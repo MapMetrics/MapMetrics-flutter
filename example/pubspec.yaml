@@ -1,0 +1,44 @@
+name: maplibre_example
+description: "An example app for the MapLibre flutter wrapper."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  flutter: ^3.29.0
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  geotypes: ^0.0.2
+  go_router: ^14.2.2
+  http: ^1.2.2
+  maplibre:
+    path: ../
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.3
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  mocktail: ^1.0.4
+  very_good_analysis: ^7.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/geojson/
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "../doc/logo.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "../doc/logo.png"
+    background_color: "#285DAA"
+    theme_color: "#285DAA"
