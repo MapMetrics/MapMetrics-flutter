@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 @immutable
 class StyleLayersFillPage extends StatefulWidget {

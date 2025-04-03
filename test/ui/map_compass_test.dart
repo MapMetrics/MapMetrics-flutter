@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../shared/mocks.dart';

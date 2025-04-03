@@ -1,4 +1,4 @@
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 /// Base class for all the events emitted by the [MapLibreMap].
 ///

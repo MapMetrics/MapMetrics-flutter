@@ -1,6 +1,6 @@
 import 'package:flutter/rendering.dart';
 import 'package:jni/jni.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/platform/android/jni/jni.dart' as jni;
 import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;
 

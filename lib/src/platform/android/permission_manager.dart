@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:jni/jni.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/platform/android/jni/jni.dart' as jni;
 
 /// MapLibre Android specific implementation of the [PermissionManager].

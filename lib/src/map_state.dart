@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/inherited_model.dart';
 import 'package:mapmetrics/src/layer/layer_manager.dart';
 

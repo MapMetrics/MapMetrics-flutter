@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 /// Model class that represents a map region for offline usage.
 ///

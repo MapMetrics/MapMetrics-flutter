@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/platform/web/interop/interop.dart' as interop;
 
 /// Extension methods for the [Position] class. Not exported publicly.

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/inherited_model.dart';
 
 class App extends StatelessWidget {

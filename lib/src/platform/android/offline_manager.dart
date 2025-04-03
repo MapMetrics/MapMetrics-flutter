@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:jni/jni.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/platform/android/extensions.dart';
 import 'package:mapmetrics/src/platform/android/jni/jni.dart' as jni;
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_example/extensions.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 @immutable
 class PermissionsPage extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 @immutable
 class StyleLayersHillshadePage extends StatefulWidget {

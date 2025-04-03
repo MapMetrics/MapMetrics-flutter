@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 part 'background_style_layer.dart';
 part 'circle_style_layer.dart';

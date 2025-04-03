@@ -1,4 +1,4 @@
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 part 'geo_json_source.dart';
 part 'image_source.dart';

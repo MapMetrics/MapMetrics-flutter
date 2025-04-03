@@ -1,4 +1,4 @@
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/map_state.dart';
 import 'package:mapmetrics/src/platform/android/extensions.dart';
 import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;

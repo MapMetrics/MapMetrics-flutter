@@ -3,7 +3,7 @@ library;
 
 import 'dart:js_interop';
 
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:web/web.dart';
 
 part 'camera.dart';

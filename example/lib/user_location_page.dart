@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_example/extensions.dart';
 import 'package:maplibre_example/map_styles.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 @immutable
 class UserLocationPage extends StatefulWidget {

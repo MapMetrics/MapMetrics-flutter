@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 /// Return used for [MapController.queryLayers].
 ///

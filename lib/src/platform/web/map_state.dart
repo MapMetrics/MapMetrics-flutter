@@ -5,7 +5,7 @@ import 'dart:ui_web';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/layer/layer_manager.dart';
 import 'package:mapmetrics/src/map_state.dart';
 import 'package:mapmetrics/src/platform/web/extensions.dart';
