@@ -7,7 +7,7 @@ issue_tracker: https://github.com/MapMetrics/MapMetrics-flutter/issues
 #documentation: https://flutter-maplibre.pages.dev/docs/index/
 publish_to: 'none'
 
-topics: [ map, maplibre, mvt ]
+topics: [ map, mapmetrics, mvt ]
 
 platforms:
   android:
