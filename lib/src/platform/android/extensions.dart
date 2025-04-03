@@ -1,8 +1,8 @@
 import 'package:flutter/rendering.dart';
 import 'package:jni/jni.dart';
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/platform/android/jni/jni.dart' as jni;
-import 'package:maplibre/src/platform/pigeon.g.dart' as pigeon;
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/platform/android/jni/jni.dart' as jni;
+import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;
 
 /// Extension methods for the [Position] class. Not exported publicly.
 extension PositionExt on Position {

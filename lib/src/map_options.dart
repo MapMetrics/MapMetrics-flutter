@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/inherited_model.dart';
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/inherited_model.dart';
 
 /// The [MapOptions] class is used to set default values for the [MapLibreMap]
 /// widget.

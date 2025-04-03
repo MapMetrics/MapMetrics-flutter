@@ -1,4 +1,4 @@
-import 'package:maplibre/src/platform_interface.dart';
+import 'package:mapmetrics/src/platform_interface.dart';
 
 /// The Permission Manager provides functionality to check if location
 /// permissions are granted and can request permissions.

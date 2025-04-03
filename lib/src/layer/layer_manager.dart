@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 /// The layer manager handles the high-level layer API used in
 /// [MapLibreMap.layers]. This is an internal class that doesn't get exposed

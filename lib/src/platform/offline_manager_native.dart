@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/platform/android/extensions.dart';
-import 'package:maplibre/src/platform/pigeon.g.dart' as pigeon;
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/platform/android/extensions.dart';
+import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;
 
 /// The [OfflineManager] implementation that uses Pigeon as a fallback.
 abstract class OfflineManagerNative implements OfflineManager {

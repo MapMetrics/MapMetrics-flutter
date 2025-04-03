@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 void main() {
   group('Style Layer Model Classes', () {

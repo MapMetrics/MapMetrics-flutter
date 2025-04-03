@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 @immutable
 class StyleLayersRasterPage extends StatefulWidget {

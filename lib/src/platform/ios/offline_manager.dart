@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/platform/ios/extensions.dart';
-import 'package:maplibre/src/platform/offline_manager_native.dart';
 import 'package:maplibre_ios/maplibre_ffi.dart';
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/platform/ios/extensions.dart';
+import 'package:mapmetrics/src/platform/offline_manager_native.dart';
 import 'package:objective_c/objective_c.dart' as objc;
 
 /// iOS specific implementation of the [OfflineManager].

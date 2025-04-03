@@ -5,7 +5,7 @@
 import FlutterMacOS
 import Foundation
 
-import maplibre
+import mapmetrics
 import url_launcher_macos
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {

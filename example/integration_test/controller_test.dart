@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:maplibre/maplibre.dart';
 import 'package:maplibre_example/map_styles.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 import 'app.dart';
 

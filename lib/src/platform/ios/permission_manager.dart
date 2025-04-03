@@ -1,4 +1,4 @@
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 /// iOS specific implementation of the [PermissionManager].
 class PermissionManagerIos implements PermissionManager {

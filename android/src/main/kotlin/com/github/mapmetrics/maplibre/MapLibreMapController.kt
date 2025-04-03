@@ -1,4 +1,4 @@
-package com.github.josxha.maplibre
+package com.github.mapmetrics.maplibre
 
 // if imports can't resolve: https://stackoverflow.com/a/65903576/9439899
 

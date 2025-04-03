@@ -3,7 +3,7 @@ library;
 
 import 'dart:js_interop';
 
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 import 'package:web/web.dart';
 
 part 'camera.dart';
@@ -11,8 +11,8 @@ part 'events.dart';
 part 'gesture_handlers.dart';
 part 'map.dart';
 part 'map_geojson_feature.dart';
-part 'style_specification.dart';
 part 'marker.dart';
+part 'style_specification.dart';
 
 /// A simple x/y [Point] class for JavaScript.
 @anonymous

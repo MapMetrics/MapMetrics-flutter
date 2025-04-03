@@ -5,12 +5,12 @@ import 'dart:ui_web';
 
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/layer/layer_manager.dart';
-import 'package:maplibre/src/map_state.dart';
-import 'package:maplibre/src/platform/web/extensions.dart';
-import 'package:maplibre/src/platform/web/interop/interop.dart' as interop;
-import 'package:maplibre/src/platform/web/interop/json.dart';
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/layer/layer_manager.dart';
+import 'package:mapmetrics/src/map_state.dart';
+import 'package:mapmetrics/src/platform/web/extensions.dart';
+import 'package:mapmetrics/src/platform/web/interop/interop.dart' as interop;
+import 'package:mapmetrics/src/platform/web/interop/json.dart';
 import 'package:web/web.dart';
 
 part 'style_controller.dart';

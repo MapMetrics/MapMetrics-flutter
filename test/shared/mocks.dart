@@ -1,4 +1,4 @@
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockMapController extends Mock implements MapController {}

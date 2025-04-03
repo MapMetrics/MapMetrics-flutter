@@ -15,7 +15,7 @@ dependencies:
   geotypes: ^0.0.2
   go_router: ^14.2.2
   http: ^1.2.2
-  maplibre:
+  mapmetrics:
     path: ../
 
 dev_dependencies:

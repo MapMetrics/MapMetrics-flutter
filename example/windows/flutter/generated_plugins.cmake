@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  maplibre
+  mapmetrics
   url_launcher_windows
 )
 

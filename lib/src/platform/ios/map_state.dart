@@ -3,13 +3,13 @@ import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/layer/extensions.dart';
-import 'package:maplibre/src/layer/layer_manager.dart';
-import 'package:maplibre/src/platform/ios/extensions.dart';
-import 'package:maplibre/src/platform/map_state_native.dart';
-import 'package:maplibre/src/platform/pigeon.g.dart' as pigeon;
 import 'package:maplibre_ios/maplibre_ffi.dart';
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/layer/extensions.dart';
+import 'package:mapmetrics/src/layer/layer_manager.dart';
+import 'package:mapmetrics/src/platform/ios/extensions.dart';
+import 'package:mapmetrics/src/platform/map_state_native.dart';
+import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;
 import 'package:objective_c/objective_c.dart';
 
 part 'style_controller.dart';

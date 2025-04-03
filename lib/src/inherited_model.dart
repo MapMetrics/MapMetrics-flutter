@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 /// The [InheritedModel] makes it possible to call `MapController.of(context)`.
 ///

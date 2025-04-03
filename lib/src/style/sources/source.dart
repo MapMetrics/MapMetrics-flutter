@@ -1,10 +1,10 @@
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 part 'geo_json_source.dart';
+part 'image_source.dart';
 part 'raster_dem_source.dart';
 part 'raster_source.dart';
 part 'vector_source.dart';
-part 'image_source.dart';
 part 'video_source.dart';
 
 /// The base Source class that can't be used directly.

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 /// A compass for flutter_map that shows the map rotation and allows to reset

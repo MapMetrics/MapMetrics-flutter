@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 /// The [StyleController] can be used to manipulate the style of
 /// a [MapLibreMap]. It can be accessed via [MapController.style].

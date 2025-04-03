@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/translucent_pointer.dart';
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/translucent_pointer.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 /// Use the [WidgetLayer] to display [Widget]s on the [MapLibreMap]

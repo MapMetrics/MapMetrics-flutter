@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:jni/jni.dart';
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/platform/android/extensions.dart';
-import 'package:maplibre/src/platform/android/jni/jni.dart' as jni;
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/platform/android/extensions.dart';
+import 'package:mapmetrics/src/platform/android/jni/jni.dart' as jni;
 
 /// MapLibre Android specific implementation of the [OfflineManager].
 class OfflineManagerAndroid implements OfflineManager {

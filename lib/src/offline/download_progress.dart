@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:maplibre/maplibre.dart';
+import 'package:mapmetrics/maplibre.dart';
 
 /// This model class is used to stream the download progress in
 /// [OfflineManager.downloadRegion].

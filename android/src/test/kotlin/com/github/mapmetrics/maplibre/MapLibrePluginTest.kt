@@ -1,4 +1,4 @@
-package com.github.josxha.maplibre
+package com.github.mapmetrics.maplibre
 
 /*import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

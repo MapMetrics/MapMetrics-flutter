@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/platform_interface.dart';
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/platform_interface.dart';
 
 /// The [MapLibreMap] widget that can be inserted into the flutter widget tree.
 ///

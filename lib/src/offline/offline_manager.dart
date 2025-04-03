@@ -1,5 +1,5 @@
-import 'package:maplibre/maplibre.dart';
-import 'package:maplibre/src/platform_interface.dart';
+import 'package:mapmetrics/maplibre.dart';
+import 'package:mapmetrics/src/platform_interface.dart';
 
 /// Use the offline manager to download map regions for offline usage.
 ///

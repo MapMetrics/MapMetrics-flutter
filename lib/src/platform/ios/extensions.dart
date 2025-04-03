@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:ffi';
 
 import 'package:flutter/cupertino.dart';
-import 'package:maplibre/maplibre.dart';
 import 'package:maplibre_ios/maplibre_ffi.dart';
+import 'package:mapmetrics/maplibre.dart';
 import 'package:objective_c/objective_c.dart';
 
 /// Internal extensions on [CLLocationCoordinate2D].

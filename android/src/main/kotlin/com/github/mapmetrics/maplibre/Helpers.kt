@@ -1,4 +1,4 @@
-package com.github.josxha.maplibre
+package com.github.mapmetrics.maplibre
 
 import androidx.annotation.Keep
 import org.maplibre.android.geometry.LatLngBounds
