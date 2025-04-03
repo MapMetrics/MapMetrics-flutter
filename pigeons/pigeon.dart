@@ -15,11 +15,11 @@ import 'package:pigeon/pigeon.dart';
     cppHeaderOut: 'windows/runner/pigeon.g.h',
     cppSourceOut: 'windows/runner/pigeon.g.cpp',
     // android
-    kotlinOut: 'android/src/main/kotlin/com/github/josxha/maplibre/Pigeon.g.kt',
+    kotlinOut:
+        'android/src/main/kotlin/com/github/mapmetrics/maplibre/Pigeon.g.kt',
     kotlinOptions: KotlinOptions(),
     // ios
-    swiftOut:
-        'maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/Pigeon.g.swift',
+    swiftOut: 'ios/mapmetrics/Sources/maplibre_ios/Pigeon.g.swift',
     swiftOptions: SwiftOptions(),
   ),
 )

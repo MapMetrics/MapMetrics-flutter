@@ -1,6 +1,6 @@
 #include <stdint.h>
 #import <Foundation/Foundation.h>
-#import "../ios/maplibre_ios/Sources/maplibre_ios/MapLibreRegistry.h"
+#import "../ios/mapmetrics/Sources/maplibre_ios/MapLibreRegistry.h"
 #import "../../../../../Library/Caches/CocoaPods/Pods/Release/MapLibre/6.11.0-9ff4b/MapLibre.xcframework/ios-arm64_x86_64-simulator/MapLibre.framework/Headers/MLNMapView.h"
 #import "../../../../../Library/Caches/CocoaPods/Pods/Release/MapLibre/6.11.0-9ff4b/MapLibre.xcframework/ios-arm64_x86_64-simulator/MapLibre.framework/Headers/MLNMapProjection.h"
 #import "../../../../../Library/Caches/CocoaPods/Pods/Release/MapLibre/6.11.0-9ff4b/MapLibre.xcframework/ios-arm64_x86_64-simulator/MapLibre.framework/Headers/MLNStyle.h"
