@@ -5,7 +5,7 @@ repository: https://github.com/MapMetrics/MapMetrics-flutter
 issue_tracker: https://github.com/MapMetrics/MapMetrics-flutter/issues
 #homepage: https://flutter-maplibre.pages.dev
 #documentation: https://flutter-maplibre.pages.dev/docs/index/
-publish_to: 'none'
+publish_to: 'https://pub.dev'
 
 topics: [ map, mapmetrics, mvt ]
 
