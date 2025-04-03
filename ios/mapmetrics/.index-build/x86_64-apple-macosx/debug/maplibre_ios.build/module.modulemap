@@ -1,0 +1,4 @@
+module maplibre_ios {
+    header "/Users/macbook/Desktop/flutter_maplibre_ios/ios/mapmetrics/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/maplibre_ios-Swift.h"
+    requires objc
+}

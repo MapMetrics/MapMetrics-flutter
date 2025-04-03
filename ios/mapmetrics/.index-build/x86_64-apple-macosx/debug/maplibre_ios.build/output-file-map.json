@@ -1,0 +1,47 @@
+{
+  "": {
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/master.swiftdeps"
+  },
+  "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/Extensions.swift": {
+    "dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Extensions.d",
+    "object": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Extensions.swift.o",
+    "swiftmodule": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Extensions~partial.swiftmodule",
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Extensions.swiftdeps"
+  },
+  "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/MapLibreIosPlugin.swift": {
+    "dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreIosPlugin.d",
+    "object": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreIosPlugin.swift.o",
+    "swiftmodule": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreIosPlugin~partial.swiftmodule",
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreIosPlugin.swiftdeps"
+  },
+  "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/MapLibreRegistry.swift": {
+    "dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreRegistry.d",
+    "object": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreRegistry.swift.o",
+    "swiftmodule": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreRegistry~partial.swiftmodule",
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreRegistry.swiftdeps"
+  },
+  "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/MapLibreViewFactory.swift": {
+    "dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreViewFactory.d",
+    "object": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreViewFactory.swift.o",
+    "swiftmodule": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreViewFactory~partial.swiftmodule",
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapLibreViewFactory.swiftdeps"
+  },
+  "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/MapViewDelegate.swift": {
+    "dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapViewDelegate.d",
+    "object": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapViewDelegate.swift.o",
+    "swiftmodule": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapViewDelegate~partial.swiftmodule",
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/MapViewDelegate.swiftdeps"
+  },
+  "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/OfflineManager.swift": {
+    "dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/OfflineManager.d",
+    "object": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/OfflineManager.swift.o",
+    "swiftmodule": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/OfflineManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/OfflineManager.swiftdeps"
+  },
+  "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/Sources/maplibre_ios/Pigeon.g.swift": {
+    "dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Pigeon.g.d",
+    "object": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Pigeon.g.swift.o",
+    "swiftmodule": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Pigeon.g~partial.swiftmodule",
+    "swift-dependencies": "/Users/macbook/Desktop/flutter_maplibre_ios/ios/maplibre_ios/.index-build/x86_64-apple-macosx/debug/maplibre_ios.build/Pigeon.g.swiftdeps"
+  }
+}
