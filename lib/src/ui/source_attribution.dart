@@ -62,7 +62,7 @@ class _SourceAttributionState extends State<SourceAttribution> {
     final size = MediaQuery.sizeOf(context);
 
     final attributions = [
-      if (widget.showMapLibre) '<a href="https://maplibre.org/">MapLibre</a>',
+      if (widget.showMapLibre) '<a href="https://maplibre.org/">MapMetrics</a>',
       ...style.getAttributionsSync(),
     ];
 

@@ -34,7 +34,7 @@ class MenuPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('MapLibre Demo')),
+      appBar: AppBar(title: const Text('MapMetrics Demo')),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [

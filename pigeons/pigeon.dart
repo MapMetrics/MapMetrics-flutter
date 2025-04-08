@@ -4,7 +4,7 @@ import 'package:pigeon/pigeon.dart';
   PigeonOptions(
     dartOut: 'lib/src/platform/pigeon.g.dart',
     dartOptions: DartOptions(),
-    dartPackageName: 'maplibre',
+    dartPackageName: 'mapmetrics',
     copyrightHeader: 'pigeons/header.txt',
     // linux
     gobjectHeaderOut: 'linux/pigeon.g.h',

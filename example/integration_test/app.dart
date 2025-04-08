@@ -22,7 +22,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MapLibre Demo',
+      title: 'MapMetrics Demo',
       home: Scaffold(
         body: MapLibreMap(
           acceptLicense: true,

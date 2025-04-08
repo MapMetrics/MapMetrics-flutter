@@ -12,7 +12,7 @@ class MapLibreMap extends StatefulWidget {
   /// Default constructor to create a new [MapLibreMap] widget with its
   /// properties.
   const MapLibreMap({
-    required this.acceptLicense,
+    this.acceptLicense = true,
     this.options = const MapOptions(),
     this.gestureRecognizers,
     this.onMapCreated,
