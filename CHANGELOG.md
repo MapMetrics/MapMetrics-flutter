@@ -1,3 +1,7 @@
+0.0.4
+0.0.4 release
+bugs fixed for IOS
+
 0.0.3
 0.0.3 release
 bugs fixed for android
