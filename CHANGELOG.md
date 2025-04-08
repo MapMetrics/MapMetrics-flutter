@@ -1,3 +1,7 @@
+0.0.5
+0.0.5 release
+Permission issue fixed for IOS
+
 0.0.4
 0.0.4 release
 bugs fixed for IOS
