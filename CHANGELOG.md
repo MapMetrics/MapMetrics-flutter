@@ -1,6 +1,11 @@
+0.0.6 release
+zoombuttons are optional now,auto load to user current location
+
+
 0.0.5
 0.0.5 release
-Permission issue fixed for IOS
+bugs fixed for IOS
+
 
 0.0.4
 0.0.4 release
@@ -19,4 +24,3 @@ Add docs
 0.0.1
 Initial release
 Implement map for android ios and web
-Add docs

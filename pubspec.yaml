@@ -1,6 +1,6 @@
 name: mapmetrics
 description: "Permissive and performant mapping library that supports Mapbox Vector Tiles (MVT) powered by MapLibre SDKs."
-version: 0.0.5
+version: 0.0.6
 repository: https://github.com/MapMetrics/MapMetrics-flutter
 issue_tracker: https://github.com/MapMetrics/MapMetrics-flutter/issues
 #homepage: https://flutter-maplibre.pages.dev

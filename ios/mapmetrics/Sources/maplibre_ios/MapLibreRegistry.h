@@ -329,28 +329,28 @@ typedef unsigned int swift_uint4 __attribute__((__ext_vector_type__(4)));
 @class NSExpression;
 
 SWIFT_CLASS("_TtC12maplibre_ios7Helpers")
-@interface Helpers : NSObject
-+ (void)setExpressionWithTarget:(NSObject *_Nonnull)target
-                          field:(NSString *_Nonnull)field
-                     expression:(NSExpression *_Nonnull)expression;
-+ (NSExpression *_Nullable)
-    parseExpressionWithPropertyName:(NSString *_Nonnull)propertyName
-                         expression:(NSString *_Nonnull)expression
-    SWIFT_WARN_UNUSED_RESULT;
-- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
-@end
+//@interface Helpers : NSObject
+//+ (void)setExpressionWithTarget:(NSObject *_Nonnull)target
+//                          field:(NSString *_Nonnull)field
+//                     expression:(NSExpression *_Nonnull)expression;
+//+ (NSExpression *_Nullable)
+//    parseExpressionWithPropertyName:(NSString *_Nonnull)propertyName
+//                         expression:(NSString *_Nonnull)expression
+//    SWIFT_WARN_UNUSED_RESULT;
+//- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+//@end
 
 SWIFT_CLASS("_TtC12maplibre_ios16MapLibreRegistry")
-@interface MapLibreRegistry : NSObject
-+ (id _Nullable)getMapWithViewId:(int64_t)viewId SWIFT_WARN_UNUSED_RESULT;
-SWIFT_CLASS_PROPERTY(@property(nonatomic, class, strong) id _Nullable activity;)
-+ (id _Nullable)activity SWIFT_WARN_UNUSED_RESULT;
-+ (void)setActivity:(id _Nullable)value;
-SWIFT_CLASS_PROPERTY(@property(nonatomic, class, strong) id _Nullable context;)
-+ (id _Nullable)context SWIFT_WARN_UNUSED_RESULT;
-+ (void)setContext:(id _Nullable)value;
-- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
-@end
+//@interface MapLibreRegistry : NSObject
+//+ (id _Nullable)getMapWithViewId:(int64_t)viewId SWIFT_WARN_UNUSED_RESULT;
+//SWIFT_CLASS_PROPERTY(@property(nonatomic, class, strong) id _Nullable activity;)
+//+ (id _Nullable)activity SWIFT_WARN_UNUSED_RESULT;
+//+ (void)setActivity:(id _Nullable)value;
+//SWIFT_CLASS_PROPERTY(@property(nonatomic, class, strong) id _Nullable context;)
+//+ (id _Nullable)context SWIFT_WARN_UNUSED_RESULT;
+//+ (void)setContext:(id _Nullable)value;
+//- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+//@end
 
 #endif
 #if __has_attribute(external_source_symbol)

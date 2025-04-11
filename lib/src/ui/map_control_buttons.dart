@@ -22,6 +22,7 @@ class MapControlButtons extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(vertical: 50, horizontal: 12),
     this.alignment = Alignment.bottomRight,
     this.showTrackLocation = false,
+    this.showZoomInOutButton = false,
     this.requestPermissionsExplanation =
         'We need your location to show it on the map.',
   });
@@ -39,6 +40,8 @@ class MapControlButtons extends StatefulWidget {
 
   /// The explanation to show when requesting location permissions.
   final String requestPermissionsExplanation;
+
+  final bool showZoomInOutButton;
 
   @override
   State<MapControlButtons> createState() => _MapControlButtonsState();
@@ -66,9 +69,15 @@ class _MapControlButtonsState extends State<MapControlButtons> {
     if (!kIsWeb && widget.showTrackLocation) {
       if (!_trackLocationButtonInitialized) {
         _trackLocationButtonInitialized = true;
-        if (_permissionManager?.locationPermissionsGranted ?? false) {
+        if (Platform.isIOS) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            await _initializeLocation(controller, trackLocation: false);
+            // await Future.delayed(const Duration(milliseconds: 500));
+            await _initializeLocation(controller);
+          });
+        } else if (_permissionManager?.locationPermissionsGranted ?? false) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            // await Future.delayed(const Duration(milliseconds: 500));
+            await _initializeLocation(controller);
           });
         }
       }
@@ -85,24 +94,27 @@ class _MapControlButtonsState extends State<MapControlButtons> {
             spacing: 8,
             mainAxisSize: MainAxisSize.min,
             children: [
-              FloatingActionButton(
-                heroTag: 'MapLibreZoomInButton',
-                onPressed:
-                    () => controller.animateCamera(
-                      zoom: controller.getCamera().zoom + 1,
-                      nativeDuration: const Duration(milliseconds: 200),
-                    ),
-                child: const Icon(Icons.add),
-              ),
-              FloatingActionButton(
-                heroTag: 'MapLibreZoomOutButton',
-                onPressed:
-                    () => controller.animateCamera(
-                      zoom: controller.getCamera().zoom - 1,
-                      nativeDuration: const Duration(milliseconds: 200),
-                    ),
-                child: const Icon(Icons.remove),
-              ),
+              if (widget.showZoomInOutButton) ...[
+                FloatingActionButton(
+                  heroTag: 'MapLibreZoomInButton',
+                  onPressed:
+                      () => controller.animateCamera(
+                        zoom: controller.getCamera().zoom + 1,
+                        nativeDuration: const Duration(milliseconds: 200),
+                      ),
+                  child: const Icon(Icons.add),
+                ),
+                FloatingActionButton(
+                  heroTag: 'MapLibreZoomOutButton',
+                  onPressed:
+                      () => controller.animateCamera(
+                        zoom: controller.getCamera().zoom - 1,
+                        nativeDuration: const Duration(milliseconds: 200),
+                      ),
+                  child: const Icon(Icons.remove),
+                ),
+              ],
+
               if (!kIsWeb && widget.showTrackLocation) ...[
                 FloatingActionButton(
                   heroTag: 'MapLibreTrackLocationButton',
@@ -159,8 +171,9 @@ class _MapControlButtonsState extends State<MapControlButtons> {
 
     try {
       await controller.enableLocation();
-      setState(() => _trackState = _TrackLocationState.gpsFixed);
 
+      setState(() => _trackState = _TrackLocationState.gpsFixed);
+      await Future.delayed(const Duration(milliseconds: 500));
       if (trackLocation) await controller.trackLocation();
     } on Exception {
       setState(() => _trackState = _TrackLocationState.gpsNotFixed);
