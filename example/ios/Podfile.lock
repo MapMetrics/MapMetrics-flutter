@@ -1,52 +1,21 @@
 PODS:
   - Flutter (1.0.0)
-  - integration_test (0.0.1):
-    - Flutter
-  - MapLibre (6.12.2)
-  - mapmetrics (0.0.1):
-    - Flutter
-    - MapLibre (~> 6.11)
   - objective_c (0.0.1):
-    - Flutter
-  - pointer_interceptor_ios (0.0.1):
-    - Flutter
-  - url_launcher_ios (0.0.1):
     - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - integration_test (from `.symlinks/plugins/integration_test/ios`)
-  - mapmetrics (from `.symlinks/plugins/mapmetrics/ios`)
   - objective_c (from `.symlinks/plugins/objective_c/ios`)
-  - pointer_interceptor_ios (from `.symlinks/plugins/pointer_interceptor_ios/ios`)
-  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
-
-SPEC REPOS:
-  trunk:
-    - MapLibre
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  integration_test:
-    :path: ".symlinks/plugins/integration_test/ios"
-  mapmetrics:
-    :path: ".symlinks/plugins/mapmetrics/ios"
   objective_c:
     :path: ".symlinks/plugins/objective_c/ios"
-  pointer_interceptor_ios:
-    :path: ".symlinks/plugins/pointer_interceptor_ios/ios"
-  url_launcher_ios:
-    :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  MapLibre: 667345b9e4d16a7873146a83b7249805a4432fba
-  mapmetrics: c023a32a58d6672f8fed434f82e79af0bfa20387
-  objective_c: 89e720c30d716b036faf9c9684022048eee1eee2
-  pointer_interceptor_ios: ec847ef8b0915778bed2b2cef636f4d177fa8eed
-  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  objective_c: 77e887b5ba1827970907e10e832eec1683f3431d
 
 PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5
 
