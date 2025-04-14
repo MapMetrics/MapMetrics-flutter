@@ -23,6 +23,7 @@ class MapControlButtons extends StatefulWidget {
     this.alignment = Alignment.bottomRight,
     this.showTrackLocation = false,
     this.showZoomInOutButton = false,
+    this.onCurrentLocation, // Made this optional
     this.requestPermissionsExplanation =
         'We need your location to show it on the map.',
   });
@@ -37,6 +38,7 @@ class MapControlButtons extends StatefulWidget {
   ///
   /// This button is currently not available on web.
   final bool showTrackLocation;
+  final void Function(Position)? onCurrentLocation;
 
   /// The explanation to show when requesting location permissions.
   final String requestPermissionsExplanation;
@@ -118,7 +120,7 @@ class _MapControlButtonsState extends State<MapControlButtons> {
               if (!kIsWeb && widget.showTrackLocation) ...[
                 FloatingActionButton(
                   heroTag: 'MapLibreTrackLocationButton',
-                  onPressed: () async => _initializeLocation(controller),
+                  onPressed: () async => {_initializeLocation(controller)},
                   child:
                       _trackState == _TrackLocationState.loading
                           ? const SizedBox.square(
@@ -174,6 +176,10 @@ class _MapControlButtonsState extends State<MapControlButtons> {
 
       setState(() => _trackState = _TrackLocationState.gpsFixed);
       await Future.delayed(const Duration(milliseconds: 500));
+      if (widget.onCurrentLocation != null) {
+        widget.onCurrentLocation!(controller.camera!.center);
+      }
+
       if (trackLocation) await controller.trackLocation();
     } on Exception {
       setState(() => _trackState = _TrackLocationState.gpsNotFixed);

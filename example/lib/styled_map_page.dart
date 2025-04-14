@@ -24,11 +24,16 @@ class _StyledMapPageState extends State<StyledMapPage> {
           initZoom: 2,
           initStyle: MapStyles.maptilerStreets,
         ),
-        children: const [
-          MapScalebar(),
-          SourceAttribution(),
-          MapControlButtons(showTrackLocation: true),
-          MapCompass(),
+        children: [
+          const MapScalebar(),
+          const SourceAttribution(),
+          MapControlButtons(
+            showTrackLocation: true,
+            onCurrentLocation: (location) {
+              print("location" + location.lat.toString());
+            },
+          ),
+          const MapCompass(),
         ],
         onStyleLoaded: (style) {
           style.setProjection(MapProjection.globe);
