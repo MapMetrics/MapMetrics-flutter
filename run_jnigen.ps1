@@ -1,1 +1,1 @@
-dart run jnigen --config jnigen.yml
+flutter pub run jnigen --config jnigen.yml

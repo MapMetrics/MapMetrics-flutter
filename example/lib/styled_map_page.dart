@@ -22,12 +22,13 @@ class _StyledMapPageState extends State<StyledMapPage> {
         options: MapOptions(
           initCenter: Position(9.17, 47.68),
           initZoom: 2,
-          initStyle: MapStyles.maptilerStreets,
+          initStyle: MapStyles.testMap,
         ),
         children: [
           const MapScalebar(),
           const SourceAttribution(),
           MapControlButtons(
+            showZoomInOutButton: true,
             showTrackLocation: true,
             onCurrentLocation: (location) {
               print("location" + location.lat.toString());
