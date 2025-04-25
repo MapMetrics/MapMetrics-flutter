@@ -102,8 +102,11 @@ class MapLibreMapController(
             MapLibre.getInstance(context) // needs to be called before MapView gets created
             mapView = MapView(context, options)
             lifecycleProvider.getLifecycle()?.addObserver(this)
-            mapView.getMapAsync(this)
-            mapViewContainer.addView(mapView)
+            MapLibre.initializeSessionWithToken(context, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4MjQ5NGNjNy04YTUzLTQwNGUtODNlOS1hZjA5OWY1MGE0Y2IiLCJzY29wZSI6WyJtYXBzIiwic2VhcmNoIl0sImlhdCI6MTc0NDY5NTgxOH0.3oDQzbcD72gIvtd4lkKi96aMFF3-d-i7UnIdc9iADeA") {
+                mapView.getMapAsync(this)
+                mapViewContainer.addView(mapView)
+            }
+
         }
     }
 
