@@ -11,6 +11,7 @@ export 'src/map_camera.dart';
 export 'src/map_controller.dart';
 export 'src/map_events.dart';
 export 'src/map_gestures.dart';
+export 'src/map_metrics_view.dart';
 export 'src/map_options.dart';
 export 'src/offline/download_progress.dart';
 export 'src/offline/offline_manager.dart';
