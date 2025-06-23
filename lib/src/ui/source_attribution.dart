@@ -18,7 +18,7 @@ class SourceAttribution extends StatefulWidget {
     super.key,
     this.padding = const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
     this.alignment = Alignment.bottomRight,
-    this.showMapLibre = true,
+    this.showMapLibre = false,
     this.keepExpanded = false,
   });
 

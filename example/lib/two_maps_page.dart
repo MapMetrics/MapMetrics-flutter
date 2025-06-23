@@ -23,7 +23,7 @@ class _TwoMapsPageState extends State<TwoMapsPage> {
         children: [
           _ButtonsWidget(controller: _controller1),
           Expanded(
-            child: MapLibreMap(
+            child: MapMetricsView(
               acceptLicense: true,
               options: MapOptions(initCenter: Position(9.17, 47.68)),
               onMapCreated: (controller) {
