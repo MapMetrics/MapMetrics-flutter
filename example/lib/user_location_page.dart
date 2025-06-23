@@ -87,12 +87,10 @@ class _UserLocationPageState extends State<UserLocationPage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
-              acceptLicense: true,
+            child: MapMetricsView(
               options: MapOptions(
-                initZoom: 1,
-                initCenter: Position(0, 0),
-                initStyle: MapStyles.protomapsLight,
+                initCenter: Position(-74.006, 40.7128),
+                initZoom: 9,
               ),
               onMapCreated: (controller) => _controller = controller,
             ),

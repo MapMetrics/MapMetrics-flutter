@@ -19,33 +19,12 @@ class _StyleLayersFillPageState extends State<StyleLayersFillPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Fill Style Layer')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initZoom: 7, initCenter: Position(9.17, 47.68)),
-        onMapCreated: (controller) => _controller = controller,
+      body: MapMetricsView(
+        options: MapOptions(
+          initCenter: Position(-74.006, 40.7128),
+          initZoom: 9,
+        ),
         onStyleLoaded: _onStyleLoaded,
-        onEvent: (event) async {
-          if (event case MapEventClick()) {
-            final screenPoint = await _controller.toScreenLocation(event.point);
-            final features = await _controller.queryLayers(screenPoint);
-            debugPrint(
-              '${features.length} layers clicked\n'
-              '${features.join('\n')}',
-            );
-            if (context.mounted) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${features.length} layers clicked: '
-                      '${features.map((e) => e.layerId).join(', ')}',
-                    ),
-                  ),
-                );
-            }
-          }
-        },
       ),
     );
   }

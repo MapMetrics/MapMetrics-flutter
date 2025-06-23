@@ -12,6 +12,7 @@ class ParametersPage extends StatefulWidget {
 }
 
 class _ParametersPageState extends State<ParametersPage> {
+  MapController? _controller;
   double _minZoom = 0;
   double _maxZoom = 22;
   double _minPitch = 0;
@@ -87,8 +88,7 @@ class _ParametersPageState extends State<ParametersPage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
-              acceptLicense: true,
+            child: MapMetricsView(
               options: MapOptions(
                 initCenter: Position(0, 0),
                 initZoom: 3,
@@ -98,6 +98,7 @@ class _ParametersPageState extends State<ParametersPage> {
                 maxPitch: _maxPitch,
                 maxBounds: _lngLatBounds,
               ),
+              onMapCreated: (controller) => _controller = controller,
             ),
           ),
         ],

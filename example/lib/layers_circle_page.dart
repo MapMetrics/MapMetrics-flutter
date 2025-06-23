@@ -23,9 +23,8 @@ class _LayersCirclePageState extends State<LayersCirclePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Circle Layers')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initZoom: 7, initCenter: Position(9.17, 47.68)),
+      body: MapMetricsView(
+        options: MapOptions(initCenter: Position(9.17, 47.68), initZoom: 7),
         onEvent: (event) {
           if (event case MapEventClick()) {
             setState(() {

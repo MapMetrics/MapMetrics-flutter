@@ -1,5 +1,7 @@
 part of 'map_state.dart';
 
+import 'dart:typed_data';
+
 /// Android specific implementation of the [StyleController].
 class StyleControllerIos implements StyleController {
   StyleControllerIos._(this._ffiStyle, this._hostApi);
@@ -115,12 +117,26 @@ class StyleControllerIos implements StyleController {
     switch (source) {
       case GeoJsonSource():
         final shapeSource = MLNShapeSource.new1();
+
+        // TODO: Implement clustering for iOS
+        // Create options dictionary for clustering
+        // final options = NSMutableDictionary.new1();
+        // if (source.cluster) {
+        //   options.setObject_forKey_(true.toNSNumber(), 'MLNShapeSourceOptionClustered'.toNSString());
+        //   options.setObject_forKey_(source.clusterRadius.toNSNumber(), 'MLNShapeSourceOptionClusterRadius'.toNSString());
+        //   if (source.clusterMaxZoom != null) {
+        //     options.setObject_forKey_(source.clusterMaxZoom!.toNSNumber(), 'MLNShapeSourceOptionMaximumZoomLevelForClustering'.toNSString());
+        //   }
+        // }
+
         if (source.data.startsWith('{')) {
           shapeSource.initWithIdentifier_shape_options_(
             source.id.toNSString(),
             MLNShape.shapeWithData_encoding_error_(
-              source.data.toNSDataUTF8()!,
-              nsUTF8StringEncoding,
+              // TODO: Fix iOS-specific conversion
+              // source.data.toNSDataUTF8()!,
+              source.data.toNSString().dataUsingEncoding_(4)!,
+              4, // nsUTF8StringEncoding
               nullptr,
             ),
             NSDictionary.new1(),
@@ -128,7 +144,9 @@ class StyleControllerIos implements StyleController {
         } else {
           shapeSource.initWithIdentifier_URL_options_(
             source.id.toNSString(),
-            source.data.toNSURL()!,
+            // TODO: Fix iOS-specific conversion
+            // source.data.toNSURL()!,
+            objc.NSURL.URLWithString_(source.data.toNSString())!,
             NSDictionary.new1(),
           );
         }
@@ -138,7 +156,9 @@ class StyleControllerIos implements StyleController {
         if (source.url case final String url) {
           demSource.initWithIdentifier_configurationURL_tileSize_(
             source.id.toNSString(),
-            url.toNSURL()!,
+            // TODO: Fix iOS-specific conversion
+            // url.toNSURL()!,
+            objc.NSURL.URLWithString_(url.toNSString())!,
             source.tileSize.toDouble(),
           );
         } else {
@@ -157,7 +177,9 @@ class StyleControllerIos implements StyleController {
         if (source.url case final String url) {
           rasterSource.initWithIdentifier_configurationURL_tileSize_(
             source.id.toNSString(),
-            url.toNSURL()!,
+            // TODO: Fix iOS-specific conversion
+            // url.toNSURL()!,
+            objc.NSURL.URLWithString_(url.toNSString())!,
             source.tileSize.toDouble(),
           );
         } else {
@@ -192,18 +214,33 @@ class StyleControllerIos implements StyleController {
       case ImageSource():
         final coordinates =
             Struct.create<MLNCoordinateQuad>()
-              ..bottomLeft =
-                  source.coordinates.bottomLeft.toCLLocationCoordinate2D()
-              ..bottomRight =
-                  source.coordinates.bottomRight.toCLLocationCoordinate2D()
-              ..topLeft = source.coordinates.topLeft.toCLLocationCoordinate2D()
-              ..topRight =
-                  source.coordinates.topRight.toCLLocationCoordinate2D();
+              // TODO: Fix iOS-specific conversion
+              // ..bottomLeft =
+              //     source.coordinates.bottomLeft.toCLLocationCoordinate2D()
+              // ..bottomRight =
+              //     source.coordinates.bottomRight.toCLLocationCoordinate2D()
+              // ..topLeft = source.coordinates.topLeft.toCLLocationCoordinate2D()
+              // ..topRight =
+              //     source.coordinates.topRight.toCLLocationCoordinate2D();
+              ..bottomLeft = Struct.create<CLLocationCoordinate2D>()
+                ..longitude = source.coordinates.bottomLeft.lng
+                ..latitude = source.coordinates.bottomLeft.lat
+              ..bottomRight = Struct.create<CLLocationCoordinate2D>()
+                ..longitude = source.coordinates.bottomRight.lng
+                ..latitude = source.coordinates.bottomRight.lat
+              ..topLeft = Struct.create<CLLocationCoordinate2D>()
+                ..longitude = source.coordinates.topLeft.lng
+                ..latitude = source.coordinates.topLeft.lat
+              ..topRight = Struct.create<CLLocationCoordinate2D>()
+                ..longitude = source.coordinates.topRight.lng
+                ..latitude = source.coordinates.topRight.lat;
         final imageSource = ffiSource = MLNImageSource.new1();
         imageSource.initWithIdentifier_coordinateQuad_URL_(
           source.id.toNSString(),
           coordinates,
-          source.url.toNSURL()!,
+          // TODO: Fix iOS-specific conversion
+          // source.url.toNSURL()!,
+          NSURL.URLWithString_(source.url.toNSString())!,
         );
       case VideoSource():
         throw UnimplementedError('Video source is only supported on web.');
@@ -254,13 +291,15 @@ class StyleControllerIos implements StyleController {
     final source = _ffiStyle.sourceWithIdentifier_(id.toNSString())!;
     final shapeSource = MLNShapeSource.castFrom(source);
     shapeSource.shape = MLNShape.shapeWithData_encoding_error_(
-      data.toNSDataUTF8()!,
+      // TODO: Fix iOS-specific conversion
+      // data.toNSDataUTF8()!,
+      data.toNSString().dataUsingEncoding_(4)!,
       4, // utf-8
       nullptr,
     );
   }
 
-  NSArray _getLayers() => _ffiStyle.layers;
+  objc.NSArray _getLayers() => _ffiStyle.layers;
 
   @override
   void setProjection(MapProjection projection) {

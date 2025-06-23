@@ -4,7 +4,6 @@ export 'package:geotypes/geotypes.dart';
 
 export 'src/android_platform_view_mode.dart';
 export 'src/layer/layer.dart';
-export 'src/layer/layers_custom_marker_page.dart';
 export 'src/lng_lat_bounds.dart';
 export 'src/map.dart';
 export 'src/map_camera.dart';

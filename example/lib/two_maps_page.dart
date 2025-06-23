@@ -25,7 +25,10 @@ class _TwoMapsPageState extends State<TwoMapsPage> {
           Expanded(
             child: MapMetricsView(
               acceptLicense: true,
-              options: MapOptions(initCenter: Position(9.17, 47.68)),
+              options: MapOptions(
+                initCenter: Position(-74.006, 40.7128),
+                initZoom: 9,
+              ),
               onMapCreated: (controller) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   setState(() => _controller1 = controller);
@@ -35,9 +38,12 @@ class _TwoMapsPageState extends State<TwoMapsPage> {
           ),
           _ButtonsWidget(controller: _controller2),
           Expanded(
-            child: MapLibreMap(
+            child: MapMetricsView(
               acceptLicense: true,
-              options: MapOptions(initCenter: Position(9.17, 47.68)),
+              options: MapOptions(
+                initCenter: Position(-74.006, 40.7128),
+                initZoom: 9,
+              ),
               onMapCreated: (controller) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   setState(() => _controller2 = controller);

@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -49,8 +47,13 @@ class MapMetricsView extends StatelessWidget {
         Positioned(
           left: 10,
           bottom: 40,
-          child: IgnorePointer( // Prevents blocking touch events below
-            child: Image.asset('packages/mapmetrics/assets/logo_tr.png', width: 100, height: 25),
+          child: IgnorePointer(
+            // Prevents blocking touch events below
+            child: Image.asset(
+              'packages/mapmetrics/assets/logo_tr.png',
+              width: 100,
+              height: 25,
+            ),
           ),
         ),
       ],

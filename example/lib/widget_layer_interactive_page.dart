@@ -42,8 +42,7 @@ class _WidgetLayerPageState extends State<WidgetLayerInteractivePage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
-              acceptLicense: true,
+            child: MapMetricsView(
               key: _mapKey,
               options: MapOptions(
                 initZoom: 3,
@@ -59,7 +58,7 @@ class _WidgetLayerPageState extends State<WidgetLayerInteractivePage> {
                   setState(() {});
                 }
               },
-              children: [
+              mapChildren: [
                 WidgetLayer(
                   allowInteraction: true,
                   markers: List.generate(
