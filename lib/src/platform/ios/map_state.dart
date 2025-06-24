@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,10 +9,11 @@ import 'package:mapmetrics/src/layer/extensions.dart';
 import 'package:mapmetrics/src/layer/layer_manager.dart';
 import 'package:mapmetrics/src/platform/ios/extensions_stub.dart'
     if (dart.library.objc) 'package:mapmetrics/src/platform/ios/extensions_ios.dart';
+import 'package:mapmetrics/src/platform/ios/extensions.dart';
 import 'package:mapmetrics/src/platform/map_state_native.dart';
 import 'package:mapmetrics/src/platform/maplibre_ffi.dart';
 import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;
-import 'package:objective_c/objective_c.dart';
+import 'package:objective_c/objective_c.dart' as objc;
 
 part 'style_controller.dart';
 
@@ -23,10 +25,13 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   late final int _viewId;
   MLNMapView? _cachedMapView;
 
-  MLNMapView get _mapView =>
-      _cachedMapView ??= MLNMapView.castFrom(
-        MapLibreRegistry.getMapWithViewId_(_viewId)!,
-      );
+  MLNMapView get _mapView {
+    // TODO: Fix MapLibreRegistry FFI binding issue
+    // _cachedMapView ??= MLNMapView.castFrom(
+    //   MapLibreRegistry.getMapWithViewId_(_viewId)!,
+    // );
+    throw UnimplementedError('MapLibreRegistry not available in FFI bindings');
+  }
 
   @override
   StyleControllerIos? style;

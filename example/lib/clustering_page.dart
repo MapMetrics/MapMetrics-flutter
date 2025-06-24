@@ -44,15 +44,19 @@ class _ClusteringPageState extends State<ClusteringPage> {
   }
 
   Future<void> _onStyleLoaded(StyleController style) async {
+    print('iOS: Style loaded, adding earthquake source...');
+
     // Add GeoJSON source with clustering enabled
     const earthquakes = GeoJsonSource(
       id: 'earthquakes',
-      data: 'https://gateway.mapmetrics.org/assets/earthquakes.geojson',
+      data:
+          'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
       cluster: true,
       clusterRadius: 50,
       clusterMaxZoom: 14,
     );
     await style.addSource(earthquakes);
+    print('iOS: Added earthquake source');
 
     // Add layer for unclustered points FIRST (so it renders below clusters)
     const unclusteredLayer = CircleStyleLayer(
@@ -70,6 +74,7 @@ class _ClusteringPageState extends State<ClusteringPage> {
       },
     );
     await style.addLayer(unclusteredLayer);
+    print('iOS: Added unclustered points layer');
 
     // Add layer for clusters (colored circles) - SECOND (renders above points)
     const clustersLayer = CircleStyleLayer(
@@ -101,6 +106,7 @@ class _ClusteringPageState extends State<ClusteringPage> {
       },
     );
     await style.addLayer(clustersLayer);
+    print('iOS: Added clusters layer');
 
     // Add layer for cluster count labels - LAST (renders on top of everything)
     const clusterCountLayer = SymbolStyleLayer(
@@ -114,5 +120,6 @@ class _ClusteringPageState extends State<ClusteringPage> {
       },
     );
     await style.addLayer(clusterCountLayer);
+    print('iOS: Added cluster count layer');
   }
 }

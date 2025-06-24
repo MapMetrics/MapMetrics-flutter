@@ -1,7 +1,5 @@
 part of 'map_state.dart';
 
-import 'dart:typed_data';
-
 /// Android specific implementation of the [StyleController].
 class StyleControllerIos implements StyleController {
   StyleControllerIos._(this._ffiStyle, this._hostApi);
@@ -139,7 +137,7 @@ class StyleControllerIos implements StyleController {
               4, // nsUTF8StringEncoding
               nullptr,
             ),
-            NSDictionary.new1(),
+            objc.NSDictionary.dictionary(),
           );
         } else {
           shapeSource.initWithIdentifier_URL_options_(
@@ -147,7 +145,7 @@ class StyleControllerIos implements StyleController {
             // TODO: Fix iOS-specific conversion
             // source.data.toNSURL()!,
             objc.NSURL.URLWithString_(source.data.toNSString())!,
-            NSDictionary.new1(),
+            objc.NSDictionary.dictionary(),
           );
         }
         ffiSource = shapeSource;
@@ -169,7 +167,7 @@ class StyleControllerIos implements StyleController {
           demSource.initWithIdentifier_tileURLTemplates_options_(
             source.id.toNSString(),
             ffiUrls,
-            NSDictionary.new1(),
+            objc.NSDictionary.dictionary(),
           );
         }
       case RasterSource():
@@ -190,7 +188,7 @@ class StyleControllerIos implements StyleController {
           rasterSource.initWithIdentifier_tileURLTemplates_options_(
             source.id.toNSString(),
             ffiUrls,
-            NSDictionary.new1(),
+            objc.NSDictionary.dictionary(),
           );
         }
       case VectorSource():
@@ -208,39 +206,35 @@ class StyleControllerIos implements StyleController {
           vectorSource.initWithIdentifier_tileURLTemplates_options_(
             source.id.toNSString(),
             ffiUrls,
-            NSDictionary.new1(),
+            objc.NSDictionary.dictionary(),
           );
         }
       case ImageSource():
         final coordinates =
             Struct.create<MLNCoordinateQuad>()
-              // TODO: Fix iOS-specific conversion
-              // ..bottomLeft =
-              //     source.coordinates.bottomLeft.toCLLocationCoordinate2D()
-              // ..bottomRight =
-              //     source.coordinates.bottomRight.toCLLocationCoordinate2D()
-              // ..topLeft = source.coordinates.topLeft.toCLLocationCoordinate2D()
-              // ..topRight =
-              //     source.coordinates.topRight.toCLLocationCoordinate2D();
-              ..bottomLeft = Struct.create<CLLocationCoordinate2D>()
-                ..longitude = source.coordinates.bottomLeft.lng
-                ..latitude = source.coordinates.bottomLeft.lat
-              ..bottomRight = Struct.create<CLLocationCoordinate2D>()
-                ..longitude = source.coordinates.bottomRight.lng
-                ..latitude = source.coordinates.bottomRight.lat
-              ..topLeft = Struct.create<CLLocationCoordinate2D>()
-                ..longitude = source.coordinates.topLeft.lng
-                ..latitude = source.coordinates.topLeft.lat
-              ..topRight = Struct.create<CLLocationCoordinate2D>()
-                ..longitude = source.coordinates.topRight.lng
-                ..latitude = source.coordinates.topRight.lat;
+              ..bottomLeft =
+                  (Struct.create<CLLocationCoordinate2D>()
+                    ..longitude = source.coordinates.bottomLeft.lng.toDouble()
+                    ..latitude = source.coordinates.bottomLeft.lat.toDouble())
+              ..bottomRight =
+                  (Struct.create<CLLocationCoordinate2D>()
+                    ..longitude = source.coordinates.bottomRight.lng.toDouble()
+                    ..latitude = source.coordinates.bottomRight.lat.toDouble())
+              ..topLeft =
+                  (Struct.create<CLLocationCoordinate2D>()
+                    ..longitude = source.coordinates.topLeft.lng.toDouble()
+                    ..latitude = source.coordinates.topLeft.lat.toDouble())
+              ..topRight =
+                  (Struct.create<CLLocationCoordinate2D>()
+                    ..longitude = source.coordinates.topRight.lng.toDouble()
+                    ..latitude = source.coordinates.topRight.lat.toDouble());
         final imageSource = ffiSource = MLNImageSource.new1();
         imageSource.initWithIdentifier_coordinateQuad_URL_(
           source.id.toNSString(),
           coordinates,
           // TODO: Fix iOS-specific conversion
           // source.url.toNSURL()!,
-          NSURL.URLWithString_(source.url.toNSString())!,
+          objc.NSURL.URLWithString_(source.url.toNSString())!,
         );
       case VideoSource():
         throw UnimplementedError('Video source is only supported on web.');

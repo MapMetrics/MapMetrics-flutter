@@ -5,7 +5,6 @@ import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/platform/ios/extensions.dart';
 import 'package:mapmetrics/src/platform/maplibre_ffi.dart';
 import 'package:mapmetrics/src/platform/offline_manager_native.dart';
-import 'package:objective_c/objective_c.dart' as objc;
 
 /// iOS specific implementation of the [OfflineManager].
 class OfflineManagerIos extends OfflineManagerNative {
@@ -81,14 +80,16 @@ class OfflineManagerIos extends OfflineManagerNative {
       // print(json);
       if (json['id'] != regionId) {
         final ffiRegion = MLNTilePyramidOfflineRegion.castFrom(ffiPack.region);
+        // TODO: MLNTilePyramidOfflineRegion does not expose a styleURL getter in FFI. If needed, store styleURL separately when creating the region.
+        // Any usage of region.styleURL has been removed or commented out.
         return OfflineRegion(
           id: regionId,
           bounds: ffiRegion.bounds.toLngLatBounds(),
           minZoom: ffiRegion.minimumZoomLevel,
           maxZoom: ffiRegion.maximumZoomLevel,
           pixelRatio: 1,
-          // TODO
-          styleUrl: ffiRegion.styleURL.toString(),
+          // TODO: styleUrl is not available from FFI. Store it separately if needed.
+          styleUrl: '',
         );
       }
     }
@@ -122,7 +123,8 @@ class OfflineManagerIos extends OfflineManagerNative {
         maxZoom: ffiRegion.maximumZoomLevel,
         // TODO ffiPack.pixelRatio,
         pixelRatio: 1,
-        styleUrl: ffiRegion.styleURL.absoluteString!.toDartString(),
+        // TODO: styleUrl is not available from FFI. Store it separately if needed.
+        styleUrl: '',
       );
     }, growable: false);
   }
@@ -152,5 +154,5 @@ class OfflineManagerIos extends OfflineManagerNative {
 
   @override
   void setOfflineTileCountLimit({required int amount}) =>
-      _storage.setMaximumAllowedMapboxTiles_(amount);
+      _storage.setMaximumAllowedMapboxTiles(amount);
 }
