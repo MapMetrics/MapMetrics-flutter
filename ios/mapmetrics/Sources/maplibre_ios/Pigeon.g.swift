@@ -550,6 +550,8 @@ protocol MapLibreHostApi {
   func getCamera() throws -> MapCamera
   /// Get the current zoom level.
   func getZoomLevel() throws -> Double
+  /// Get the user's current location.
+  func getUserLocation() throws -> LngLat
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -897,6 +899,20 @@ class MapLibreHostApiSetup {
       }
     } else {
       getZoomLevelChannel.setMessageHandler(nil)
+    }
+    /// Get the user's current location.
+    let getUserLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getUserLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getUserLocationChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.getUserLocation()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      getUserLocationChannel.setMessageHandler(nil)
     }
   }
 }

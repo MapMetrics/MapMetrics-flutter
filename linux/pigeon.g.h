@@ -687,6 +687,29 @@ MapmetricsMapLibreHostApiGetZoomLevelResponse* mapmetrics_map_libre_host_api_get
  */
 MapmetricsMapLibreHostApiGetZoomLevelResponse* mapmetrics_map_libre_host_api_get_zoom_level_response_new_error(const gchar* code, const gchar* message, FlValue* details);
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiGetUserLocationResponse, mapmetrics_map_libre_host_api_get_user_location_response, MAPMETRICS, MAP_LIBRE_HOST_API_GET_USER_LOCATION_RESPONSE, GObject)
+
+/**
+ * mapmetrics_map_libre_host_api_get_user_location_response_new:
+ *
+ * Creates a new response to MapLibreHostApi.getUserLocation.
+ *
+ * Returns: a new #MapmetricsMapLibreHostApiGetUserLocationResponse
+ */
+MapmetricsMapLibreHostApiGetUserLocationResponse* mapmetrics_map_libre_host_api_get_user_location_response_new(MapmetricsLngLat* return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_get_user_location_response_new_error:
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Creates a new error response to MapLibreHostApi.getUserLocation.
+ *
+ * Returns: a new #MapmetricsMapLibreHostApiGetUserLocationResponse
+ */
+MapmetricsMapLibreHostApiGetUserLocationResponse* mapmetrics_map_libre_host_api_get_user_location_response_new_error(const gchar* code, const gchar* message, FlValue* details);
+
 /**
  * MapmetricsMapLibreHostApiVTable:
  *
@@ -710,6 +733,7 @@ typedef struct {
   void (*animate_camera)(double latitude, double longitude, double zoom, double bearing, double pitch, int64_t duration, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   MapmetricsMapLibreHostApiGetCameraResponse* (*get_camera)(gpointer user_data);
   MapmetricsMapLibreHostApiGetZoomLevelResponse* (*get_zoom_level)(gpointer user_data);
+  MapmetricsMapLibreHostApiGetUserLocationResponse* (*get_user_location)(gpointer user_data);
 } MapmetricsMapLibreHostApiVTable;
 
 /**

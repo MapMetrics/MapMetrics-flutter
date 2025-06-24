@@ -1639,6 +1639,43 @@ MapmetricsMapLibreHostApiGetZoomLevelResponse* mapmetrics_map_libre_host_api_get
   return self;
 }
 
+struct _MapmetricsMapLibreHostApiGetUserLocationResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiGetUserLocationResponse, mapmetrics_map_libre_host_api_get_user_location_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_get_user_location_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiGetUserLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_USER_LOCATION_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_get_user_location_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_get_user_location_response_init(MapmetricsMapLibreHostApiGetUserLocationResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_get_user_location_response_class_init(MapmetricsMapLibreHostApiGetUserLocationResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_get_user_location_response_dispose;
+}
+
+MapmetricsMapLibreHostApiGetUserLocationResponse* mapmetrics_map_libre_host_api_get_user_location_response_new(MapmetricsLngLat* return_value) {
+  MapmetricsMapLibreHostApiGetUserLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_USER_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_get_user_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_custom_object(132, G_OBJECT(return_value)));
+  return self;
+}
+
+MapmetricsMapLibreHostApiGetUserLocationResponse* mapmetrics_map_libre_host_api_get_user_location_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiGetUserLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_USER_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_get_user_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 struct _MapmetricsMapLibreHostApi {
   GObject parent_instance;
 
@@ -2003,6 +2040,25 @@ static void mapmetrics_map_libre_host_api_get_zoom_level_cb(FlBasicMessageChanne
   }
 }
 
+static void mapmetrics_map_libre_host_api_get_user_location_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->get_user_location == nullptr) {
+    return;
+  }
+
+  g_autoptr(MapmetricsMapLibreHostApiGetUserLocationResponse) response = self->vtable->get_user_location(self->user_data);
+  if (response == nullptr) {
+    g_warning("No response returned to %s.%s", "MapLibreHostApi", "getUserLocation");
+    return;
+  }
+
+  g_autoptr(GError) error = NULL;
+  if (!fl_basic_message_channel_respond(channel, response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "getUserLocation", error->message);
+  }
+}
+
 void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix, const MapmetricsMapLibreHostApiVTable* vtable, gpointer user_data, GDestroyNotify user_data_free_func) {
   g_autofree gchar* dot_suffix = suffix != nullptr ? g_strdup_printf(".%s", suffix) : g_strdup("");
   g_autoptr(MapmetricsMapLibreHostApi) api_data = mapmetrics_map_libre_host_api_new(vtable, user_data, user_data_free_func);
@@ -2059,6 +2115,9 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* get_zoom_level_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getZoomLevel%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) get_zoom_level_channel = fl_basic_message_channel_new(messenger, get_zoom_level_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(get_zoom_level_channel, mapmetrics_map_libre_host_api_get_zoom_level_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* get_user_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getUserLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) get_user_location_channel = fl_basic_message_channel_new(messenger, get_user_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(get_user_location_channel, mapmetrics_map_libre_host_api_get_user_location_cb, g_object_ref(api_data), g_object_unref);
 }
 
 void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix) {
@@ -2116,6 +2175,9 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* get_zoom_level_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getZoomLevel%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) get_zoom_level_channel = fl_basic_message_channel_new(messenger, get_zoom_level_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(get_zoom_level_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* get_user_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getUserLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) get_user_location_channel = fl_basic_message_channel_new(messenger, get_user_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(get_user_location_channel, nullptr, nullptr, nullptr);
 }
 
 void mapmetrics_map_libre_host_api_respond_add_fill_layer(MapmetricsMapLibreHostApiResponseHandle* response_handle) {

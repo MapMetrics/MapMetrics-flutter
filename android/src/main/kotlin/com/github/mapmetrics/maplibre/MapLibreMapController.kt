@@ -480,4 +480,64 @@ class MapLibreMapController(
             callback(Result.failure(e))
         }
     }
+
+    override fun testMethod(
+        value: String,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        println("Android: testMethod called with value: $value")
+        callback(Result.success(Unit))
+    }
+
+    override fun animateCamera(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+        bearing: Double,
+        pitch: Double,
+        duration: Long,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        try {
+            val cameraUpdate = org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
+                CameraPosition.Builder()
+                    .target(LatLng(latitude, longitude))
+                    .zoom(zoom)
+                    .bearing(bearing)
+                    .tilt(pitch)
+                    .build()
+            )
+
+            val animationDuration = if (duration > 0) duration.toInt() else 200
+            mapLibreMap.animateCamera(cameraUpdate, animationDuration)
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error animating camera: ${e.message}")
+            callback(Result.failure(e))
+        }
+    }
+
+    override fun getCamera(): MapCamera {
+        val position = mapLibreMap.cameraPosition
+        val target = position.target ?: LatLng(0.0, 0.0)
+        return MapCamera(
+            LngLat(target.longitude, target.latitude),
+            position.zoom,
+            position.tilt,
+            position.bearing
+        )
+    }
+
+    override fun getZoomLevel(): Double {
+        return mapLibreMap.cameraPosition.zoom
+    }
+
+    override fun getUserLocation(): LngLat {
+        val userLocation = mapLibreMap.locationComponent.lastKnownLocation
+        return if (userLocation != null) {
+            LngLat(userLocation.longitude, userLocation.latitude)
+        } else {
+            LngLat(0.0, 0.0) // Default location if user location is not available
+        }
+    }
 }

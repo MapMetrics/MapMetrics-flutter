@@ -636,6 +636,8 @@ class MapLibreHostApi {
   virtual ErrorOr<MapCamera> GetCamera() = 0;
   // Get the current zoom level.
   virtual ErrorOr<double> GetZoomLevel() = 0;
+  // Get the user's current location.
+  virtual ErrorOr<LngLat> GetUserLocation() = 0;
 
   // The codec used by MapLibreHostApi.
   static const flutter::StandardMessageCodec& GetCodec();

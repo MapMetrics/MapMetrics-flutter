@@ -426,4 +426,17 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
   func getZoomLevel() -> Double {
     return _mapView.zoomLevel
   }
+
+  // Get the user's current location
+  func getUserLocation() -> LngLat {
+    if let userLocation = _mapView.userLocation?.location {
+      return LngLat(
+        lng: userLocation.coordinate.longitude,
+        lat: userLocation.coordinate.latitude
+      )
+    } else {
+      // Return a default location if user location is not available
+      return LngLat(lng: 0.0, lat: 0.0)
+    }
+  }
 }

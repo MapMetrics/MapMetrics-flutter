@@ -167,6 +167,9 @@ abstract class MapLibreHostApi {
 
   /// Get the current zoom level.
   double getZoomLevel();
+
+  /// Get the user's current location.
+  LngLat getUserLocation();
 }
 
 @FlutterApi()

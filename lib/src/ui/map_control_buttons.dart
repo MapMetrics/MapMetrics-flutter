@@ -137,7 +137,28 @@ class _MapControlButtonsState extends State<MapControlButtons> {
               if (!kIsWeb && widget.showTrackLocation) ...[
                 FloatingActionButton(
                   heroTag: 'MapLibreTrackLocationButton',
-                  onPressed: () async => {_initializeLocation(controller)},
+                  onPressed: () async {
+                    print('MapControlButtons: Location button pressed');
+                    await _initializeLocation(controller);
+
+                    // After enabling location, animate to user's location
+                    // For now, we'll use a simple approach - just enable tracking
+                    // which will automatically center on the user's location
+                    try {
+                      print('MapControlButtons: Starting location tracking');
+                      await controller.trackLocation(trackLocation: true);
+
+                      // Set a reasonable zoom level for user location
+                      await controller.animateCamera(
+                        zoom: 15.0,
+                        nativeDuration: const Duration(milliseconds: 1000),
+                      );
+                    } catch (e) {
+                      print(
+                        'MapControlButtons: Error with location tracking: $e',
+                      );
+                    }
+                  },
                   child:
                       _trackState == _TrackLocationState.loading
                           ? const SizedBox.square(
@@ -184,6 +205,30 @@ class _MapControlButtonsState extends State<MapControlButtons> {
     MapController controller, {
     bool trackLocation = true,
   }) async {
+    // Handle iOS case where permission manager is null
+    if (Platform.isIOS) {
+      try {
+        print('MapControlButtons: Enabling location services on iOS');
+        await controller.enableLocation();
+        setState(() => _trackState = _TrackLocationState.gpsFixed);
+
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (widget.onCurrentLocation != null && controller.camera != null) {
+          widget.onCurrentLocation!(controller.camera!.center);
+        }
+
+        if (trackLocation) {
+          print('MapControlButtons: Starting location tracking on iOS');
+          await controller.trackLocation();
+        }
+      } on Exception catch (e) {
+        print('MapControlButtons: Error enabling location on iOS: $e');
+        setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+      }
+      return;
+    }
+
+    // Android case
     if (!_permissionManager!.locationPermissionsGranted) {
       setState(() => _trackState = _TrackLocationState.gpsNotFixed);
     }
@@ -193,12 +238,13 @@ class _MapControlButtonsState extends State<MapControlButtons> {
 
       setState(() => _trackState = _TrackLocationState.gpsFixed);
       await Future.delayed(const Duration(milliseconds: 500));
-      if (widget.onCurrentLocation != null) {
+      if (widget.onCurrentLocation != null && controller.camera != null) {
         widget.onCurrentLocation!(controller.camera!.center);
       }
 
       if (trackLocation) await controller.trackLocation();
-    } on Exception {
+    } on Exception catch (e) {
+      print('MapControlButtons: Error enabling location on Android: $e');
       setState(() => _trackState = _TrackLocationState.gpsNotFixed);
     }
   }

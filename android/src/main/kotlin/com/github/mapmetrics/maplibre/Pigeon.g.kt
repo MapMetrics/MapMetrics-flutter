@@ -537,6 +537,8 @@ interface MapLibreHostApi {
   fun getCamera(): MapCamera
   /** Get the current zoom level. */
   fun getZoomLevel(): Double
+  /** Get the user's current location. */
+  fun getUserLocation(): LngLat
 
   companion object {
     /** The codec used by MapLibreHostApi. */
@@ -896,6 +898,21 @@ interface MapLibreHostApi {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               listOf(api.getZoomLevel())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getUserLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.getUserLocation())
             } catch (exception: Throwable) {
               wrapError(exception)
             }
