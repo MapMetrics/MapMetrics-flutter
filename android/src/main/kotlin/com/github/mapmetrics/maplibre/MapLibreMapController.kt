@@ -392,4 +392,92 @@ class MapLibreMapController(
         mapLibreMap.style?.addImage(id, bitmap)
         callback(Result.success(Unit))
     }
+
+    override fun addClusteredGeoJsonSource(
+        id: String,
+        data: String,
+        clustered: Boolean,
+        clusterRadius: Double,
+        clusterMaxZoom: Double,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        try {
+            println("Android: addClusteredGeoJsonSource called with id: $id, clustered: $clustered")
+            val style = mapLibreMap.style
+            if (style == null) {
+                println("Android: Error - Style not available")
+                callback(Result.failure(Exception("Style not available")))
+                return
+            }
+
+            val options = org.maplibre.android.style.sources.GeoJsonOptions()
+            if (clustered) {
+                options.withCluster(true)
+                options.withClusterRadius(clusterRadius.toInt())
+                options.withClusterMaxZoom(clusterMaxZoom.toInt())
+                println("Android: Clustering enabled with radius: $clusterRadius, maxZoom: $clusterMaxZoom")
+            }
+
+            val source = if (data.startsWith("http://") || data.startsWith("https://")) {
+                println("Android: Creating URL source")
+                org.maplibre.android.style.sources.GeoJsonSource(id, data, options)
+            } else {
+                println("Android: Creating GeoJSON data source with ${data.length} characters")
+                org.maplibre.android.style.sources.GeoJsonSource(id, data, options)
+            }
+            style.addSource(source)
+            println("Android: Successfully added clustered source with ID: $id")
+
+            // Add visualization layers for clusters if clustering is enabled
+            if (clustered) {
+                println("Android: Adding visualization layers for clusters")
+
+                // Add layer for unclustered points (individual points)
+                val unclusteredLayer = CircleLayer("$id-unclustered", id)
+                unclusteredLayer.setProperties(
+                    org.maplibre.android.style.layers.PropertyFactory.circleRadius(8f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleColor("#11b4da"),
+                    org.maplibre.android.style.layers.PropertyFactory.circleOpacity(0.8f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth(2f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor("#ffffff")
+                )
+                unclusteredLayer.setFilter(org.maplibre.android.style.expressions.Expression.not(
+                    org.maplibre.android.style.expressions.Expression.has("point_count")
+                ))
+                style.addLayer(unclusteredLayer)
+                println("Android: Added unclustered points layer")
+
+                // Add layer for clusters (colored circles)
+                val clustersLayer = CircleLayer("$id-clusters", id)
+                clustersLayer.setProperties(
+                    org.maplibre.android.style.layers.PropertyFactory.circleRadius(20f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleColor("#f1f075"),
+                    org.maplibre.android.style.layers.PropertyFactory.circleOpacity(0.8f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth(2f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor("#ffffff")
+                )
+                clustersLayer.setFilter(org.maplibre.android.style.expressions.Expression.has("point_count"))
+                style.addLayer(clustersLayer)
+                println("Android: Added clusters layer")
+
+                // Add layer for cluster count labels
+                val clusterCountLayer = SymbolLayer("$id-cluster-count", id)
+                clusterCountLayer.setProperties(
+                    org.maplibre.android.style.layers.PropertyFactory.textField(
+                        org.maplibre.android.style.expressions.Expression.get("point_count_abbreviated")
+                    ),
+                    org.maplibre.android.style.layers.PropertyFactory.textSize(12f),
+                    org.maplibre.android.style.layers.PropertyFactory.textColor("#ffffff")
+                )
+                clusterCountLayer.setFilter(org.maplibre.android.style.expressions.Expression.has("point_count"))
+                style.addLayer(clusterCountLayer)
+                println("Android: Added cluster count labels layer")
+            }
+
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error adding clustered source: ${e.message}")
+            callback(Result.failure(e))
+        }
+    }
 }

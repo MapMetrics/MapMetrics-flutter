@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 
 @immutable
@@ -13,15 +14,22 @@ class ClusteringPage extends StatefulWidget {
 
 class _ClusteringPageState extends State<ClusteringPage> {
   @override
+  void initState() {
+    super.initState();
+    print('ClusteringPage: initState called');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print('ClusteringPage: build called');
     return Scaffold(
       appBar: AppBar(title: const Text('Clustering Example')),
       body: MapMetricsView(
         options: MapOptions(
           initCenter: Position(
-            -151.5,
-            63.1,
-          ), // Alaska - where most earthquake data is
+            10.0,
+            50.0,
+          ), // Europe - where our test points are
           initZoom: 4,
         ),
         onStyleLoaded: _onStyleLoaded,
@@ -36,7 +44,10 @@ class _ClusteringPageState extends State<ClusteringPage> {
         onEvent: (event) {
           if (event case MapEventClick()) {
             // Handle click events for clusters and points
-            print('Clicked at: ${event.point}');
+            print('ClusteringPage: Clicked at: ${event.point}');
+          }
+          if (event case MapEventStyleLoaded()) {
+            print('ClusteringPage: MapEventStyleLoaded received');
           }
         },
       ),
@@ -44,42 +55,53 @@ class _ClusteringPageState extends State<ClusteringPage> {
   }
 
   Future<void> _onStyleLoaded(StyleController style) async {
-    print('iOS: Style loaded, adding earthquake source...');
+    print('ClusteringPage: Style loaded, adding test points source...');
+
+    // Load local GeoJSON file instead of URL
+    final testPointsData = await DefaultAssetBundle.of(
+      context,
+    ).loadString('assets/geojson/test-points.json');
+    print(
+      'ClusteringPage: Loaded test points data: ${testPointsData.length} characters',
+    );
 
     // Add GeoJSON source with clustering enabled
-    const earthquakes = GeoJsonSource(
-      id: 'earthquakes',
-      data:
-          'https://maplibre.org/maplibre-gl-js/docs/assets/earthquakes.geojson',
+    final testPoints = GeoJsonSource(
+      id: 'test-points',
+      data: testPointsData,
       cluster: true,
       clusterRadius: 50,
       clusterMaxZoom: 14,
     );
-    await style.addSource(earthquakes);
-    print('iOS: Added earthquake source');
+    print(
+      'ClusteringPage: About to add source with cluster: ${testPoints.cluster}',
+    );
+    await style.addSource(testPoints);
+    print('ClusteringPage: Added test points source');
 
     // Add layer for unclustered points FIRST (so it renders below clusters)
     const unclusteredLayer = CircleStyleLayer(
       id: 'unclustered-point',
-      sourceId: 'earthquakes',
+      sourceId: 'test-points',
       filter: [
         '!',
         ['has', 'point_count'],
       ], // Only show features that DON'T have point_count (individual points)
       paint: {
         'circle-color': '#11b4da',
-        'circle-radius': 4,
-        'circle-stroke-width': 1,
+        'circle-radius': 8,
+        'circle-stroke-width': 2,
         'circle-stroke-color': '#fff',
       },
     );
+    print('ClusteringPage: About to add unclustered layer');
     await style.addLayer(unclusteredLayer);
-    print('iOS: Added unclustered points layer');
+    print('ClusteringPage: Added unclustered points layer');
 
     // Add layer for clusters (colored circles) - SECOND (renders above points)
     const clustersLayer = CircleStyleLayer(
       id: 'clusters',
-      sourceId: 'earthquakes',
+      sourceId: 'test-points',
       filter: [
         'has',
         'point_count',
@@ -105,13 +127,14 @@ class _ClusteringPageState extends State<ClusteringPage> {
         ],
       },
     );
+    print('ClusteringPage: About to add clusters layer');
     await style.addLayer(clustersLayer);
-    print('iOS: Added clusters layer');
+    print('ClusteringPage: Added clusters layer');
 
     // Add layer for cluster count labels - LAST (renders on top of everything)
     const clusterCountLayer = SymbolStyleLayer(
       id: 'cluster-count',
-      sourceId: 'earthquakes',
+      sourceId: 'test-points',
       filter: ['has', 'point_count'], // Only show labels for clusters
       layout: {
         'text-field': '{point_count_abbreviated}',
@@ -119,7 +142,8 @@ class _ClusteringPageState extends State<ClusteringPage> {
         'text-size': 12,
       },
     );
+    print('ClusteringPage: About to add cluster count layer');
     await style.addLayer(clusterCountLayer);
-    print('iOS: Added cluster count layer');
+    print('ClusteringPage: Added cluster count layer');
   }
 }

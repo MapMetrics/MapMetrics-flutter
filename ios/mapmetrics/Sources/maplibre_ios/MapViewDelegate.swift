@@ -128,7 +128,12 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
   }
 
   // MLNMapViewDelegate method called when map has finished loading
-  func mapView(_ mapView: MLNMapView, didFinishLoading _: MLNStyle) {
+  func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
+    print("iOS: MapViewDelegate - didFinishLoading called, setting current style")
+    // Set the current style for clustering support
+    MapLibreIosPlugin.setCurrentStyle(style)
+    print("iOS: MapViewDelegate - Current style set successfully")
+    
     // setCamera() can only be used after the map did finish loading
     var camera = _mapView.camera
     camera.pitch = _mapOptions!.pitch
@@ -254,6 +259,105 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     print("addImage afters")
     print("added image: \(style.image(forName: id))")
     // }
+    completion(.success(()))
+  }
+  
+  func addClusteredGeoJsonSource(
+    id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    print("Swift: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
+    
+    guard let style = _mapView.style else {
+      print("Swift: Error - Style not available")
+      completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+      return
+    }
+    
+    print("Swift: Style is available, creating clustering options")
+    
+    // Create clustering options
+    var options: [MLNShapeSourceOption: Any] = [:]
+    if clustered {
+      options[.clustered] = true
+      options[.clusterRadius] = clusterRadius
+      options[.maximumZoomLevelForClustering] = clusterMaxZoom
+      print("Swift: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
+    }
+    
+    // Create the shape source
+    let source: MLNShapeSource
+    if data.hasPrefix("http://") || data.hasPrefix("https://") {
+      // Handle URL source
+      print("Swift: Creating URL source")
+      guard let url = URL(string: data) else {
+        print("Swift: Error - Invalid URL: \(data)")
+        completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])))
+        return
+      }
+      source = MLNShapeSource(identifier: id, url: url, options: options)
+    } else {
+      // Handle GeoJSON data
+      print("Swift: Creating GeoJSON data source with \(data.count) characters")
+      guard let dataBytes = data.data(using: .utf8),
+            let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
+        print("Swift: Error - Invalid GeoJSON data")
+        completion(.failure(NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])))
+        return
+      }
+      source = MLNShapeSource(identifier: id, shape: shape, options: options)
+    }
+    
+    // Add the source to the style
+    print("Swift: Adding source to style")
+    style.addSource(source)
+    print("Swift: Successfully added clustered source with ID: \(id)")
+    
+    // Add visualization layers for the clusters
+    if clustered {
+      print("Swift: Adding visualization layers for clusters")
+      
+      // Add layer for unclustered points (individual points)
+      let unclusteredLayer = MLNCircleStyleLayer(identifier: "\(id)-unclustered", source: source)
+      unclusteredLayer.circleRadius = NSExpression(forConstantValue: 8)
+      unclusteredLayer.circleColor = NSExpression(forConstantValue: UIColor.systemBlue)
+      unclusteredLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+      unclusteredLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+      unclusteredLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
+      
+      // Filter to show only unclustered points
+      unclusteredLayer.predicate = NSPredicate(format: "point_count == nil")
+      
+      style.addLayer(unclusteredLayer)
+      print("Swift: Added unclustered points layer")
+      
+      // Add layer for clusters (colored circles)
+      let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
+      clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
+      clustersLayer.circleColor = NSExpression(forConstantValue: UIColor.systemOrange)
+      clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+      clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+      clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
+      
+      // Filter to show only clusters
+      clustersLayer.predicate = NSPredicate(format: "point_count != nil")
+      
+      style.addLayer(clustersLayer)
+      print("Swift: Added clusters layer")
+      
+      // Add layer for cluster count labels
+      let clusterCountLayer = MLNSymbolStyleLayer(identifier: "\(id)-cluster-count", source: source)
+      clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
+      clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
+      clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor.white)
+      
+      // Filter to show only clusters
+      clusterCountLayer.predicate = NSPredicate(format: "point_count != nil")
+      
+      style.addLayer(clusterCountLayer)
+      print("Swift: Added cluster count labels layer")
+    }
+    
     completion(.success(()))
   }
 }

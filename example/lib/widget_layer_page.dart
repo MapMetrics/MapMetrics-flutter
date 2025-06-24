@@ -13,7 +13,14 @@ class WidgetLayerPage extends StatefulWidget {
 
 class _WidgetLayerPageState extends State<WidgetLayerPage> {
   @override
+  void initState() {
+    super.initState();
+    print('WidgetLayerPage: initState called');
+  }
+
+  @override
   Widget build(BuildContext context) {
+    print('WidgetLayerPage: build called');
     return Scaffold(
       appBar: AppBar(title: const Text('Widget Layer')),
       body: MapMetricsView(
@@ -22,6 +29,14 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
           initZoom: 9,
         ),
         onStyleLoaded: _onStyleLoaded,
+        onEvent: (event) {
+          if (event case MapEventClick()) {
+            print('WidgetLayerPage: Clicked at: ${event.point}');
+          }
+          if (event case MapEventStyleLoaded()) {
+            print('WidgetLayerPage: MapEventStyleLoaded received');
+          }
+        },
         mapChildren: [
           WidgetLayer(
             markers: [
@@ -80,6 +95,7 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
   }
 
   Future<void> _onStyleLoaded(StyleController style) async {
+    print('WidgetLayerPage: Style loaded');
     // Widget layer example doesn't need additional style setup
   }
 }

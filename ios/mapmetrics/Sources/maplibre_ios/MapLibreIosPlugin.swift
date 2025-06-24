@@ -3,6 +3,8 @@ import MapLibre
 import UIKit
 
 public class MapLibreIosPlugin: NSObject, FlutterPlugin {
+  private static var currentStyle: MLNStyle?
+  
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(
       name: "mapmetrics", binaryMessenger: registrar.messenger()
@@ -24,8 +26,282 @@ public class MapLibreIosPlugin: NSObject, FlutterPlugin {
     switch call.method {
     case "getPlatformVersion":
       result("iOS " + UIDevice.current.systemVersion)
+    case "addClusteredGeoJsonSource":
+      guard let args = call.arguments as? [String: Any],
+            let id = args["id"] as? String,
+            let data = args["data"] as? String,
+            let clustered = args["clustered"] as? Bool,
+            let clusterRadius = args["clusterRadius"] as? Double,
+            let clusterMaxZoom = args["clusterMaxZoom"] as? Double else {
+        print("iOS: addClusteredGeoJsonSource - Invalid arguments")
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for addClusteredGeoJsonSource", details: nil))
+        return
+      }
+      
+      print("iOS: addClusteredGeoJsonSource - Adding source with ID: \(id), clustered: \(clustered)")
+      
+      // Create clustering options
+      var options: [MLNShapeSourceOption: Any] = [:]
+      if clustered {
+        options[.clustered] = true
+        options[.clusterRadius] = clusterRadius
+        options[.maximumZoomLevelForClustering] = clusterMaxZoom
+        print("iOS: addClusteredGeoJsonSource - Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
+      }
+      
+      // Create the shape source
+      let source: MLNShapeSource
+      if data.hasPrefix("http://") || data.hasPrefix("https://") {
+        // Handle URL source
+        guard let url = URL(string: data) else {
+          print("iOS: addClusteredGeoJsonSource - Invalid URL: \(data)")
+          result(FlutterError(code: "INVALID_URL", message: "Invalid URL: \(data)", details: nil))
+          return
+        }
+        source = MLNShapeSource(identifier: id, url: url, options: options)
+        print("iOS: addClusteredGeoJsonSource - Created URL source")
+      } else {
+        // Handle GeoJSON data
+        guard let dataBytes = data.data(using: .utf8),
+              let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
+          print("iOS: addClusteredGeoJsonSource - Invalid GeoJSON data")
+          result(FlutterError(code: "INVALID_GEOJSON", message: "Invalid GeoJSON data", details: nil))
+          return
+        }
+        source = MLNShapeSource(identifier: id, shape: shape, options: options)
+        print("iOS: addClusteredGeoJsonSource - Created GeoJSON source with \(data.count) characters")
+      }
+      
+      // Add the source to the current style
+      if let currentStyle = MapLibreIosPlugin.currentStyle {
+        currentStyle.addSource(source)
+        print("iOS: addClusteredGeoJsonSource - Source added to style successfully")
+        
+        // Add a default circle layer to visualize the clusters
+        let circleLayer = MLNCircleStyleLayer(identifier: "\(id)-circles", source: source)
+        circleLayer.circleRadius = NSExpression(forConstantValue: 20)
+        circleLayer.circleColor = NSExpression(forConstantValue: UIColor.red)
+        circleLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+        circleLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+        circleLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
+        
+        currentStyle.addLayer(circleLayer)
+        print("iOS: addClusteredGeoJsonSource - Circle layer added for visualization")
+        
+        result(nil)
+      } else {
+        print("iOS: addClusteredGeoJsonSource - No current style available")
+        result(FlutterError(code: "NO_STYLE", message: "No current style available", details: nil))
+      }
+    case "addCircleLayer":
+      guard let args = call.arguments as? [String: Any],
+            let id = args["id"] as? String,
+            let sourceId = args["sourceId"] as? String,
+            let layout = args["layout"] as? [String: Any],
+            let paint = args["paint"] as? [String: Any] else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for addCircleLayer", details: nil))
+        return
+      }
+      
+      if let currentStyle = MapLibreIosPlugin.currentStyle {
+        let layer = MLNCircleStyleLayer(identifier: id, source: currentStyle.source(withIdentifier: sourceId)!)
+        
+        // Apply layout properties
+        for (key, value) in layout {
+          layer.setValue(value, forKey: key)
+        }
+        
+        // Apply paint properties
+        for (key, value) in paint {
+          layer.setValue(value, forKey: key)
+        }
+        
+        currentStyle.addLayer(layer)
+        result(nil)
+      } else {
+        result(FlutterError(code: "NO_STYLE", message: "No current style available", details: nil))
+      }
+    case "addSymbolLayer":
+      guard let args = call.arguments as? [String: Any],
+            let id = args["id"] as? String,
+            let sourceId = args["sourceId"] as? String,
+            let layout = args["layout"] as? [String: Any],
+            let paint = args["paint"] as? [String: Any] else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for addSymbolLayer", details: nil))
+        return
+      }
+      
+      if let currentStyle = MapLibreIosPlugin.currentStyle {
+        let layer = MLNSymbolStyleLayer(identifier: id, source: currentStyle.source(withIdentifier: sourceId)!)
+        
+        // Apply layout properties
+        for (key, value) in layout {
+          layer.setValue(value, forKey: key)
+        }
+        
+        // Apply paint properties
+        for (key, value) in paint {
+          layer.setValue(value, forKey: key)
+        }
+        
+        currentStyle.addLayer(layer)
+        result(nil)
+      } else {
+        result(FlutterError(code: "NO_STYLE", message: "No current style available", details: nil))
+      }
+    case "addFillLayer":
+      guard let args = call.arguments as? [String: Any],
+            let id = args["id"] as? String,
+            let sourceId = args["sourceId"] as? String,
+            let layout = args["layout"] as? [String: Any],
+            let paint = args["paint"] as? [String: Any] else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for addFillLayer", details: nil))
+        return
+      }
+      
+      if let currentStyle = MapLibreIosPlugin.currentStyle {
+        let layer = MLNFillStyleLayer(identifier: id, source: currentStyle.source(withIdentifier: sourceId)!)
+        
+        // Apply layout properties
+        for (key, value) in layout {
+          layer.setValue(value, forKey: key)
+        }
+        
+        // Apply paint properties
+        for (key, value) in paint {
+          layer.setValue(value, forKey: key)
+        }
+        
+        currentStyle.addLayer(layer)
+        result(nil)
+      } else {
+        result(FlutterError(code: "NO_STYLE", message: "No current style available", details: nil))
+      }
+    case "addLineLayer":
+      guard let args = call.arguments as? [String: Any],
+            let id = args["id"] as? String,
+            let sourceId = args["sourceId"] as? String,
+            let layout = args["layout"] as? [String: Any],
+            let paint = args["paint"] as? [String: Any] else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for addLineLayer", details: nil))
+        return
+      }
+      
+      if let currentStyle = MapLibreIosPlugin.currentStyle {
+        let layer = MLNLineStyleLayer(identifier: id, source: currentStyle.source(withIdentifier: sourceId)!)
+        
+        // Apply layout properties
+        for (key, value) in layout {
+          layer.setValue(value, forKey: key)
+        }
+        
+        // Apply paint properties
+        for (key, value) in paint {
+          layer.setValue(value, forKey: key)
+        }
+        
+        currentStyle.addLayer(layer)
+        result(nil)
+      } else {
+        result(FlutterError(code: "NO_STYLE", message: "No current style available", details: nil))
+      }
+    case "addBackgroundLayer":
+      guard let args = call.arguments as? [String: Any],
+            let id = args["id"] as? String,
+            let layout = args["layout"] as? [String: Any],
+            let paint = args["paint"] as? [String: Any] else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for addBackgroundLayer", details: nil))
+        return
+      }
+      
+      if let currentStyle = MapLibreIosPlugin.currentStyle {
+        let layer = MLNBackgroundStyleLayer(identifier: id)
+        
+        // Apply layout properties
+        for (key, value) in layout {
+          layer.setValue(value, forKey: key)
+        }
+        
+        // Apply paint properties
+        for (key, value) in paint {
+          layer.setValue(value, forKey: key)
+        }
+        
+        currentStyle.addLayer(layer)
+        result(nil)
+      } else {
+        result(FlutterError(code: "NO_STYLE", message: "No current style available", details: nil))
+      }
+    case "addImage":
+      guard let args = call.arguments as? [String: Any],
+            let id = args["id"] as? String,
+            let bytes = args["bytes"] as? FlutterStandardTypedData else {
+        result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for addImage", details: nil))
+        return
+      }
+      
+      if let currentStyle = MapLibreIosPlugin.currentStyle,
+         let image = UIImage(data: bytes.data) {
+        currentStyle.setImage(image, forName: id)
+        result(nil)
+      } else {
+        result(FlutterError(code: "NO_STYLE", message: "No current style available or invalid image data", details: nil))
+      }
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  // MARK: - FFI Bridge for Clustering
+  @objc public static func createShapeSourceWithClustering(
+    _ identifier: UnsafePointer<CChar>,
+    _ shape: UnsafePointer<CChar>,
+    _ options: UnsafePointer<CChar>
+  ) -> UnsafeMutableRawPointer? {
+    let id = String(cString: identifier)
+    let shapeStr = String(cString: shape)
+    let optionsStr = String(cString: options)
+    
+    // Parse options JSON to get clustering parameters
+    guard let optionsData = optionsStr.data(using: .utf8),
+          let optionsDict = try? JSONSerialization.jsonObject(with: optionsData) as? [String: Any] else {
+      return nil
+    }
+    
+    let isClustered = optionsDict["clustered"] as? Bool ?? false
+    let clusterRadius = optionsDict["clusterRadius"] as? Double ?? 50.0
+    let clusterMaxZoom = optionsDict["maximumZoomLevelForClustering"] as? Double ?? 16.0
+    
+    var mlOptions: [MLNShapeSourceOption: Any] = [:]
+    
+    if isClustered {
+      mlOptions[.clustered] = true
+      mlOptions[.clusterRadius] = clusterRadius
+      mlOptions[.maximumZoomLevelForClustering] = clusterMaxZoom
+    }
+    
+    let source: MLNShapeSource
+    
+    // Check if shape is a URL or GeoJSON data
+    if shapeStr.hasPrefix("http://") || shapeStr.hasPrefix("https://") {
+      // Handle URL source
+      guard let url = URL(string: shapeStr) else { return nil }
+      source = MLNShapeSource(identifier: id, url: url, options: mlOptions)
+    } else {
+      // Handle GeoJSON data
+      guard let data = shapeStr.data(using: .utf8),
+            let mlShape = try? MLNShape(data: data, encoding: String.Encoding.utf8.rawValue) else {
+        return nil
+      }
+      source = MLNShapeSource(identifier: id, shape: mlShape, options: mlOptions)
+    }
+    
+    // Return an unmanaged pointer to the source
+    return Unmanaged.passRetained(source).toOpaque()
+  }
+
+  // Method to set the current style
+  public static func setCurrentStyle(_ style: MLNStyle) {
+    currentStyle = style
   }
 }
