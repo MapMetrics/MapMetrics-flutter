@@ -31,6 +31,8 @@ class _ClusteringPageState extends State<ClusteringPage> {
             50.0,
           ), // Europe - where our test points are
           initZoom: 4,
+          minZoom: 1, // Allow zooming out to level 1
+          maxZoom: 20, // Allow zooming in to level 20
         ),
         onStyleLoaded: _onStyleLoaded,
         mapChildren: [

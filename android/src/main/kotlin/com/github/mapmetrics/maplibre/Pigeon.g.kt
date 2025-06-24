@@ -99,6 +99,33 @@ enum class CameraChangeReason(val raw: Int) {
 }
 
 /**
+ * A longitude/latitude coordinate object.
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class LngLat (
+  /** The longitude */
+  val lng: Double,
+  /** The latitude */
+  val lat: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): LngLat {
+      val lng = pigeonVar_list[0] as Double
+      val lat = pigeonVar_list[1] as Double
+      return LngLat(lng, lat)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      lng,
+      lat,
+    )
+  }
+}
+
+/**
  * The map options define initial values for the MapLibre map.
  *
  * Generated class from Pigeon that represents data sent in messages.
@@ -196,33 +223,6 @@ data class MapGestures (
       pan,
       zoom,
       tilt,
-    )
-  }
-}
-
-/**
- * A longitude/latitude coordinate object.
- *
- * Generated class from Pigeon that represents data sent in messages.
- */
-data class LngLat (
-  /** The longitude */
-  val lng: Double,
-  /** The latitude */
-  val lat: Double
-)
- {
-  companion object {
-    fun fromList(pigeonVar_list: List<Any?>): LngLat {
-      val lng = pigeonVar_list[0] as Double
-      val lat = pigeonVar_list[1] as Double
-      return LngLat(lng, lat)
-    }
-  }
-  fun toList(): List<Any?> {
-    return listOf(
-      lng,
-      lat,
     )
   }
 }
@@ -403,17 +403,17 @@ private open class PigeonPigeonCodec : StandardMessageCodec() {
       }
       132.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          MapOptions.fromList(it)
+          LngLat.fromList(it)
         }
       }
       133.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          MapGestures.fromList(it)
+          MapOptions.fromList(it)
         }
       }
       134.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          LngLat.fromList(it)
+          MapGestures.fromList(it)
         }
       }
       135.toByte() -> {
@@ -458,15 +458,15 @@ private open class PigeonPigeonCodec : StandardMessageCodec() {
         stream.write(131)
         writeValue(stream, value.raw)
       }
-      is MapOptions -> {
+      is LngLat -> {
         stream.write(132)
         writeValue(stream, value.toList())
       }
-      is MapGestures -> {
+      is MapOptions -> {
         stream.write(133)
         writeValue(stream, value.toList())
       }
-      is LngLat -> {
+      is MapGestures -> {
         stream.write(134)
         writeValue(stream, value.toList())
       }
@@ -526,6 +526,17 @@ interface MapLibreHostApi {
   fun addImage(id: String, bytes: ByteArray, callback: (Result<Unit>) -> Unit)
   /** Add a GeoJSON source with clustering to the map style. */
   fun addClusteredGeoJsonSource(id: String, data: String, clustered: Boolean, clusterRadius: Double, clusterMaxZoom: Double, callback: (Result<Unit>) -> Unit)
+  /** Minimal test method to debug Pigeon generation. */
+  fun testMethod(value: String, callback: (Result<Unit>) -> Unit)
+  /**
+   * Animate the camera to a new position.
+   * Use -1.0 or double.nan for any value you do not want to change.
+   */
+  fun animateCamera(latitude: Double, longitude: Double, zoom: Double, bearing: Double, pitch: Double, duration: Long, callback: (Result<Unit>) -> Unit)
+  /** Get the current camera state. */
+  fun getCamera(): MapCamera
+  /** Get the current zoom level. */
+  fun getZoomLevel(): Double
 
   companion object {
     /** The codec used by MapLibreHostApi. */
@@ -816,6 +827,79 @@ interface MapLibreHostApi {
                 reply.reply(wrapResult(null))
               }
             }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val valueArg = args[0] as String
+            api.testMethod(valueArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.animateCamera$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val latitudeArg = args[0] as Double
+            val longitudeArg = args[1] as Double
+            val zoomArg = args[2] as Double
+            val bearingArg = args[3] as Double
+            val pitchArg = args[4] as Double
+            val durationArg = args[5] as Long
+            api.animateCamera(latitudeArg, longitudeArg, zoomArg, bearingArg, pitchArg, durationArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getCamera$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.getCamera())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getZoomLevel$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.getZoomLevel())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

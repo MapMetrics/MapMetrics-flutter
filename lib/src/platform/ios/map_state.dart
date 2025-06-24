@@ -70,18 +70,24 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     double webSpeed = 1.2,
     Duration? webMaxDuration,
   }) async {
-    if (zoom != null) _mapView.zoomLevel = zoom;
-    final ffiCamera = _mapView.camera;
-    if (pitch != null) ffiCamera.pitch = pitch;
-    if (bearing != null) ffiCamera.heading = bearing;
-    if (center != null) {
-      // TODO: Fix iOS-specific conversion
-      // ffiCamera.centerCoordinate = center.toCLLocationCoordinate2D();
-    }
-    _mapView.flyToCamera_withDuration_completionHandler_(
-      ffiCamera,
-      nativeDuration.inMicroseconds / 1000000,
-      null,
+    print(
+      'MapLibreMapStateIos: animateCamera called - zoom: $zoom, center: $center',
+    );
+
+    // Use sentinel values for optional parameters
+    final latitude = center?.lat ?? double.nan;
+    final longitude = center?.lng ?? double.nan;
+    final zoomValue = zoom ?? double.nan;
+    final bearingValue = bearing ?? double.nan;
+    final pitchValue = pitch ?? double.nan;
+
+    await _hostApi.animateCamera(
+      latitude.toDouble(),
+      longitude.toDouble(),
+      zoomValue,
+      bearingValue,
+      pitchValue,
+      nativeDuration.inMilliseconds,
     );
   }
 
@@ -128,10 +134,9 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
 
   @override
   MapCamera getCamera() {
+    // Use FFI stubs for now since Pigeon methods are async
     final ffiCamera = _mapView.camera;
     return MapCamera(
-      // TODO: Fix iOS-specific conversion
-      // center: ffiCamera.centerCoordinate.toPosition(),
       center: Position(0, 0), // Temporary stub
       zoom: _mapView.zoomLevel,
       bearing: ffiCamera.heading,

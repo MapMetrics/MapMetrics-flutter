@@ -360,4 +360,70 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     
     completion(.success(()))
   }
+
+  // Animate the camera to a new position (Pigeon API)
+  func animateCamera(
+    latitude: Double,
+    longitude: Double,
+    zoom: Double,
+    bearing: Double,
+    pitch: Double,
+    duration: Int64,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    DispatchQueue.main.async {
+      var camera = self._mapView.camera
+      
+      // Use sentinel values (-1.0 or NaN) to indicate "no change"
+      if !latitude.isNaN && latitude != -1.0 {
+        camera.centerCoordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+      }
+      if !bearing.isNaN && bearing != -1.0 {
+        camera.heading = bearing
+      }
+      if !pitch.isNaN && pitch != -1.0 {
+        camera.pitch = pitch
+      }
+      
+      // Set camera with animation
+      let animationDuration = duration > 0 ? Double(duration) / 1000.0 : 0.2
+      self._mapView.setCamera(camera, withDuration: animationDuration, animationTimingFunction: nil)
+      
+      // Handle zoom separately if needed
+      if !zoom.isNaN && zoom != -1.0 {
+        self._mapView.setZoomLevel(zoom, animated: true)
+      }
+      
+      completion(.success(()))
+    }
+  }
+
+  // Test method for debugging Pigeon generation
+  func testMethod(
+    value: String,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    print("Swift: testMethod called with value: \(value)")
+    completion(.success(()))
+  }
+
+  // Get the current camera state
+  func getCamera() -> MapCamera {
+    let camera = _mapView.camera
+    let center = LngLat(
+      lng: camera.centerCoordinate.longitude,
+      lat: camera.centerCoordinate.latitude
+    )
+    return MapCamera(
+      center: center,
+      zoom: _mapView.zoomLevel,
+      pitch: camera.pitch,
+      bearing: camera.heading
+    )
+  }
+
+  // Get the current zoom level
+  func getZoomLevel() -> Double {
+    return _mapView.zoomLevel
+  }
 }

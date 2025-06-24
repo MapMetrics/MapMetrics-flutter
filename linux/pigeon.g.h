@@ -59,6 +59,45 @@ typedef enum {
 } MapmetricsCameraChangeReason;
 
 /**
+ * MapmetricsLngLat:
+ *
+ * A longitude/latitude coordinate object.
+ */
+
+G_DECLARE_FINAL_TYPE(MapmetricsLngLat, mapmetrics_lng_lat, MAPMETRICS, LNG_LAT, GObject)
+
+/**
+ * mapmetrics_lng_lat_new:
+ * lng: field in this object.
+ * lat: field in this object.
+ *
+ * Creates a new #LngLat object.
+ *
+ * Returns: a new #MapmetricsLngLat
+ */
+MapmetricsLngLat* mapmetrics_lng_lat_new(double lng, double lat);
+
+/**
+ * mapmetrics_lng_lat_get_lng
+ * @object: a #MapmetricsLngLat.
+ *
+ * The longitude
+ *
+ * Returns: the field value.
+ */
+double mapmetrics_lng_lat_get_lng(MapmetricsLngLat* object);
+
+/**
+ * mapmetrics_lng_lat_get_lat
+ * @object: a #MapmetricsLngLat.
+ *
+ * The latitude
+ *
+ * Returns: the field value.
+ */
+double mapmetrics_lng_lat_get_lat(MapmetricsLngLat* object);
+
+/**
  * MapmetricsMapOptions:
  *
  * The map options define initial values for the MapLibre map.
@@ -267,45 +306,6 @@ gboolean mapmetrics_map_gestures_get_zoom(MapmetricsMapGestures* object);
  * Returns: the field value.
  */
 gboolean mapmetrics_map_gestures_get_tilt(MapmetricsMapGestures* object);
-
-/**
- * MapmetricsLngLat:
- *
- * A longitude/latitude coordinate object.
- */
-
-G_DECLARE_FINAL_TYPE(MapmetricsLngLat, mapmetrics_lng_lat, MAPMETRICS, LNG_LAT, GObject)
-
-/**
- * mapmetrics_lng_lat_new:
- * lng: field in this object.
- * lat: field in this object.
- *
- * Creates a new #LngLat object.
- *
- * Returns: a new #MapmetricsLngLat
- */
-MapmetricsLngLat* mapmetrics_lng_lat_new(double lng, double lat);
-
-/**
- * mapmetrics_lng_lat_get_lng
- * @object: a #MapmetricsLngLat.
- *
- * The longitude
- *
- * Returns: the field value.
- */
-double mapmetrics_lng_lat_get_lng(MapmetricsLngLat* object);
-
-/**
- * mapmetrics_lng_lat_get_lat
- * @object: a #MapmetricsLngLat.
- *
- * The latitude
- *
- * Returns: the field value.
- */
-double mapmetrics_lng_lat_get_lat(MapmetricsLngLat* object);
 
 /**
  * MapmetricsOffset:
@@ -641,6 +641,52 @@ MapmetricsMapLibreHostApiDisposeResponse* mapmetrics_map_libre_host_api_dispose_
  */
 MapmetricsMapLibreHostApiDisposeResponse* mapmetrics_map_libre_host_api_dispose_response_new_error(const gchar* code, const gchar* message, FlValue* details);
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiGetCameraResponse, mapmetrics_map_libre_host_api_get_camera_response, MAPMETRICS, MAP_LIBRE_HOST_API_GET_CAMERA_RESPONSE, GObject)
+
+/**
+ * mapmetrics_map_libre_host_api_get_camera_response_new:
+ *
+ * Creates a new response to MapLibreHostApi.getCamera.
+ *
+ * Returns: a new #MapmetricsMapLibreHostApiGetCameraResponse
+ */
+MapmetricsMapLibreHostApiGetCameraResponse* mapmetrics_map_libre_host_api_get_camera_response_new(MapmetricsMapCamera* return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_get_camera_response_new_error:
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Creates a new error response to MapLibreHostApi.getCamera.
+ *
+ * Returns: a new #MapmetricsMapLibreHostApiGetCameraResponse
+ */
+MapmetricsMapLibreHostApiGetCameraResponse* mapmetrics_map_libre_host_api_get_camera_response_new_error(const gchar* code, const gchar* message, FlValue* details);
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiGetZoomLevelResponse, mapmetrics_map_libre_host_api_get_zoom_level_response, MAPMETRICS, MAP_LIBRE_HOST_API_GET_ZOOM_LEVEL_RESPONSE, GObject)
+
+/**
+ * mapmetrics_map_libre_host_api_get_zoom_level_response_new:
+ *
+ * Creates a new response to MapLibreHostApi.getZoomLevel.
+ *
+ * Returns: a new #MapmetricsMapLibreHostApiGetZoomLevelResponse
+ */
+MapmetricsMapLibreHostApiGetZoomLevelResponse* mapmetrics_map_libre_host_api_get_zoom_level_response_new(double return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_get_zoom_level_response_new_error:
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Creates a new error response to MapLibreHostApi.getZoomLevel.
+ *
+ * Returns: a new #MapmetricsMapLibreHostApiGetZoomLevelResponse
+ */
+MapmetricsMapLibreHostApiGetZoomLevelResponse* mapmetrics_map_libre_host_api_get_zoom_level_response_new_error(const gchar* code, const gchar* message, FlValue* details);
+
 /**
  * MapmetricsMapLibreHostApiVTable:
  *
@@ -660,6 +706,10 @@ typedef struct {
   void (*load_image)(const gchar* url, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_image)(const gchar* id, const uint8_t* bytes, size_t bytes_length, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_clustered_geo_json_source)(const gchar* id, const gchar* data, gboolean clustered, double cluster_radius, double cluster_max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*test_method)(const gchar* value, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*animate_camera)(double latitude, double longitude, double zoom, double bearing, double pitch, int64_t duration, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  MapmetricsMapLibreHostApiGetCameraResponse* (*get_camera)(gpointer user_data);
+  MapmetricsMapLibreHostApiGetZoomLevelResponse* (*get_zoom_level)(gpointer user_data);
 } MapmetricsMapLibreHostApiVTable;
 
 /**
@@ -914,6 +964,44 @@ void mapmetrics_map_libre_host_api_respond_add_clustered_geo_json_source(Mapmetr
  * Responds with an error to MapLibreHostApi.addClusteredGeoJsonSource. 
  */
 void mapmetrics_map_libre_host_api_respond_error_add_clustered_geo_json_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_test_method:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.testMethod. 
+ */
+void mapmetrics_map_libre_host_api_respond_test_method(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_test_method:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.testMethod. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_test_method(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_animate_camera:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.animateCamera. 
+ */
+void mapmetrics_map_libre_host_api_respond_animate_camera(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_animate_camera:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.animateCamera. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_animate_camera(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 G_DECLARE_FINAL_TYPE(MapmetricsMapLibreFlutterApiGetOptionsResponse, mapmetrics_map_libre_flutter_api_get_options_response, MAPMETRICS, MAP_LIBRE_FLUTTER_API_GET_OPTIONS_RESPONSE, GObject)
 

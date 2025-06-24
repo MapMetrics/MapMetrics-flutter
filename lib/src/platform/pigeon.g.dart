@@ -55,6 +55,35 @@ enum CameraChangeReason {
   apiGesture,
 }
 
+/// A longitude/latitude coordinate object.
+class LngLat {
+  LngLat({
+    required this.lng,
+    required this.lat,
+  });
+
+  /// The longitude
+  double lng;
+
+  /// The latitude
+  double lat;
+
+  Object encode() {
+    return <Object?>[
+      lng,
+      lat,
+    ];
+  }
+
+  static LngLat decode(Object result) {
+    result as List<Object?>;
+    return LngLat(
+      lng: result[0]! as double,
+      lat: result[1]! as double,
+    );
+  }
+}
+
 /// The map options define initial values for the MapLibre map.
 class MapOptions {
   MapOptions({
@@ -181,35 +210,6 @@ class MapGestures {
       pan: result[1]! as bool,
       zoom: result[2]! as bool,
       tilt: result[3]! as bool,
-    );
-  }
-}
-
-/// A longitude/latitude coordinate object.
-class LngLat {
-  LngLat({
-    required this.lng,
-    required this.lat,
-  });
-
-  /// The longitude
-  double lng;
-
-  /// The latitude
-  double lat;
-
-  Object encode() {
-    return <Object?>[
-      lng,
-      lat,
-    ];
-  }
-
-  static LngLat decode(Object result) {
-    result as List<Object?>;
-    return LngLat(
-      lng: result[0]! as double,
-      lat: result[1]! as double,
     );
   }
 }
@@ -418,13 +418,13 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is CameraChangeReason) {
       buffer.putUint8(131);
       writeValue(buffer, value.index);
-    }    else if (value is MapOptions) {
+    }    else if (value is LngLat) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
-    }    else if (value is MapGestures) {
+    }    else if (value is MapOptions) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
-    }    else if (value is LngLat) {
+    }    else if (value is MapGestures) {
       buffer.putUint8(134);
       writeValue(buffer, value.encode());
     }    else if (value is Offset) {
@@ -460,11 +460,11 @@ class _PigeonCodec extends StandardMessageCodec {
         final int? value = readValue(buffer) as int?;
         return value == null ? null : CameraChangeReason.values[value];
       case 132: 
-        return MapOptions.decode(readValue(buffer)!);
-      case 133: 
-        return MapGestures.decode(readValue(buffer)!);
-      case 134: 
         return LngLat.decode(readValue(buffer)!);
+      case 133: 
+        return MapOptions.decode(readValue(buffer)!);
+      case 134: 
+        return MapGestures.decode(readValue(buffer)!);
       case 135: 
         return Offset.decode(readValue(buffer)!);
       case 136: 
@@ -808,6 +808,113 @@ class MapLibreHostApi {
       );
     } else {
       return;
+    }
+  }
+
+  /// Minimal test method to debug Pigeon generation.
+  Future<void> testMethod(String value) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[value]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  /// Animate the camera to a new position.
+  /// Use -1.0 or double.nan for any value you do not want to change.
+  Future<void> animateCamera(double latitude, double longitude, double zoom, double bearing, double pitch, int duration) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.animateCamera$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[latitude, longitude, zoom, bearing, pitch, duration]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  /// Get the current camera state.
+  Future<MapCamera> getCamera() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getCamera$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as MapCamera?)!;
+    }
+  }
+
+  /// Get the current zoom level.
+  Future<double> getZoomLevel() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getZoomLevel$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as double?)!;
     }
   }
 }

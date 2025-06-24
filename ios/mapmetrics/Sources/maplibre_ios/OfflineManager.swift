@@ -82,7 +82,7 @@ class OfflineManager: NSObject, OfflineManagerHostApi {
         code: "INVALID_METADATA",
         message: "The metadata could not be converted to NSData.",
         details: nil
-      )
+      ) as Error
       completion(.failure(error))
       return
     }

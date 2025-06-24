@@ -98,6 +98,34 @@ enum CameraChangeReason: Int {
   case apiGesture = 2
 }
 
+/// A longitude/latitude coordinate object.
+///
+/// Generated class from Pigeon that represents data sent in messages.
+struct LngLat {
+  /// The longitude
+  var lng: Double
+  /// The latitude
+  var lat: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> LngLat? {
+    let lng = pigeonVar_list[0] as! Double
+    let lat = pigeonVar_list[1] as! Double
+
+    return LngLat(
+      lng: lng,
+      lat: lat
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      lng,
+      lat,
+    ]
+  }
+}
+
 /// The map options define initial values for the MapLibre map.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
@@ -210,34 +238,6 @@ struct MapGestures {
       pan,
       zoom,
       tilt,
-    ]
-  }
-}
-
-/// A longitude/latitude coordinate object.
-///
-/// Generated class from Pigeon that represents data sent in messages.
-struct LngLat {
-  /// The longitude
-  var lng: Double
-  /// The latitude
-  var lat: Double
-
-
-  // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> LngLat? {
-    let lng = pigeonVar_list[0] as! Double
-    let lat = pigeonVar_list[1] as! Double
-
-    return LngLat(
-      lng: lng,
-      lat: lat
-    )
-  }
-  func toList() -> [Any?] {
-    return [
-      lng,
-      lat,
     ]
   }
 }
@@ -436,11 +436,11 @@ private class PigeonPigeonCodecReader: FlutterStandardReader {
       }
       return nil
     case 132:
-      return MapOptions.fromList(self.readValue() as! [Any?])
-    case 133:
-      return MapGestures.fromList(self.readValue() as! [Any?])
-    case 134:
       return LngLat.fromList(self.readValue() as! [Any?])
+    case 133:
+      return MapOptions.fromList(self.readValue() as! [Any?])
+    case 134:
+      return MapGestures.fromList(self.readValue() as! [Any?])
     case 135:
       return Offset.fromList(self.readValue() as! [Any?])
     case 136:
@@ -468,13 +468,13 @@ private class PigeonPigeonCodecWriter: FlutterStandardWriter {
     } else if let value = value as? CameraChangeReason {
       super.writeByte(131)
       super.writeValue(value.rawValue)
-    } else if let value = value as? MapOptions {
+    } else if let value = value as? LngLat {
       super.writeByte(132)
       super.writeValue(value.toList())
-    } else if let value = value as? MapGestures {
+    } else if let value = value as? MapOptions {
       super.writeByte(133)
       super.writeValue(value.toList())
-    } else if let value = value as? LngLat {
+    } else if let value = value as? MapGestures {
       super.writeByte(134)
       super.writeValue(value.toList())
     } else if let value = value as? Offset {
@@ -541,6 +541,15 @@ protocol MapLibreHostApi {
   func addImage(id: String, bytes: FlutterStandardTypedData, completion: @escaping (Result<Void, Error>) -> Void)
   /// Add a GeoJSON source with clustering to the map style.
   func addClusteredGeoJsonSource(id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Minimal test method to debug Pigeon generation.
+  func testMethod(value: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Animate the camera to a new position.
+  /// Use -1.0 or double.nan for any value you do not want to change.
+  func animateCamera(latitude: Double, longitude: Double, zoom: Double, bearing: Double, pitch: Double, duration: Int64, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Get the current camera state.
+  func getCamera() throws -> MapCamera
+  /// Get the current zoom level.
+  func getZoomLevel() throws -> Double
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -818,6 +827,76 @@ class MapLibreHostApiSetup {
       }
     } else {
       addClusteredGeoJsonSourceChannel.setMessageHandler(nil)
+    }
+    /// Minimal test method to debug Pigeon generation.
+    let testMethodChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      testMethodChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let valueArg = args[0] as! String
+        api.testMethod(value: valueArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      testMethodChannel.setMessageHandler(nil)
+    }
+    /// Animate the camera to a new position.
+    /// Use -1.0 or double.nan for any value you do not want to change.
+    let animateCameraChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.animateCamera\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      animateCameraChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let latitudeArg = args[0] as! Double
+        let longitudeArg = args[1] as! Double
+        let zoomArg = args[2] as! Double
+        let bearingArg = args[3] as! Double
+        let pitchArg = args[4] as! Double
+        let durationArg = args[5] as! Int64
+        api.animateCamera(latitude: latitudeArg, longitude: longitudeArg, zoom: zoomArg, bearing: bearingArg, pitch: pitchArg, duration: durationArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      animateCameraChannel.setMessageHandler(nil)
+    }
+    /// Get the current camera state.
+    let getCameraChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getCamera\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getCameraChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.getCamera()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      getCameraChannel.setMessageHandler(nil)
+    }
+    /// Get the current zoom level.
+    let getZoomLevelChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getZoomLevel\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getZoomLevelChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.getZoomLevel()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      getZoomLevelChannel.setMessageHandler(nil)
     }
   }
 }

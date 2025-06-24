@@ -1,5 +1,16 @@
 import 'package:pigeon/pigeon.dart';
 
+/// A longitude/latitude coordinate object.
+class LngLat {
+  const LngLat({required this.lng, required this.lat});
+
+  /// The longitude
+  final double lng;
+
+  /// The latitude
+  final double lat;
+}
+
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/platform/pigeon.g.dart',
@@ -24,7 +35,7 @@ import 'package:pigeon/pigeon.dart';
   ),
 )
 @HostApi()
-abstract interface class MapLibreHostApi {
+abstract class MapLibreHostApi {
   void dispose();
 
   /// Add a fill layer to the map style.
@@ -134,10 +145,32 @@ abstract interface class MapLibreHostApi {
     required double clusterRadius,
     required double clusterMaxZoom,
   });
+
+  /// Minimal test method to debug Pigeon generation.
+  @async
+  void testMethod(String value);
+
+  /// Animate the camera to a new position.
+  /// Use -1.0 or double.nan for any value you do not want to change.
+  @async
+  void animateCamera(
+    double latitude,
+    double longitude,
+    double zoom,
+    double bearing,
+    double pitch,
+    int duration,
+  );
+
+  /// Get the current camera state.
+  MapCamera getCamera();
+
+  /// Get the current zoom level.
+  double getZoomLevel();
 }
 
 @FlutterApi()
-abstract interface class MapLibreFlutterApi {
+abstract class MapLibreFlutterApi {
   /// Get the map options from dart.
   MapOptions getOptions();
 
@@ -175,14 +208,14 @@ abstract interface class MapLibreFlutterApi {
 
 @HostApi()
 // ignore: one_member_abstracts
-abstract interface class PermissionManagerHostApi {
+abstract class PermissionManagerHostApi {
   /// Request location permissions.
   @async
   bool requestLocationPermissions({required String explanation});
 }
 
 @HostApi()
-abstract interface class OfflineManagerHostApi {
+abstract class OfflineManagerHostApi {
   /// Clear the ambient cache.
   @async
   void clearAmbientCache();
@@ -286,17 +319,6 @@ class MapGestures {
 
   /// Tilt (pitch) the map camera.
   final bool tilt;
-}
-
-/// A longitude/latitude coordinate object.
-class LngLat {
-  const LngLat({required this.lng, required this.lat});
-
-  /// The longitude
-  final double lng;
-
-  /// The latitude
-  final double lat;
 }
 
 /// A pixel location / location on the device screen.
@@ -406,4 +428,8 @@ enum CameraChangeReason {
 
   /// API gesture
   apiGesture,
+}
+
+void main() {
+  // This function is required for pigeon code generation
 }

@@ -29,6 +29,47 @@ FlutterError CreateConnectionError(const std::string channel_name) {
       EncodableValue(""));
 }
 
+// LngLat
+
+LngLat::LngLat(
+  double lng,
+  double lat)
+ : lng_(lng),
+    lat_(lat) {}
+
+double LngLat::lng() const {
+  return lng_;
+}
+
+void LngLat::set_lng(double value_arg) {
+  lng_ = value_arg;
+}
+
+
+double LngLat::lat() const {
+  return lat_;
+}
+
+void LngLat::set_lat(double value_arg) {
+  lat_ = value_arg;
+}
+
+
+EncodableList LngLat::ToEncodableList() const {
+  EncodableList list;
+  list.reserve(2);
+  list.push_back(EncodableValue(lng_));
+  list.push_back(EncodableValue(lat_));
+  return list;
+}
+
+LngLat LngLat::FromEncodableList(const EncodableList& list) {
+  LngLat decoded(
+    std::get<double>(list[0]),
+    std::get<double>(list[1]));
+  return decoded;
+}
+
 // MapOptions
 
 MapOptions::MapOptions(
@@ -330,47 +371,6 @@ MapGestures MapGestures::FromEncodableList(const EncodableList& list) {
     std::get<bool>(list[1]),
     std::get<bool>(list[2]),
     std::get<bool>(list[3]));
-  return decoded;
-}
-
-// LngLat
-
-LngLat::LngLat(
-  double lng,
-  double lat)
- : lng_(lng),
-    lat_(lat) {}
-
-double LngLat::lng() const {
-  return lng_;
-}
-
-void LngLat::set_lng(double value_arg) {
-  lng_ = value_arg;
-}
-
-
-double LngLat::lat() const {
-  return lat_;
-}
-
-void LngLat::set_lat(double value_arg) {
-  lat_ = value_arg;
-}
-
-
-EncodableList LngLat::ToEncodableList() const {
-  EncodableList list;
-  list.reserve(2);
-  list.push_back(EncodableValue(lng_));
-  list.push_back(EncodableValue(lat_));
-  return list;
-}
-
-LngLat LngLat::FromEncodableList(const EncodableList& list) {
-  LngLat decoded(
-    std::get<double>(list[0]),
-    std::get<double>(list[1]));
   return decoded;
 }
 
@@ -764,13 +764,13 @@ EncodableValue PigeonInternalCodecSerializer::ReadValueOfType(
         return encodable_enum_arg.IsNull() ? EncodableValue() : CustomEncodableValue(static_cast<CameraChangeReason>(enum_arg_value));
       }
     case 132: {
-        return CustomEncodableValue(MapOptions::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
+        return CustomEncodableValue(LngLat::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
       }
     case 133: {
-        return CustomEncodableValue(MapGestures::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
+        return CustomEncodableValue(MapOptions::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
       }
     case 134: {
-        return CustomEncodableValue(LngLat::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
+        return CustomEncodableValue(MapGestures::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
       }
     case 135: {
         return CustomEncodableValue(Offset::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
@@ -811,19 +811,19 @@ void PigeonInternalCodecSerializer::WriteValue(
       WriteValue(EncodableValue(static_cast<int>(std::any_cast<CameraChangeReason>(*custom_value))), stream);
       return;
     }
-    if (custom_value->type() == typeid(MapOptions)) {
+    if (custom_value->type() == typeid(LngLat)) {
       stream->WriteByte(132);
+      WriteValue(EncodableValue(std::any_cast<LngLat>(*custom_value).ToEncodableList()), stream);
+      return;
+    }
+    if (custom_value->type() == typeid(MapOptions)) {
+      stream->WriteByte(133);
       WriteValue(EncodableValue(std::any_cast<MapOptions>(*custom_value).ToEncodableList()), stream);
       return;
     }
     if (custom_value->type() == typeid(MapGestures)) {
-      stream->WriteByte(133);
-      WriteValue(EncodableValue(std::any_cast<MapGestures>(*custom_value).ToEncodableList()), stream);
-      return;
-    }
-    if (custom_value->type() == typeid(LngLat)) {
       stream->WriteByte(134);
-      WriteValue(EncodableValue(std::any_cast<LngLat>(*custom_value).ToEncodableList()), stream);
+      WriteValue(EncodableValue(std::any_cast<MapGestures>(*custom_value).ToEncodableList()), stream);
       return;
     }
     if (custom_value->type() == typeid(Offset)) {
@@ -1437,6 +1437,136 @@ void MapLibreHostApi::SetUp(
             wrapped.push_back(EncodableValue());
             reply(EncodableValue(std::move(wrapped)));
           });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_value_arg = args.at(0);
+          if (encodable_value_arg.IsNull()) {
+            reply(WrapError("value_arg unexpectedly null."));
+            return;
+          }
+          const auto& value_arg = std::get<std::string>(encodable_value_arg);
+          api->TestMethod(value_arg, [reply](std::optional<FlutterError>&& output) {
+            if (output.has_value()) {
+              reply(WrapError(output.value()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue());
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.animateCamera" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_latitude_arg = args.at(0);
+          if (encodable_latitude_arg.IsNull()) {
+            reply(WrapError("latitude_arg unexpectedly null."));
+            return;
+          }
+          const auto& latitude_arg = std::get<double>(encodable_latitude_arg);
+          const auto& encodable_longitude_arg = args.at(1);
+          if (encodable_longitude_arg.IsNull()) {
+            reply(WrapError("longitude_arg unexpectedly null."));
+            return;
+          }
+          const auto& longitude_arg = std::get<double>(encodable_longitude_arg);
+          const auto& encodable_zoom_arg = args.at(2);
+          if (encodable_zoom_arg.IsNull()) {
+            reply(WrapError("zoom_arg unexpectedly null."));
+            return;
+          }
+          const auto& zoom_arg = std::get<double>(encodable_zoom_arg);
+          const auto& encodable_bearing_arg = args.at(3);
+          if (encodable_bearing_arg.IsNull()) {
+            reply(WrapError("bearing_arg unexpectedly null."));
+            return;
+          }
+          const auto& bearing_arg = std::get<double>(encodable_bearing_arg);
+          const auto& encodable_pitch_arg = args.at(4);
+          if (encodable_pitch_arg.IsNull()) {
+            reply(WrapError("pitch_arg unexpectedly null."));
+            return;
+          }
+          const auto& pitch_arg = std::get<double>(encodable_pitch_arg);
+          const auto& encodable_duration_arg = args.at(5);
+          if (encodable_duration_arg.IsNull()) {
+            reply(WrapError("duration_arg unexpectedly null."));
+            return;
+          }
+          const int64_t duration_arg = encodable_duration_arg.LongValue();
+          api->AnimateCamera(latitude_arg, longitude_arg, zoom_arg, bearing_arg, pitch_arg, duration_arg, [reply](std::optional<FlutterError>&& output) {
+            if (output.has_value()) {
+              reply(WrapError(output.value()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue());
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getCamera" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          ErrorOr<MapCamera> output = api->GetCamera();
+          if (output.has_error()) {
+            reply(WrapError(output.error()));
+            return;
+          }
+          EncodableList wrapped;
+          wrapped.push_back(CustomEncodableValue(std::move(output).TakeValue()));
+          reply(EncodableValue(std::move(wrapped)));
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getZoomLevel" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          ErrorOr<double> output = api->GetZoomLevel();
+          if (output.has_error()) {
+            reply(WrapError(output.error()));
+            return;
+          }
+          EncodableList wrapped;
+          wrapped.push_back(EncodableValue(std::move(output).TakeValue()));
+          reply(EncodableValue(std::move(wrapped)));
         } catch (const std::exception& exception) {
           reply(WrapError(exception.what()));
         }

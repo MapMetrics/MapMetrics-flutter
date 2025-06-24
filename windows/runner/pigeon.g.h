@@ -90,6 +90,41 @@ enum class CameraChangeReason {
 };
 
 
+// A longitude/latitude coordinate object.
+//
+// Generated class from Pigeon that represents data sent in messages.
+class LngLat {
+ public:
+  // Constructs an object setting all fields.
+  explicit LngLat(
+    double lng,
+    double lat);
+
+  // The longitude
+  double lng() const;
+  void set_lng(double value_arg);
+
+  // The latitude
+  double lat() const;
+  void set_lat(double value_arg);
+
+
+ private:
+  static LngLat FromEncodableList(const flutter::EncodableList& list);
+  flutter::EncodableList ToEncodableList() const;
+  friend class MapOptions;
+  friend class MapCamera;
+  friend class MapLibreHostApi;
+  friend class MapLibreFlutterApi;
+  friend class PermissionManagerHostApi;
+  friend class OfflineManagerHostApi;
+  friend class PigeonInternalCodecSerializer;
+  double lng_;
+  double lat_;
+
+};
+
+
 // The map options define initial values for the MapLibre map.
 //
 // Generated class from Pigeon that represents data sent in messages.
@@ -245,41 +280,6 @@ class MapGestures {
   bool pan_;
   bool zoom_;
   bool tilt_;
-
-};
-
-
-// A longitude/latitude coordinate object.
-//
-// Generated class from Pigeon that represents data sent in messages.
-class LngLat {
- public:
-  // Constructs an object setting all fields.
-  explicit LngLat(
-    double lng,
-    double lat);
-
-  // The longitude
-  double lng() const;
-  void set_lng(double value_arg);
-
-  // The latitude
-  double lat() const;
-  void set_lat(double value_arg);
-
-
- private:
-  static LngLat FromEncodableList(const flutter::EncodableList& list);
-  flutter::EncodableList ToEncodableList() const;
-  friend class MapOptions;
-  friend class MapCamera;
-  friend class MapLibreHostApi;
-  friend class MapLibreFlutterApi;
-  friend class PermissionManagerHostApi;
-  friend class OfflineManagerHostApi;
-  friend class PigeonInternalCodecSerializer;
-  double lng_;
-  double lat_;
 
 };
 
@@ -618,6 +618,24 @@ class MapLibreHostApi {
     double cluster_radius,
     double cluster_max_zoom,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Minimal test method to debug Pigeon generation.
+  virtual void TestMethod(
+    const std::string& value,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Animate the camera to a new position.
+  // Use -1.0 or double.nan for any value you do not want to change.
+  virtual void AnimateCamera(
+    double latitude,
+    double longitude,
+    double zoom,
+    double bearing,
+    double pitch,
+    int64_t duration,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Get the current camera state.
+  virtual ErrorOr<MapCamera> GetCamera() = 0;
+  // Get the current zoom level.
+  virtual ErrorOr<double> GetZoomLevel() = 0;
 
   // The codec used by MapLibreHostApi.
   static const flutter::StandardMessageCodec& GetCodec();

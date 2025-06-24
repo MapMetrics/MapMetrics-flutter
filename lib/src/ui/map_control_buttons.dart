@@ -52,8 +52,10 @@ class MapControlButtons extends StatefulWidget {
 class _MapControlButtonsState extends State<MapControlButtons> {
   late final PermissionManager? _permissionManager;
   _TrackLocationState _trackState = _TrackLocationState.gpsNotFixed;
-
   late bool _trackLocationButtonInitialized = false;
+
+  // Track current zoom level manually since getCamera().zoom returns 0.0
+  double _currentZoom = 10.0; // Default zoom level
 
   @override
   void initState() {
@@ -99,20 +101,35 @@ class _MapControlButtonsState extends State<MapControlButtons> {
               if (widget.showZoomInOutButton) ...[
                 FloatingActionButton(
                   heroTag: 'MapLibreZoomInButton',
-                  onPressed:
-                      () => controller.animateCamera(
-                        zoom: controller.getCamera().zoom + 1,
-                        nativeDuration: const Duration(milliseconds: 200),
-                      ),
+                  onPressed: () {
+                    print('MapControlButtons: Zoom in button pressed');
+                    _currentZoom += 1.0;
+                    print(
+                      'MapControlButtons: Current zoom: ${_currentZoom - 1}, new zoom: $_currentZoom',
+                    );
+                    controller.animateCamera(
+                      zoom: _currentZoom,
+                      nativeDuration: const Duration(milliseconds: 200),
+                    );
+                  },
                   child: const Icon(Icons.add),
                 ),
                 FloatingActionButton(
                   heroTag: 'MapLibreZoomOutButton',
-                  onPressed:
-                      () => controller.animateCamera(
-                        zoom: controller.getCamera().zoom - 1,
-                        nativeDuration: const Duration(milliseconds: 200),
-                      ),
+                  onPressed: () {
+                    print('MapControlButtons: Zoom out button pressed');
+                    _currentZoom = (_currentZoom - 1.0).clamp(
+                      0.0,
+                      22.0,
+                    ); // Clamp to valid zoom range
+                    print(
+                      'MapControlButtons: Current zoom: ${_currentZoom + 1}, new zoom: $_currentZoom',
+                    );
+                    controller.animateCamera(
+                      zoom: _currentZoom,
+                      nativeDuration: const Duration(milliseconds: 200),
+                    );
+                  },
                   child: const Icon(Icons.remove),
                 ),
               ],
