@@ -35,12 +35,11 @@ class _ClusteringPageState extends State<ClusteringPage> {
           maxZoom: 20, // Allow zooming in to level 20
         ),
         onStyleLoaded: _onStyleLoaded,
-        mapChildren: [
-          const MapScalebar(
-            alignment: Alignment.bottomLeft,
+        mapChildren: const [
+          MapScalebar(
             padding: EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 50),
           ),
-          const SourceAttribution(),
+          SourceAttribution(),
           MapControlButtons(showZoomInOutButton: true, showTrackLocation: true),
         ],
         onEvent: (event) {
@@ -72,7 +71,6 @@ class _ClusteringPageState extends State<ClusteringPage> {
       id: 'test-points',
       data: testPointsData,
       cluster: true,
-      clusterRadius: 50,
       clusterMaxZoom: 14,
     );
     print(
