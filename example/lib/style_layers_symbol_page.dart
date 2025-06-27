@@ -19,46 +19,50 @@ class _StyleLayersSymbolPageState extends State<StyleLayersSymbolPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Symbol Style Layer')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initZoom: 3, initCenter: Position(9.17, 47.68)),
-        onStyleLoaded: (style) async {
-          try {
-            // load the image data
-            final response = await http.get(
-              Uri.parse(StyleLayersSymbolPage.imageUrl),
-            );
-            final bytes = response.bodyBytes;
-
-            // add the image to the map
-            await style.addImage('marker', bytes);
-
-            // add some points as GeoJSON source to the map
-            await style.addSource(
-              const GeoJsonSource(id: 'points', data: _geoJsonString),
-            );
-
-            // display the image on the map
-            await style.addLayer(
-              const SymbolStyleLayer(
-                id: 'images',
-                sourceId: 'points',
-                layout: {
-                  // see https://maplibre.org/maplibre-style-spec/layers/#symbol
-                  'icon-image': 'marker',
-                  'icon-size': 0.08,
-                  'icon-allow-overlap': true,
-                  'icon-anchor': 'bottom',
-                },
-              ),
-            );
-          } on Exception catch (error, stacktrace) {
-            debugPrint(error.toString());
-            debugPrintStack(stackTrace: stacktrace);
-          }
-        },
+      body: MapMetricsView(
+        options: MapOptions(
+          initCenter: Position(-74.006, 40.7128),
+          initZoom: 9,
+        ),
+        onStyleLoaded: _onStyleLoaded,
       ),
     );
+  }
+
+  Future<void> _onStyleLoaded(StyleController style) async {
+    try {
+      // load the image data
+      final response = await http.get(
+        Uri.parse(StyleLayersSymbolPage.imageUrl),
+      );
+      final bytes = response.bodyBytes;
+
+      // add the image to the map
+      await style.addImage('marker', bytes);
+
+      // add some points as GeoJSON source to the map
+      await style.addSource(
+        const GeoJsonSource(id: 'points', data: _geoJsonString),
+      );
+
+      // display the image on the map
+      await style.addLayer(
+        const SymbolStyleLayer(
+          id: 'images',
+          sourceId: 'points',
+          layout: {
+            // see https://maplibre.org/maplibre-style-spec/layers/#symbol
+            'icon-image': 'marker',
+            'icon-size': 0.08,
+            'icon-allow-overlap': true,
+            'icon-anchor': 'bottom',
+          },
+        ),
+      );
+    } on Exception catch (error, stacktrace) {
+      debugPrint(error.toString());
+      debugPrintStack(stackTrace: stacktrace);
+    }
   }
 }
 

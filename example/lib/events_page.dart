@@ -18,24 +18,15 @@ class _EventsPageState extends State<EventsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Events')),
-      body: Stack(
-        children: [
-          MapLibreMap(
-            acceptLicense: true,
-            options: MapOptions(initCenter: Position(9.17, 47.68)),
-            onEvent: _onEvent,
-          ),
-          IgnorePointer(
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              alignment: Alignment.bottomLeft,
-              child: Text(
-                _eventMessages.join('\n'),
-                style: const TextStyle(color: Colors.black),
-              ),
-            ),
-          ),
-        ],
+      body: MapMetricsView(
+        options: MapOptions(
+          initCenter: Position(-74.006, 40.7128),
+          initZoom: 9,
+        ),
+        onEvent: (event) {
+          final message = event.toString();
+          debugPrint('[MapMetricsView] $message');
+        },
       ),
     );
   }
@@ -67,7 +58,7 @@ class _EventsPageState extends State<EventsPage> {
   };
 
   void _print(String message) {
-    debugPrint('[MapLibreMap] $message');
+    debugPrint('[MapMetricsView] $message');
     setState(() {
       _eventMessages.add(message);
       if (_eventMessages.length > 10) _eventMessages.removeAt(0);

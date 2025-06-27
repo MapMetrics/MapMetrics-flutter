@@ -30,10 +30,9 @@ class _LayersPolygonPageState extends State<LayersPolygonPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Polygon Layers')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initZoom: 7, initCenter: Position(9.17, 47.68)),
+      appBar: AppBar(title: const Text('Polygon Layer')),
+      body: MapMetricsView(
+        options: MapOptions(initCenter: Position(9.17, 47.68), initZoom: 7),
         onEvent: (event) {
           if (event case MapEventClick()) {
             setState(() {

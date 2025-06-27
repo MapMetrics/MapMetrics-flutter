@@ -21,14 +21,10 @@ class _StyleLayersFillExtrusionPageState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Fill Extrusion Style Layer')),
-      body: MapLibreMap(
-        acceptLicense: true,
+      body: MapMetricsView(
         options: MapOptions(
-          initCenter: Position(-87.61694, 41.86625),
-          initZoom: 15.99,
-          initPitch: 40,
-          initBearing: 20,
-          initStyle: MapStyles.protomapsLight,
+          initCenter: Position(-74.006, 40.7128),
+          initZoom: 9,
         ),
         onStyleLoaded: _onStyleLoaded,
       ),

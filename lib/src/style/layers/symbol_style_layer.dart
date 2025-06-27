@@ -13,6 +13,10 @@ final class SymbolStyleLayer extends StyleLayerWithSource {
     required super.sourceId,
     super.layout,
     super.paint,
+    super.filter,
+    super.minZoom,
+    super.maxZoom,
+    super.metadata,
   });
 
   // TODO add properties

@@ -16,10 +16,13 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Widget Layer')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initZoom: 3, initCenter: Position(0, 0)),
-        children: [
+      body: MapMetricsView(
+        options: MapOptions(
+          initCenter: Position(-74.006, 40.7128),
+          initZoom: 9,
+        ),
+        onStyleLoaded: _onStyleLoaded,
+        mapChildren: [
           WidgetLayer(
             markers: [
               // A 3D marker
@@ -74,5 +77,9 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _onStyleLoaded(StyleController style) async {
+    // Widget layer example doesn't need additional style setup
   }
 }

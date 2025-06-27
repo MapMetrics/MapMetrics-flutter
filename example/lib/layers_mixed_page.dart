@@ -79,11 +79,10 @@ class _LayersMixedPageState extends State<LayersMixedPage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
-              acceptLicense: true,
+            child: MapMetricsView(
               options: MapOptions(
-                initZoom: 7,
                 initCenter: Position(9.17, 47.68),
+                initZoom: 7,
               ),
               onEvent: (event) {
                 if (event case MapEventClick()) {

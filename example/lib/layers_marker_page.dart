@@ -26,29 +26,14 @@ class _LayersMarkerPageState extends State<LayersMarkerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Marker Layers')),
-      body: MapLibreMap(
-        options: MapOptions(initZoom: 7, initCenter: Position(9.17, 47.68)),
-        onEvent: (event) async {
-          switch (event) {
-            case MapEventStyleLoaded():
-              // add marker image to map
-              final response = await http.get(
-                Uri.parse(StyleLayersSymbolPage.imageUrl),
-              );
-              final bytes = response.bodyBytes;
-              await event.style.addImage('marker', bytes);
-              setState(() {
-                _imageLoaded = true;
-              });
-            case MapEventClick():
-              // add a new marker on click
-              setState(() {
-                _points.add(Point(coordinates: event.point));
-              });
-            default:
-              // ignore all other events
-              break;
+      appBar: AppBar(title: const Text('Marker Layer')),
+      body: MapMetricsView(
+        options: MapOptions(initCenter: Position(9.17, 47.68), initZoom: 7),
+        onEvent: (event) {
+          if (event case MapEventClick()) {
+            setState(() {
+              _points.add(Point(coordinates: event.point));
+            });
           }
         },
         layers: [

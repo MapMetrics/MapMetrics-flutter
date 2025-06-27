@@ -12,6 +12,7 @@ class GesturesPage extends StatefulWidget {
 }
 
 class _GesturesPageState extends State<GesturesPage> {
+  MapController? _controller;
   final _selections = Map.fromEntries(
     Gestures.values.map((e) => MapEntry(e, false)),
   );
@@ -42,8 +43,7 @@ class _GesturesPageState extends State<GesturesPage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
-              acceptLicense: true,
+            child: MapMetricsView(
               options: MapOptions(
                 initCenter: Position(9.17, 47.68),
                 initZoom: 3,
@@ -54,6 +54,7 @@ class _GesturesPageState extends State<GesturesPage> {
                   pitch: _selections[Gestures.tilt]!,
                 ),
               ),
+              onMapCreated: (controller) => _controller = controller,
             ),
           ),
         ],

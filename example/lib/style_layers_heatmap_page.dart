@@ -19,9 +19,11 @@ class _StyleLayersHeatmapPageState extends State<StyleLayersHeatmapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Heatmap Style Layer')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initCenter: Position(-120, 50), initZoom: 2),
+      body: MapMetricsView(
+        options: MapOptions(
+          initCenter: Position(-152.9959, 59.8150),
+          initZoom: 9,
+        ),
         onStyleLoaded: _onStyleLoaded,
       ),
     );

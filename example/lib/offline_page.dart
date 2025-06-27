@@ -345,8 +345,7 @@ class _OfflineMapPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Offline Map "$title"')),
-      body: MapLibreMap(
-        acceptLicense: true,
+      body: MapMetricsView(
         options: MapOptions(
           initStyle: MapStyles.protomapsLight,
           maxBounds: bounds,

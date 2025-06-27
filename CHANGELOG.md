@@ -1,3 +1,20 @@
+0.1.0 release
+MM waterMark Logo Added
+
+
+0.0.9 release
+Markers Fixed
+
+
+0.0.8 release
+bugs fixed
+
+
+
+0.0.7 release
+bugs fixed
+
+
 0.0.6 release
 zoombuttons are optional now,auto load to user current location
 
@@ -16,7 +33,7 @@ bugs fixed for IOS
 bugs fixed for android
 Add docs
 
-0.0.2 
+0.0.2
 0.0.2 release
 bugs fixed for android
 Add docs

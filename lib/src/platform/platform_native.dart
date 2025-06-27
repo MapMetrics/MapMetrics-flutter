@@ -15,6 +15,9 @@ import 'package:mapmetrics/src/platform_interface.dart';
 final class PlatformImpl extends PlatformInterface {
   @override
   MapLibreMapState createWidgetState() {
+    print(
+      'Platform detection: isAndroid=${Platform.isAndroid}, isIOS=${Platform.isIOS}',
+    );
     if (Platform.isAndroid) return MapLibreMapStateAndroid();
     if (Platform.isIOS) return MapLibreMapStateIos();
     throw UnimplementedError('Unsupported platform');

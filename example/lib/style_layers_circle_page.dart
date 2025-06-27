@@ -19,8 +19,7 @@ class _StyleLayersCirclePageState extends State<StyleLayersCirclePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Circle Style Layer')),
-      body: MapLibreMap(
-        acceptLicense: true,
+      body: MapMetricsView(
         options: MapOptions(
           initCenter: Position(-152.9959, 59.8150),
           initZoom: 9,
