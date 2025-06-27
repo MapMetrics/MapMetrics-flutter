@@ -17,14 +17,13 @@ class _StyledMapPageState extends State<StyledMapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Styled Map')),
-      body: MapLibreMap(
-        acceptLicense: true,
+      body: MapMetricsView(
         options: MapOptions(
           initCenter: Position(9.17, 47.68),
           initZoom: 2,
           initStyle: MapStyles.testMap,
         ),
-        children: [
+        mapChildren: [
           const MapScalebar(),
           const SourceAttribution(),
           MapControlButtons(
@@ -43,3 +42,28 @@ class _StyledMapPageState extends State<StyledMapPage> {
     );
   }
 }
+
+//
+// MapLibreMap(
+// acceptLicense: true,
+// options: MapOptions(
+// initCenter: Position(9.17, 47.68),
+// initZoom: 2,
+// initStyle: MapStyles.testMap,
+// ),
+// children: [
+// const MapScalebar(),
+// const SourceAttribution(),
+// MapControlButtons(
+// showZoomInOutButton: true,
+// showTrackLocation: true,
+// onCurrentLocation: (location) {
+// print("location" + location.lat.toString());
+// },
+// ),
+// const MapCompass(),
+// ],
+// onStyleLoaded: (style) {
+// style.setProjection(MapProjection.globe);
+// },
+// )
