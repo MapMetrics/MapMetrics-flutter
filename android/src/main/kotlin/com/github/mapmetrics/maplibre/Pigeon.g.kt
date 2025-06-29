@@ -539,6 +539,38 @@ interface MapLibreHostApi {
   fun getZoomLevel(): Double
   /** Get the user's current location. */
   fun getUserLocation(): LngLat
+  /**
+   * Move the camera to a new position without animation.
+   * Use -1.0 or double.nan for any value you do not want to change.
+   */
+  fun moveCamera(lat: Double, lng: Double, zoom: Double, bearing: Double, pitch: Double, callback: (Result<Unit>) -> Unit)
+  /** Update map options including bounds and gesture settings. */
+  fun updateMapOptions(minZoom: Double, maxZoom: Double, minPitch: Double, maxPitch: Double, boundsWest: Double, boundsSouth: Double, boundsEast: Double, boundsNorth: Double, rotateEnabled: Boolean, panEnabled: Boolean, zoomEnabled: Boolean, pitchEnabled: Boolean, callback: (Result<Unit>) -> Unit)
+  /** Enable location services and show user location on map. */
+  fun enableLocation(fastestInterval: Long, maxWaitTime: Long, pulseFade: Boolean, accuracyAnimation: Boolean, compassAnimation: Boolean, pulse: Boolean, callback: (Result<Unit>) -> Unit)
+  /** Fit the map camera to show the specified bounds. */
+  fun fitBounds(west: Double, south: Double, east: Double, north: Double, bearing: Double, pitch: Double, duration: Long, paddingLeft: Double, paddingTop: Double, paddingRight: Double, paddingBottom: Double, callback: (Result<Unit>) -> Unit)
+  /** Get the meters per pixel at the specified latitude. */
+  fun getMetersPerPixelAtLatitude(latitude: Double, callback: (Result<Double>) -> Unit)
+  /**
+   * Get the visible region bounds.
+   * Returns [west, south, east, north]
+   */
+  fun getVisibleRegion(callback: (Result<List<Double>>) -> Unit)
+  /**
+   * Convert screen coordinates to longitude/latitude.
+   * Returns [lng, lat]
+   */
+  fun toLngLat(x: Double, y: Double, callback: (Result<List<Double>>) -> Unit)
+  /**
+   * Convert longitude/latitude to screen coordinates.
+   * Returns [x, y]
+   */
+  fun toScreenLocation(lng: Double, lat: Double, callback: (Result<List<Double>>) -> Unit)
+  /** Query rendered layers at the specified screen location. */
+  fun queryLayers(x: Double, y: Double, callback: (Result<List<Map<String, String?>>>) -> Unit)
+  /** Enable/disable location tracking with bearing mode. */
+  fun trackLocation(track: Boolean, bearingMode: Long, callback: (Result<Unit>) -> Unit)
 
   companion object {
     /** The codec used by MapLibreHostApi. */
@@ -917,6 +949,233 @@ interface MapLibreHostApi {
               wrapError(exception)
             }
             reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.moveCamera$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val latArg = args[0] as Double
+            val lngArg = args[1] as Double
+            val zoomArg = args[2] as Double
+            val bearingArg = args[3] as Double
+            val pitchArg = args[4] as Double
+            api.moveCamera(latArg, lngArg, zoomArg, bearingArg, pitchArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateMapOptions$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val minZoomArg = args[0] as Double
+            val maxZoomArg = args[1] as Double
+            val minPitchArg = args[2] as Double
+            val maxPitchArg = args[3] as Double
+            val boundsWestArg = args[4] as Double
+            val boundsSouthArg = args[5] as Double
+            val boundsEastArg = args[6] as Double
+            val boundsNorthArg = args[7] as Double
+            val rotateEnabledArg = args[8] as Boolean
+            val panEnabledArg = args[9] as Boolean
+            val zoomEnabledArg = args[10] as Boolean
+            val pitchEnabledArg = args[11] as Boolean
+            api.updateMapOptions(minZoomArg, maxZoomArg, minPitchArg, maxPitchArg, boundsWestArg, boundsSouthArg, boundsEastArg, boundsNorthArg, rotateEnabledArg, panEnabledArg, zoomEnabledArg, pitchEnabledArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.enableLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val fastestIntervalArg = args[0] as Long
+            val maxWaitTimeArg = args[1] as Long
+            val pulseFadeArg = args[2] as Boolean
+            val accuracyAnimationArg = args[3] as Boolean
+            val compassAnimationArg = args[4] as Boolean
+            val pulseArg = args[5] as Boolean
+            api.enableLocation(fastestIntervalArg, maxWaitTimeArg, pulseFadeArg, accuracyAnimationArg, compassAnimationArg, pulseArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.fitBounds$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val westArg = args[0] as Double
+            val southArg = args[1] as Double
+            val eastArg = args[2] as Double
+            val northArg = args[3] as Double
+            val bearingArg = args[4] as Double
+            val pitchArg = args[5] as Double
+            val durationArg = args[6] as Long
+            val paddingLeftArg = args[7] as Double
+            val paddingTopArg = args[8] as Double
+            val paddingRightArg = args[9] as Double
+            val paddingBottomArg = args[10] as Double
+            api.fitBounds(westArg, southArg, eastArg, northArg, bearingArg, pitchArg, durationArg, paddingLeftArg, paddingTopArg, paddingRightArg, paddingBottomArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val latitudeArg = args[0] as Double
+            api.getMetersPerPixelAtLatitude(latitudeArg) { result: Result<Double> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getVisibleRegion$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.getVisibleRegion{ result: Result<List<Double>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toLngLat$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val xArg = args[0] as Double
+            val yArg = args[1] as Double
+            api.toLngLat(xArg, yArg) { result: Result<List<Double>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toScreenLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val lngArg = args[0] as Double
+            val latArg = args[1] as Double
+            api.toScreenLocation(lngArg, latArg) { result: Result<List<Double>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayers$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val xArg = args[0] as Double
+            val yArg = args[1] as Double
+            api.queryLayers(xArg, yArg) { result: Result<List<Map<String, String?>>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val trackArg = args[0] as Boolean
+            val bearingModeArg = args[1] as Long
+            api.trackLocation(trackArg, bearingModeArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
           }
         } else {
           channel.setMessageHandler(null)

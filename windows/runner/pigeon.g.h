@@ -638,6 +638,82 @@ class MapLibreHostApi {
   virtual ErrorOr<double> GetZoomLevel() = 0;
   // Get the user's current location.
   virtual ErrorOr<LngLat> GetUserLocation() = 0;
+  // Move the camera to a new position without animation.
+  // Use -1.0 or double.nan for any value you do not want to change.
+  virtual void MoveCamera(
+    double lat,
+    double lng,
+    double zoom,
+    double bearing,
+    double pitch,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Update map options including bounds and gesture settings.
+  virtual void UpdateMapOptions(
+    double min_zoom,
+    double max_zoom,
+    double min_pitch,
+    double max_pitch,
+    double bounds_west,
+    double bounds_south,
+    double bounds_east,
+    double bounds_north,
+    bool rotate_enabled,
+    bool pan_enabled,
+    bool zoom_enabled,
+    bool pitch_enabled,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Enable location services and show user location on map.
+  virtual void EnableLocation(
+    int64_t fastest_interval,
+    int64_t max_wait_time,
+    bool pulse_fade,
+    bool accuracy_animation,
+    bool compass_animation,
+    bool pulse,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Fit the map camera to show the specified bounds.
+  virtual void FitBounds(
+    double west,
+    double south,
+    double east,
+    double north,
+    double bearing,
+    double pitch,
+    int64_t duration,
+    double padding_left,
+    double padding_top,
+    double padding_right,
+    double padding_bottom,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Get the meters per pixel at the specified latitude.
+  virtual void GetMetersPerPixelAtLatitude(
+    double latitude,
+    std::function<void(ErrorOr<double> reply)> result) = 0;
+  // Get the visible region bounds.
+  // Returns [west, south, east, north]
+  virtual void GetVisibleRegion(std::function<void(ErrorOr<flutter::EncodableList> reply)> result) = 0;
+  // Convert screen coordinates to longitude/latitude.
+  // Returns [lng, lat]
+  virtual void ToLngLat(
+    double x,
+    double y,
+    std::function<void(ErrorOr<flutter::EncodableList> reply)> result) = 0;
+  // Convert longitude/latitude to screen coordinates.
+  // Returns [x, y]
+  virtual void ToScreenLocation(
+    double lng,
+    double lat,
+    std::function<void(ErrorOr<flutter::EncodableList> reply)> result) = 0;
+  // Query rendered layers at the specified screen location.
+  virtual void QueryLayers(
+    double x,
+    double y,
+    std::function<void(ErrorOr<flutter::EncodableList> reply)> result) = 0;
+  // Enable/disable location tracking with bearing mode.
+  virtual void TrackLocation(
+    bool track,
+    int64_t bearing_mode,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
 
   // The codec used by MapLibreHostApi.
   static const flutter::StandardMessageCodec& GetCodec();

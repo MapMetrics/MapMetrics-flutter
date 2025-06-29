@@ -165,6 +165,8 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     _flutterApi.onMoveCamera(camera: pigeonCamera) { _ in }
   }
 
+  // MARK: - MapLibreHostApi Implementation
+
   func addFillLayer(
     id _: String, sourceId _: String, layout _: [String: Any],
     paint _: [String: Any], belowLayerId _: String?,
@@ -249,8 +251,6 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     id: String, bytes: FlutterStandardTypedData,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
-    // Main Thread Checker: UI API called on a background thread: -[UIView frame]
-    // DispatchQueue.main.async {
     print("addImage before")
     var style = _mapView.style!
     var imageData = bytes.data
@@ -258,24 +258,23 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     style.setImage(image, forName: id)
     print("addImage afters")
     print("added image: \(style.image(forName: id))")
-    // }
     completion(.success(()))
   }
-  
+
   func addClusteredGeoJsonSource(
     id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
     print("Swift: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
-    
+
     guard let style = _mapView.style else {
       print("Swift: Error - Style not available")
       completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
       return
     }
-    
+
     print("Swift: Style is available, creating clustering options")
-    
+
     // Create clustering options
     var options: [MLNShapeSourceOption: Any] = [:]
     if clustered {
@@ -284,7 +283,7 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       options[.maximumZoomLevelForClustering] = clusterMaxZoom
       print("Swift: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
     }
-    
+
     // Create the shape source
     let source: MLNShapeSource
     if data.hasPrefix("http://") || data.hasPrefix("https://") {
@@ -307,16 +306,16 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       }
       source = MLNShapeSource(identifier: id, shape: shape, options: options)
     }
-    
+
     // Add the source to the style
     print("Swift: Adding source to style")
     style.addSource(source)
     print("Swift: Successfully added clustered source with ID: \(id)")
-    
+
     // Add visualization layers for the clusters
     if clustered {
       print("Swift: Adding visualization layers for clusters")
-      
+
       // Add layer for unclustered points (individual points)
       let unclusteredLayer = MLNCircleStyleLayer(identifier: "\(id)-unclustered", source: source)
       unclusteredLayer.circleRadius = NSExpression(forConstantValue: 8)
@@ -324,13 +323,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       unclusteredLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
       unclusteredLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
       unclusteredLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
-      
+
       // Filter to show only unclustered points
       unclusteredLayer.predicate = NSPredicate(format: "point_count == nil")
-      
+
       style.addLayer(unclusteredLayer)
       print("Swift: Added unclustered points layer")
-      
+
       // Add layer for clusters (colored circles)
       let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
       clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
@@ -338,26 +337,35 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
       clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
       clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
-      
+
       // Filter to show only clusters
       clustersLayer.predicate = NSPredicate(format: "point_count != nil")
-      
+
       style.addLayer(clustersLayer)
       print("Swift: Added clusters layer")
-      
+
       // Add layer for cluster count labels
       let clusterCountLayer = MLNSymbolStyleLayer(identifier: "\(id)-cluster-count", source: source)
       clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
       clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
       clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor.white)
-      
+
       // Filter to show only clusters
       clusterCountLayer.predicate = NSPredicate(format: "point_count != nil")
-      
+
       style.addLayer(clusterCountLayer)
       print("Swift: Added cluster count labels layer")
     }
-    
+
+    completion(.success(()))
+  }
+
+  // Test method for debugging Pigeon generation
+  func testMethod(
+    value: String,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    print("Swift: testMethod called with value: \(value)")
     completion(.success(()))
   }
 
@@ -373,7 +381,7 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
   ) {
     DispatchQueue.main.async {
       var camera = self._mapView.camera
-      
+
       // Use sentinel values (-1.0 or NaN) to indicate "no change"
       if !latitude.isNaN && latitude != -1.0 {
         camera.centerCoordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
@@ -384,27 +392,18 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       if !pitch.isNaN && pitch != -1.0 {
         camera.pitch = pitch
       }
-      
+
       // Set camera with animation
       let animationDuration = duration > 0 ? Double(duration) / 1000.0 : 0.2
       self._mapView.setCamera(camera, withDuration: animationDuration, animationTimingFunction: nil)
-      
+
       // Handle zoom separately if needed
       if !zoom.isNaN && zoom != -1.0 {
         self._mapView.setZoomLevel(zoom, animated: true)
       }
-      
+
       completion(.success(()))
     }
-  }
-
-  // Test method for debugging Pigeon generation
-  func testMethod(
-    value: String,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    print("Swift: testMethod called with value: \(value)")
-    completion(.success(()))
   }
 
   // Get the current camera state
@@ -437,6 +436,243 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     } else {
       // Return a default location if user location is not available
       return LngLat(lng: 0.0, lat: 0.0)
+    }
+  }
+
+  // MARK: - New Required Methods
+
+  // Move the camera to a new position without animation
+  func moveCamera(
+    lat: Double,
+    lng: Double,
+    zoom: Double,
+    bearing: Double,
+    pitch: Double,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    DispatchQueue.main.async {
+      var camera = self._mapView.camera
+
+      // Use sentinel values (-1.0 or NaN) to indicate "no change"
+      if !lat.isNaN && lat != -1.0 {
+        camera.centerCoordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+      }
+      if !bearing.isNaN && bearing != -1.0 {
+        camera.heading = bearing
+      }
+      if !pitch.isNaN && pitch != -1.0 {
+        camera.pitch = pitch
+      }
+
+      // Set camera without animation
+      self._mapView.setCamera(camera, animated: false)
+
+      // Handle zoom separately if needed
+      if !zoom.isNaN && zoom != -1.0 {
+        self._mapView.setZoomLevel(zoom, animated: false)
+      }
+
+      completion(.success(()))
+    }
+  }
+
+  // Update map options including bounds and gesture settings
+  func updateMapOptions(
+    minZoom: Double,
+    maxZoom: Double,
+    minPitch: Double,
+    maxPitch: Double,
+    boundsWest: Double,
+    boundsSouth: Double,
+    boundsEast: Double,
+    boundsNorth: Double,
+    rotateEnabled: Bool,
+    panEnabled: Bool,
+    zoomEnabled: Bool,
+    pitchEnabled: Bool,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    DispatchQueue.main.async {
+      // Update zoom and pitch limits
+      if !minZoom.isNaN && minZoom != -1.0 {
+        self._mapView.minimumZoomLevel = minZoom
+      }
+      if !maxZoom.isNaN && maxZoom != -1.0 {
+        self._mapView.maximumZoomLevel = maxZoom
+      }
+      if !minPitch.isNaN && minPitch != -1.0 {
+        self._mapView.minimumPitch = minPitch
+      }
+      if !maxPitch.isNaN && maxPitch != -1.0 {
+        self._mapView.maximumPitch = maxPitch
+      }
+
+      // Update bounds if provided
+      if !boundsWest.isNaN && !boundsSouth.isNaN && !boundsEast.isNaN && !boundsNorth.isNaN {
+        let bounds = MLNCoordinateBounds(
+          sw: CLLocationCoordinate2D(latitude: boundsSouth, longitude: boundsWest),
+          ne: CLLocationCoordinate2D(latitude: boundsNorth, longitude: boundsEast)
+        )
+        // Note: MLNMapView doesn't have a direct way to set coordinate bounds
+        // This would need to be implemented differently if needed
+      }
+
+      // Update gesture settings
+      self._mapView.allowsRotating = rotateEnabled
+      self._mapView.allowsScrolling = panEnabled
+      self._mapView.allowsZooming = zoomEnabled
+      self._mapView.allowsTilting = pitchEnabled
+
+      completion(.success(()))
+    }
+  }
+
+  // Enable location services and show user location on map
+  func enableLocation(
+    fastestInterval: Int64,
+    maxWaitTime: Int64,
+    pulseFade: Bool,
+    accuracyAnimation: Bool,
+    compassAnimation: Bool,
+    pulse: Bool,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    DispatchQueue.main.async {
+      self._mapView.showsUserLocation = true
+      // Note: iOS MapLibre doesn't have all the detailed location settings like Android
+      // The parameters here would need custom implementation if needed
+      completion(.success(()))
+    }
+  }
+
+  // Fit the map camera to show the specified bounds
+  func fitBounds(
+    west: Double,
+    south: Double,
+    east: Double,
+    north: Double,
+    bearing: Double,
+    pitch: Double,
+    duration: Int64,
+    paddingLeft: Double,
+    paddingTop: Double,
+    paddingRight: Double,
+    paddingBottom: Double,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    DispatchQueue.main.async {
+      let bounds = MLNCoordinateBounds(
+        sw: CLLocationCoordinate2D(latitude: south, longitude: west),
+        ne: CLLocationCoordinate2D(latitude: north, longitude: east)
+      )
+
+      let edgeInsets = UIEdgeInsets(
+        top: CGFloat(paddingTop),
+        left: CGFloat(paddingLeft),
+        bottom: CGFloat(paddingBottom),
+        right: CGFloat(paddingRight)
+      )
+
+      let animated = duration > 0
+      self._mapView.setVisibleCoordinateBounds(bounds, edgePadding: edgeInsets, animated: animated)
+
+      completion(.success(()))
+    }
+  }
+
+  // Get the meters per pixel at the specified latitude
+  func getMetersPerPixelAtLatitude(
+    latitude: Double,
+    completion: @escaping (Result<Double, Error>) -> Void
+  ) {
+    let metersPerPixel = _mapView.metersPerPoint(atLatitude: latitude)
+    completion(.success(metersPerPixel))
+  }
+
+  // Get the visible region bounds
+  func getVisibleRegion(
+    completion: @escaping (Result<[Double], Error>) -> Void
+  ) {
+    let bounds = _mapView.visibleCoordinateBounds
+    let result = [bounds.sw.longitude, bounds.sw.latitude, bounds.ne.longitude, bounds.ne.latitude]
+    completion(.success(result))
+  }
+
+  // Convert screen coordinates to longitude/latitude
+  func toLngLat(
+    x: Double,
+    y: Double,
+    completion: @escaping (Result<[Double], Error>) -> Void
+  ) {
+    let screenPoint = CGPoint(x: x, y: y)
+    let coordinate = _mapView.convert(screenPoint, toCoordinateFrom: _mapView)
+    let result = [coordinate.longitude, coordinate.latitude]
+    completion(.success(result))
+  }
+
+  // Convert longitude/latitude to screen coordinates
+  func toScreenLocation(
+    lng: Double,
+    lat: Double,
+    completion: @escaping (Result<[Double], Error>) -> Void
+  ) {
+    let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+    let screenPoint = _mapView.convert(coordinate, toPointTo: _mapView)
+    let result = [Double(screenPoint.x), Double(screenPoint.y)]
+    completion(.success(result))
+  }
+
+  // Query rendered layers at the specified screen location
+  func queryLayers(
+    x: Double,
+    y: Double,
+    completion: @escaping (Result<[[String: String?]], Error>) -> Void
+  ) {
+    let screenPoint = CGPoint(x: x, y: y)
+
+    // Query visible features at the point
+    let features = _mapView.visibleFeatures(at: screenPoint)
+
+    var result: [[String: String?]] = []
+    for feature in features {
+      if let layer = feature.attribute(forKey: "layer") as? String,
+         let source = feature.attribute(forKey: "source") as? String {
+        let layerInfo: [String: String?] = [
+          "layerId": layer,
+          "sourceId": source,
+          "sourceLayer": feature.attribute(forKey: "sourceLayer") as? String
+        ]
+        result.append(layerInfo)
+      }
+    }
+
+    completion(.success(result))
+  }
+
+  // Enable/disable location tracking with bearing mode
+  func trackLocation(
+    track: Bool,
+    bearingMode: Int64,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    DispatchQueue.main.async {
+      if track {
+        // Convert bearingMode to appropriate iOS tracking mode
+        switch bearingMode {
+        case 0: // none
+          self._mapView.userTrackingMode = .follow
+        case 1: // compass
+          self._mapView.userTrackingMode = .followWithHeading
+        case 2: // gps
+          self._mapView.userTrackingMode = .followWithCourse
+        default:
+          self._mapView.userTrackingMode = .follow
+        }
+      } else {
+        self._mapView.userTrackingMode = .none
+      }
+
+      completion(.success(()))
     }
   }
 }

@@ -540,4 +540,126 @@ class MapLibreMapController(
             LngLat(0.0, 0.0) // Default location if user location is not available
         }
     }
+
+    // Add these methods to your MapLibreMapController.kt class
+
+    override fun moveCamera(
+        lat: Double,
+        lng: Double,
+        zoom: Double,
+        bearing: Double,
+        pitch: Double,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // This is just a stub since Android uses JNI directly
+        callback(Result.success(Unit))
+    }
+
+    override fun updateMapOptions(
+        minZoom: Double,
+        maxZoom: Double,
+        minPitch: Double,
+        maxPitch: Double,
+        boundsWest: Double,
+        boundsSouth: Double,
+        boundsEast: Double,
+        boundsNorth: Double,
+        rotateEnabled: Boolean,
+        panEnabled: Boolean,
+        zoomEnabled: Boolean,
+        pitchEnabled: Boolean,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun enableLocation(
+        fastestInterval: Long,
+        maxWaitTime: Long,
+        pulseFade: Boolean,
+        accuracyAnimation: Boolean,
+        compassAnimation: Boolean,
+        pulse: Boolean,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun fitBounds(
+        west: Double,
+        south: Double,
+        east: Double,
+        north: Double,
+        bearing: Double,
+        pitch: Double,
+        duration: Long,
+        paddingLeft: Double,
+        paddingTop: Double,
+        paddingRight: Double,
+        paddingBottom: Double,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun getMetersPerPixelAtLatitude(
+        latitude: Double,
+        callback: (Result<Double>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // For now, return a placeholder value
+        callback(Result.success(156543.03392)) // meters per pixel at equator at zoom 0
+    }
+
+    override fun getVisibleRegion(
+        callback: (Result<List<Double>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // Return [west, south, east, north]
+        callback(Result.success(listOf(-180.0, -85.0, 180.0, 85.0)))
+    }
+
+    override fun toLngLat(
+        x: Double,
+        y: Double,
+        callback: (Result<List<Double>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // For now, return placeholder coordinates
+        // Return [lng, lat]
+        callback(Result.success(listOf(0.0, 0.0)))
+    }
+
+    override fun toScreenLocation(
+        lng: Double,
+        lat: Double,
+        callback: (Result<List<Double>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // For now, return placeholder screen coordinates
+        // Return [x, y]
+        callback(Result.success(listOf(0.0, 0.0)))
+    }
+
+    override fun queryLayers(
+        x: Double,
+        y: Double,
+        callback: (Result<List<Map<String, String?>>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(emptyList()))
+    }
+
+    override fun trackLocation(
+        track: Boolean,
+        bearingMode: Long,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
 }

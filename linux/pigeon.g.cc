@@ -1676,6 +1676,396 @@ MapmetricsMapLibreHostApiGetUserLocationResponse* mapmetrics_map_libre_host_api_
   return self;
 }
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiMoveCameraResponse, mapmetrics_map_libre_host_api_move_camera_response, MAPMETRICS, MAP_LIBRE_HOST_API_MOVE_CAMERA_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiMoveCameraResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiMoveCameraResponse, mapmetrics_map_libre_host_api_move_camera_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_move_camera_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiMoveCameraResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_MOVE_CAMERA_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_move_camera_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_move_camera_response_init(MapmetricsMapLibreHostApiMoveCameraResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_move_camera_response_class_init(MapmetricsMapLibreHostApiMoveCameraResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_move_camera_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiMoveCameraResponse* mapmetrics_map_libre_host_api_move_camera_response_new() {
+  MapmetricsMapLibreHostApiMoveCameraResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_MOVE_CAMERA_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_move_camera_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiMoveCameraResponse* mapmetrics_map_libre_host_api_move_camera_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiMoveCameraResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_MOVE_CAMERA_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_move_camera_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiUpdateMapOptionsResponse, mapmetrics_map_libre_host_api_update_map_options_response, MAPMETRICS, MAP_LIBRE_HOST_API_UPDATE_MAP_OPTIONS_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiUpdateMapOptionsResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiUpdateMapOptionsResponse, mapmetrics_map_libre_host_api_update_map_options_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_update_map_options_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiUpdateMapOptionsResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_UPDATE_MAP_OPTIONS_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_update_map_options_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_update_map_options_response_init(MapmetricsMapLibreHostApiUpdateMapOptionsResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_update_map_options_response_class_init(MapmetricsMapLibreHostApiUpdateMapOptionsResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_update_map_options_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiUpdateMapOptionsResponse* mapmetrics_map_libre_host_api_update_map_options_response_new() {
+  MapmetricsMapLibreHostApiUpdateMapOptionsResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_UPDATE_MAP_OPTIONS_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_update_map_options_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiUpdateMapOptionsResponse* mapmetrics_map_libre_host_api_update_map_options_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiUpdateMapOptionsResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_UPDATE_MAP_OPTIONS_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_update_map_options_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiEnableLocationResponse, mapmetrics_map_libre_host_api_enable_location_response, MAPMETRICS, MAP_LIBRE_HOST_API_ENABLE_LOCATION_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiEnableLocationResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiEnableLocationResponse, mapmetrics_map_libre_host_api_enable_location_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_enable_location_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiEnableLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ENABLE_LOCATION_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_enable_location_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_enable_location_response_init(MapmetricsMapLibreHostApiEnableLocationResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_enable_location_response_class_init(MapmetricsMapLibreHostApiEnableLocationResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_enable_location_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiEnableLocationResponse* mapmetrics_map_libre_host_api_enable_location_response_new() {
+  MapmetricsMapLibreHostApiEnableLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ENABLE_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_enable_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiEnableLocationResponse* mapmetrics_map_libre_host_api_enable_location_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiEnableLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ENABLE_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_enable_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiFitBoundsResponse, mapmetrics_map_libre_host_api_fit_bounds_response, MAPMETRICS, MAP_LIBRE_HOST_API_FIT_BOUNDS_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiFitBoundsResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiFitBoundsResponse, mapmetrics_map_libre_host_api_fit_bounds_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_fit_bounds_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiFitBoundsResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_FIT_BOUNDS_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_fit_bounds_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_fit_bounds_response_init(MapmetricsMapLibreHostApiFitBoundsResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_fit_bounds_response_class_init(MapmetricsMapLibreHostApiFitBoundsResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_fit_bounds_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiFitBoundsResponse* mapmetrics_map_libre_host_api_fit_bounds_response_new() {
+  MapmetricsMapLibreHostApiFitBoundsResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_FIT_BOUNDS_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_fit_bounds_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiFitBoundsResponse* mapmetrics_map_libre_host_api_fit_bounds_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiFitBoundsResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_FIT_BOUNDS_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_fit_bounds_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse, mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response, MAPMETRICS, MAP_LIBRE_HOST_API_GET_METERS_PER_PIXEL_AT_LATITUDE_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse, mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_METERS_PER_PIXEL_AT_LATITUDE_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_init(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_class_init(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse* mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_new(double return_value) {
+  MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_METERS_PER_PIXEL_AT_LATITUDE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_float(return_value));
+  return self;
+}
+
+static MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse* mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_METERS_PER_PIXEL_AT_LATITUDE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiGetVisibleRegionResponse, mapmetrics_map_libre_host_api_get_visible_region_response, MAPMETRICS, MAP_LIBRE_HOST_API_GET_VISIBLE_REGION_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiGetVisibleRegionResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiGetVisibleRegionResponse, mapmetrics_map_libre_host_api_get_visible_region_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_get_visible_region_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiGetVisibleRegionResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_VISIBLE_REGION_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_get_visible_region_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_get_visible_region_response_init(MapmetricsMapLibreHostApiGetVisibleRegionResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_get_visible_region_response_class_init(MapmetricsMapLibreHostApiGetVisibleRegionResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_get_visible_region_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiGetVisibleRegionResponse* mapmetrics_map_libre_host_api_get_visible_region_response_new(FlValue* return_value) {
+  MapmetricsMapLibreHostApiGetVisibleRegionResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_VISIBLE_REGION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_get_visible_region_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_ref(return_value));
+  return self;
+}
+
+static MapmetricsMapLibreHostApiGetVisibleRegionResponse* mapmetrics_map_libre_host_api_get_visible_region_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiGetVisibleRegionResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_GET_VISIBLE_REGION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_get_visible_region_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiToLngLatResponse, mapmetrics_map_libre_host_api_to_lng_lat_response, MAPMETRICS, MAP_LIBRE_HOST_API_TO_LNG_LAT_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiToLngLatResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiToLngLatResponse, mapmetrics_map_libre_host_api_to_lng_lat_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_to_lng_lat_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiToLngLatResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TO_LNG_LAT_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_to_lng_lat_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_to_lng_lat_response_init(MapmetricsMapLibreHostApiToLngLatResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_to_lng_lat_response_class_init(MapmetricsMapLibreHostApiToLngLatResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_to_lng_lat_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiToLngLatResponse* mapmetrics_map_libre_host_api_to_lng_lat_response_new(FlValue* return_value) {
+  MapmetricsMapLibreHostApiToLngLatResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TO_LNG_LAT_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_to_lng_lat_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_ref(return_value));
+  return self;
+}
+
+static MapmetricsMapLibreHostApiToLngLatResponse* mapmetrics_map_libre_host_api_to_lng_lat_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiToLngLatResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TO_LNG_LAT_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_to_lng_lat_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiToScreenLocationResponse, mapmetrics_map_libre_host_api_to_screen_location_response, MAPMETRICS, MAP_LIBRE_HOST_API_TO_SCREEN_LOCATION_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiToScreenLocationResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiToScreenLocationResponse, mapmetrics_map_libre_host_api_to_screen_location_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_to_screen_location_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiToScreenLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TO_SCREEN_LOCATION_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_to_screen_location_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_to_screen_location_response_init(MapmetricsMapLibreHostApiToScreenLocationResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_to_screen_location_response_class_init(MapmetricsMapLibreHostApiToScreenLocationResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_to_screen_location_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiToScreenLocationResponse* mapmetrics_map_libre_host_api_to_screen_location_response_new(FlValue* return_value) {
+  MapmetricsMapLibreHostApiToScreenLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TO_SCREEN_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_to_screen_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_ref(return_value));
+  return self;
+}
+
+static MapmetricsMapLibreHostApiToScreenLocationResponse* mapmetrics_map_libre_host_api_to_screen_location_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiToScreenLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TO_SCREEN_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_to_screen_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiQueryLayersResponse, mapmetrics_map_libre_host_api_query_layers_response, MAPMETRICS, MAP_LIBRE_HOST_API_QUERY_LAYERS_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiQueryLayersResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiQueryLayersResponse, mapmetrics_map_libre_host_api_query_layers_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_query_layers_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiQueryLayersResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_QUERY_LAYERS_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_query_layers_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_query_layers_response_init(MapmetricsMapLibreHostApiQueryLayersResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_query_layers_response_class_init(MapmetricsMapLibreHostApiQueryLayersResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_query_layers_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiQueryLayersResponse* mapmetrics_map_libre_host_api_query_layers_response_new(FlValue* return_value) {
+  MapmetricsMapLibreHostApiQueryLayersResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_QUERY_LAYERS_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_query_layers_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_ref(return_value));
+  return self;
+}
+
+static MapmetricsMapLibreHostApiQueryLayersResponse* mapmetrics_map_libre_host_api_query_layers_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiQueryLayersResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_QUERY_LAYERS_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_query_layers_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiTrackLocationResponse, mapmetrics_map_libre_host_api_track_location_response, MAPMETRICS, MAP_LIBRE_HOST_API_TRACK_LOCATION_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiTrackLocationResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiTrackLocationResponse, mapmetrics_map_libre_host_api_track_location_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_track_location_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiTrackLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TRACK_LOCATION_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_track_location_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_track_location_response_init(MapmetricsMapLibreHostApiTrackLocationResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_track_location_response_class_init(MapmetricsMapLibreHostApiTrackLocationResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_track_location_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiTrackLocationResponse* mapmetrics_map_libre_host_api_track_location_response_new() {
+  MapmetricsMapLibreHostApiTrackLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TRACK_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_track_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiTrackLocationResponse* mapmetrics_map_libre_host_api_track_location_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiTrackLocationResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_TRACK_LOCATION_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_track_location_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 struct _MapmetricsMapLibreHostApi {
   GObject parent_instance;
 
@@ -2059,6 +2449,202 @@ static void mapmetrics_map_libre_host_api_get_user_location_cb(FlBasicMessageCha
   }
 }
 
+static void mapmetrics_map_libre_host_api_move_camera_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->move_camera == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double lat = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double lng = fl_value_get_float(value1);
+  FlValue* value2 = fl_value_get_list_value(message_, 2);
+  double zoom = fl_value_get_float(value2);
+  FlValue* value3 = fl_value_get_list_value(message_, 3);
+  double bearing = fl_value_get_float(value3);
+  FlValue* value4 = fl_value_get_list_value(message_, 4);
+  double pitch = fl_value_get_float(value4);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->move_camera(lat, lng, zoom, bearing, pitch, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_update_map_options_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->update_map_options == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double min_zoom = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double max_zoom = fl_value_get_float(value1);
+  FlValue* value2 = fl_value_get_list_value(message_, 2);
+  double min_pitch = fl_value_get_float(value2);
+  FlValue* value3 = fl_value_get_list_value(message_, 3);
+  double max_pitch = fl_value_get_float(value3);
+  FlValue* value4 = fl_value_get_list_value(message_, 4);
+  double bounds_west = fl_value_get_float(value4);
+  FlValue* value5 = fl_value_get_list_value(message_, 5);
+  double bounds_south = fl_value_get_float(value5);
+  FlValue* value6 = fl_value_get_list_value(message_, 6);
+  double bounds_east = fl_value_get_float(value6);
+  FlValue* value7 = fl_value_get_list_value(message_, 7);
+  double bounds_north = fl_value_get_float(value7);
+  FlValue* value8 = fl_value_get_list_value(message_, 8);
+  gboolean rotate_enabled = fl_value_get_bool(value8);
+  FlValue* value9 = fl_value_get_list_value(message_, 9);
+  gboolean pan_enabled = fl_value_get_bool(value9);
+  FlValue* value10 = fl_value_get_list_value(message_, 10);
+  gboolean zoom_enabled = fl_value_get_bool(value10);
+  FlValue* value11 = fl_value_get_list_value(message_, 11);
+  gboolean pitch_enabled = fl_value_get_bool(value11);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->update_map_options(min_zoom, max_zoom, min_pitch, max_pitch, bounds_west, bounds_south, bounds_east, bounds_north, rotate_enabled, pan_enabled, zoom_enabled, pitch_enabled, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_enable_location_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->enable_location == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  int64_t fastest_interval = fl_value_get_int(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  int64_t max_wait_time = fl_value_get_int(value1);
+  FlValue* value2 = fl_value_get_list_value(message_, 2);
+  gboolean pulse_fade = fl_value_get_bool(value2);
+  FlValue* value3 = fl_value_get_list_value(message_, 3);
+  gboolean accuracy_animation = fl_value_get_bool(value3);
+  FlValue* value4 = fl_value_get_list_value(message_, 4);
+  gboolean compass_animation = fl_value_get_bool(value4);
+  FlValue* value5 = fl_value_get_list_value(message_, 5);
+  gboolean pulse = fl_value_get_bool(value5);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->enable_location(fastest_interval, max_wait_time, pulse_fade, accuracy_animation, compass_animation, pulse, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_fit_bounds_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->fit_bounds == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double west = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double south = fl_value_get_float(value1);
+  FlValue* value2 = fl_value_get_list_value(message_, 2);
+  double east = fl_value_get_float(value2);
+  FlValue* value3 = fl_value_get_list_value(message_, 3);
+  double north = fl_value_get_float(value3);
+  FlValue* value4 = fl_value_get_list_value(message_, 4);
+  double bearing = fl_value_get_float(value4);
+  FlValue* value5 = fl_value_get_list_value(message_, 5);
+  double pitch = fl_value_get_float(value5);
+  FlValue* value6 = fl_value_get_list_value(message_, 6);
+  int64_t duration = fl_value_get_int(value6);
+  FlValue* value7 = fl_value_get_list_value(message_, 7);
+  double padding_left = fl_value_get_float(value7);
+  FlValue* value8 = fl_value_get_list_value(message_, 8);
+  double padding_top = fl_value_get_float(value8);
+  FlValue* value9 = fl_value_get_list_value(message_, 9);
+  double padding_right = fl_value_get_float(value9);
+  FlValue* value10 = fl_value_get_list_value(message_, 10);
+  double padding_bottom = fl_value_get_float(value10);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->fit_bounds(west, south, east, north, bearing, pitch, duration, padding_left, padding_top, padding_right, padding_bottom, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->get_meters_per_pixel_at_latitude == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double latitude = fl_value_get_float(value0);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->get_meters_per_pixel_at_latitude(latitude, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_get_visible_region_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->get_visible_region == nullptr) {
+    return;
+  }
+
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->get_visible_region(handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_to_lng_lat_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->to_lng_lat == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double x = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double y = fl_value_get_float(value1);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->to_lng_lat(x, y, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_to_screen_location_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->to_screen_location == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double lng = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double lat = fl_value_get_float(value1);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->to_screen_location(lng, lat, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_query_layers_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->query_layers == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double x = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double y = fl_value_get_float(value1);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->query_layers(x, y, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_track_location_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->track_location == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  gboolean track = fl_value_get_bool(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  int64_t bearing_mode = fl_value_get_int(value1);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->track_location(track, bearing_mode, handle, self->user_data);
+}
+
 void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix, const MapmetricsMapLibreHostApiVTable* vtable, gpointer user_data, GDestroyNotify user_data_free_func) {
   g_autofree gchar* dot_suffix = suffix != nullptr ? g_strdup_printf(".%s", suffix) : g_strdup("");
   g_autoptr(MapmetricsMapLibreHostApi) api_data = mapmetrics_map_libre_host_api_new(vtable, user_data, user_data_free_func);
@@ -2118,6 +2704,36 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* get_user_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getUserLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) get_user_location_channel = fl_basic_message_channel_new(messenger, get_user_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(get_user_location_channel, mapmetrics_map_libre_host_api_get_user_location_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* move_camera_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.moveCamera%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) move_camera_channel = fl_basic_message_channel_new(messenger, move_camera_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(move_camera_channel, mapmetrics_map_libre_host_api_move_camera_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* update_map_options_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateMapOptions%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) update_map_options_channel = fl_basic_message_channel_new(messenger, update_map_options_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(update_map_options_channel, mapmetrics_map_libre_host_api_update_map_options_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* enable_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.enableLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) enable_location_channel = fl_basic_message_channel_new(messenger, enable_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(enable_location_channel, mapmetrics_map_libre_host_api_enable_location_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* fit_bounds_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.fitBounds%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) fit_bounds_channel = fl_basic_message_channel_new(messenger, fit_bounds_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(fit_bounds_channel, mapmetrics_map_libre_host_api_fit_bounds_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* get_meters_per_pixel_at_latitude_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) get_meters_per_pixel_at_latitude_channel = fl_basic_message_channel_new(messenger, get_meters_per_pixel_at_latitude_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(get_meters_per_pixel_at_latitude_channel, mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* get_visible_region_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getVisibleRegion%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) get_visible_region_channel = fl_basic_message_channel_new(messenger, get_visible_region_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(get_visible_region_channel, mapmetrics_map_libre_host_api_get_visible_region_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* to_lng_lat_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toLngLat%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) to_lng_lat_channel = fl_basic_message_channel_new(messenger, to_lng_lat_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(to_lng_lat_channel, mapmetrics_map_libre_host_api_to_lng_lat_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* to_screen_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toScreenLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) to_screen_location_channel = fl_basic_message_channel_new(messenger, to_screen_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(to_screen_location_channel, mapmetrics_map_libre_host_api_to_screen_location_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* query_layers_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayers%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) query_layers_channel = fl_basic_message_channel_new(messenger, query_layers_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(query_layers_channel, mapmetrics_map_libre_host_api_query_layers_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(track_location_channel, mapmetrics_map_libre_host_api_track_location_cb, g_object_ref(api_data), g_object_unref);
 }
 
 void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix) {
@@ -2178,6 +2794,36 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* get_user_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getUserLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) get_user_location_channel = fl_basic_message_channel_new(messenger, get_user_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(get_user_location_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* move_camera_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.moveCamera%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) move_camera_channel = fl_basic_message_channel_new(messenger, move_camera_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(move_camera_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* update_map_options_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateMapOptions%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) update_map_options_channel = fl_basic_message_channel_new(messenger, update_map_options_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(update_map_options_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* enable_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.enableLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) enable_location_channel = fl_basic_message_channel_new(messenger, enable_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(enable_location_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* fit_bounds_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.fitBounds%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) fit_bounds_channel = fl_basic_message_channel_new(messenger, fit_bounds_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(fit_bounds_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* get_meters_per_pixel_at_latitude_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) get_meters_per_pixel_at_latitude_channel = fl_basic_message_channel_new(messenger, get_meters_per_pixel_at_latitude_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(get_meters_per_pixel_at_latitude_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* get_visible_region_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getVisibleRegion%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) get_visible_region_channel = fl_basic_message_channel_new(messenger, get_visible_region_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(get_visible_region_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* to_lng_lat_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toLngLat%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) to_lng_lat_channel = fl_basic_message_channel_new(messenger, to_lng_lat_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(to_lng_lat_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* to_screen_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toScreenLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) to_screen_location_channel = fl_basic_message_channel_new(messenger, to_screen_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(to_screen_location_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* query_layers_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayers%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) query_layers_channel = fl_basic_message_channel_new(messenger, query_layers_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(query_layers_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(track_location_channel, nullptr, nullptr, nullptr);
 }
 
 void mapmetrics_map_libre_host_api_respond_add_fill_layer(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
@@ -2401,6 +3047,166 @@ void mapmetrics_map_libre_host_api_respond_error_animate_camera(MapmetricsMapLib
   g_autoptr(GError) error = nullptr;
   if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
     g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "animateCamera", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_move_camera(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiMoveCameraResponse) response = mapmetrics_map_libre_host_api_move_camera_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "moveCamera", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_move_camera(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiMoveCameraResponse) response = mapmetrics_map_libre_host_api_move_camera_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "moveCamera", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_update_map_options(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiUpdateMapOptionsResponse) response = mapmetrics_map_libre_host_api_update_map_options_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "updateMapOptions", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_update_map_options(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiUpdateMapOptionsResponse) response = mapmetrics_map_libre_host_api_update_map_options_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "updateMapOptions", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_enable_location(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiEnableLocationResponse) response = mapmetrics_map_libre_host_api_enable_location_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "enableLocation", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_enable_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiEnableLocationResponse) response = mapmetrics_map_libre_host_api_enable_location_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "enableLocation", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_fit_bounds(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiFitBoundsResponse) response = mapmetrics_map_libre_host_api_fit_bounds_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "fitBounds", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_fit_bounds(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiFitBoundsResponse) response = mapmetrics_map_libre_host_api_fit_bounds_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "fitBounds", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_get_meters_per_pixel_at_latitude(MapmetricsMapLibreHostApiResponseHandle* response_handle, double return_value) {
+  g_autoptr(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse) response = mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_new(return_value);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "getMetersPerPixelAtLatitude", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_get_meters_per_pixel_at_latitude(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse) response = mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "getMetersPerPixelAtLatitude", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_get_visible_region(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value) {
+  g_autoptr(MapmetricsMapLibreHostApiGetVisibleRegionResponse) response = mapmetrics_map_libre_host_api_get_visible_region_response_new(return_value);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "getVisibleRegion", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_get_visible_region(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiGetVisibleRegionResponse) response = mapmetrics_map_libre_host_api_get_visible_region_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "getVisibleRegion", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_to_lng_lat(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value) {
+  g_autoptr(MapmetricsMapLibreHostApiToLngLatResponse) response = mapmetrics_map_libre_host_api_to_lng_lat_response_new(return_value);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "toLngLat", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_to_lng_lat(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiToLngLatResponse) response = mapmetrics_map_libre_host_api_to_lng_lat_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "toLngLat", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_to_screen_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value) {
+  g_autoptr(MapmetricsMapLibreHostApiToScreenLocationResponse) response = mapmetrics_map_libre_host_api_to_screen_location_response_new(return_value);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "toScreenLocation", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_to_screen_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiToScreenLocationResponse) response = mapmetrics_map_libre_host_api_to_screen_location_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "toScreenLocation", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_query_layers(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value) {
+  g_autoptr(MapmetricsMapLibreHostApiQueryLayersResponse) response = mapmetrics_map_libre_host_api_query_layers_response_new(return_value);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "queryLayers", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_query_layers(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiQueryLayersResponse) response = mapmetrics_map_libre_host_api_query_layers_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "queryLayers", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_track_location(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiTrackLocationResponse) response = mapmetrics_map_libre_host_api_track_location_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "trackLocation", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_track_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiTrackLocationResponse) response = mapmetrics_map_libre_host_api_track_location_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "trackLocation", error->message);
   }
 }
 

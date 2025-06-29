@@ -552,6 +552,30 @@ protocol MapLibreHostApi {
   func getZoomLevel() throws -> Double
   /// Get the user's current location.
   func getUserLocation() throws -> LngLat
+  /// Move the camera to a new position without animation.
+  /// Use -1.0 or double.nan for any value you do not want to change.
+  func moveCamera(lat: Double, lng: Double, zoom: Double, bearing: Double, pitch: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Update map options including bounds and gesture settings.
+  func updateMapOptions(minZoom: Double, maxZoom: Double, minPitch: Double, maxPitch: Double, boundsWest: Double, boundsSouth: Double, boundsEast: Double, boundsNorth: Double, rotateEnabled: Bool, panEnabled: Bool, zoomEnabled: Bool, pitchEnabled: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Enable location services and show user location on map.
+  func enableLocation(fastestInterval: Int64, maxWaitTime: Int64, pulseFade: Bool, accuracyAnimation: Bool, compassAnimation: Bool, pulse: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Fit the map camera to show the specified bounds.
+  func fitBounds(west: Double, south: Double, east: Double, north: Double, bearing: Double, pitch: Double, duration: Int64, paddingLeft: Double, paddingTop: Double, paddingRight: Double, paddingBottom: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Get the meters per pixel at the specified latitude.
+  func getMetersPerPixelAtLatitude(latitude: Double, completion: @escaping (Result<Double, Error>) -> Void)
+  /// Get the visible region bounds.
+  /// Returns [west, south, east, north]
+  func getVisibleRegion(completion: @escaping (Result<[Double], Error>) -> Void)
+  /// Convert screen coordinates to longitude/latitude.
+  /// Returns [lng, lat]
+  func toLngLat(x: Double, y: Double, completion: @escaping (Result<[Double], Error>) -> Void)
+  /// Convert longitude/latitude to screen coordinates.
+  /// Returns [x, y]
+  func toScreenLocation(lng: Double, lat: Double, completion: @escaping (Result<[Double], Error>) -> Void)
+  /// Query rendered layers at the specified screen location.
+  func queryLayers(x: Double, y: Double, completion: @escaping (Result<[[String: String?]], Error>) -> Void)
+  /// Enable/disable location tracking with bearing mode.
+  func trackLocation(track: Bool, bearingMode: Int64, completion: @escaping (Result<Void, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -913,6 +937,222 @@ class MapLibreHostApiSetup {
       }
     } else {
       getUserLocationChannel.setMessageHandler(nil)
+    }
+    /// Move the camera to a new position without animation.
+    /// Use -1.0 or double.nan for any value you do not want to change.
+    let moveCameraChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.moveCamera\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      moveCameraChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let latArg = args[0] as! Double
+        let lngArg = args[1] as! Double
+        let zoomArg = args[2] as! Double
+        let bearingArg = args[3] as! Double
+        let pitchArg = args[4] as! Double
+        api.moveCamera(lat: latArg, lng: lngArg, zoom: zoomArg, bearing: bearingArg, pitch: pitchArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      moveCameraChannel.setMessageHandler(nil)
+    }
+    /// Update map options including bounds and gesture settings.
+    let updateMapOptionsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateMapOptions\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      updateMapOptionsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let minZoomArg = args[0] as! Double
+        let maxZoomArg = args[1] as! Double
+        let minPitchArg = args[2] as! Double
+        let maxPitchArg = args[3] as! Double
+        let boundsWestArg = args[4] as! Double
+        let boundsSouthArg = args[5] as! Double
+        let boundsEastArg = args[6] as! Double
+        let boundsNorthArg = args[7] as! Double
+        let rotateEnabledArg = args[8] as! Bool
+        let panEnabledArg = args[9] as! Bool
+        let zoomEnabledArg = args[10] as! Bool
+        let pitchEnabledArg = args[11] as! Bool
+        api.updateMapOptions(minZoom: minZoomArg, maxZoom: maxZoomArg, minPitch: minPitchArg, maxPitch: maxPitchArg, boundsWest: boundsWestArg, boundsSouth: boundsSouthArg, boundsEast: boundsEastArg, boundsNorth: boundsNorthArg, rotateEnabled: rotateEnabledArg, panEnabled: panEnabledArg, zoomEnabled: zoomEnabledArg, pitchEnabled: pitchEnabledArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      updateMapOptionsChannel.setMessageHandler(nil)
+    }
+    /// Enable location services and show user location on map.
+    let enableLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.enableLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      enableLocationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let fastestIntervalArg = args[0] as! Int64
+        let maxWaitTimeArg = args[1] as! Int64
+        let pulseFadeArg = args[2] as! Bool
+        let accuracyAnimationArg = args[3] as! Bool
+        let compassAnimationArg = args[4] as! Bool
+        let pulseArg = args[5] as! Bool
+        api.enableLocation(fastestInterval: fastestIntervalArg, maxWaitTime: maxWaitTimeArg, pulseFade: pulseFadeArg, accuracyAnimation: accuracyAnimationArg, compassAnimation: compassAnimationArg, pulse: pulseArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      enableLocationChannel.setMessageHandler(nil)
+    }
+    /// Fit the map camera to show the specified bounds.
+    let fitBoundsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.fitBounds\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      fitBoundsChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let westArg = args[0] as! Double
+        let southArg = args[1] as! Double
+        let eastArg = args[2] as! Double
+        let northArg = args[3] as! Double
+        let bearingArg = args[4] as! Double
+        let pitchArg = args[5] as! Double
+        let durationArg = args[6] as! Int64
+        let paddingLeftArg = args[7] as! Double
+        let paddingTopArg = args[8] as! Double
+        let paddingRightArg = args[9] as! Double
+        let paddingBottomArg = args[10] as! Double
+        api.fitBounds(west: westArg, south: southArg, east: eastArg, north: northArg, bearing: bearingArg, pitch: pitchArg, duration: durationArg, paddingLeft: paddingLeftArg, paddingTop: paddingTopArg, paddingRight: paddingRightArg, paddingBottom: paddingBottomArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      fitBoundsChannel.setMessageHandler(nil)
+    }
+    /// Get the meters per pixel at the specified latitude.
+    let getMetersPerPixelAtLatitudeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getMetersPerPixelAtLatitudeChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let latitudeArg = args[0] as! Double
+        api.getMetersPerPixelAtLatitude(latitude: latitudeArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      getMetersPerPixelAtLatitudeChannel.setMessageHandler(nil)
+    }
+    /// Get the visible region bounds.
+    /// Returns [west, south, east, north]
+    let getVisibleRegionChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getVisibleRegion\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getVisibleRegionChannel.setMessageHandler { _, reply in
+        api.getVisibleRegion { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      getVisibleRegionChannel.setMessageHandler(nil)
+    }
+    /// Convert screen coordinates to longitude/latitude.
+    /// Returns [lng, lat]
+    let toLngLatChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toLngLat\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      toLngLatChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let xArg = args[0] as! Double
+        let yArg = args[1] as! Double
+        api.toLngLat(x: xArg, y: yArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      toLngLatChannel.setMessageHandler(nil)
+    }
+    /// Convert longitude/latitude to screen coordinates.
+    /// Returns [x, y]
+    let toScreenLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.toScreenLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      toScreenLocationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let lngArg = args[0] as! Double
+        let latArg = args[1] as! Double
+        api.toScreenLocation(lng: lngArg, lat: latArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      toScreenLocationChannel.setMessageHandler(nil)
+    }
+    /// Query rendered layers at the specified screen location.
+    let queryLayersChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayers\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      queryLayersChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let xArg = args[0] as! Double
+        let yArg = args[1] as! Double
+        api.queryLayers(x: xArg, y: yArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      queryLayersChannel.setMessageHandler(nil)
+    }
+    /// Enable/disable location tracking with bearing mode.
+    let trackLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      trackLocationChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let trackArg = args[0] as! Bool
+        let bearingModeArg = args[1] as! Int64
+        api.trackLocation(track: trackArg, bearingMode: bearingModeArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      trackLocationChannel.setMessageHandler(nil)
     }
   }
 }

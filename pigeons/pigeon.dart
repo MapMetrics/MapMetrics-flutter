@@ -27,7 +27,7 @@ class LngLat {
     cppSourceOut: 'windows/runner/pigeon.g.cpp',
     // android
     kotlinOut:
-        'android/src/main/kotlin/com/github/mapmetrics/maplibre/Pigeon.g.kt',
+    'android/src/main/kotlin/com/github/mapmetrics/maplibre/Pigeon.g.kt',
     kotlinOptions: KotlinOptions(),
     // ios
     swiftOut: 'ios/mapmetrics/Sources/maplibre_ios/Pigeon.g.swift',
@@ -154,13 +154,13 @@ abstract class MapLibreHostApi {
   /// Use -1.0 or double.nan for any value you do not want to change.
   @async
   void animateCamera(
-    double latitude,
-    double longitude,
-    double zoom,
-    double bearing,
-    double pitch,
-    int duration,
-  );
+      double latitude,
+      double longitude,
+      double zoom,
+      double bearing,
+      double pitch,
+      int duration,
+      );
 
   /// Get the current camera state.
   MapCamera getCamera();
@@ -170,6 +170,82 @@ abstract class MapLibreHostApi {
 
   /// Get the user's current location.
   LngLat getUserLocation();
+
+  /// Move the camera to a new position without animation.
+  /// Use -1.0 or double.nan for any value you do not want to change.
+  @async
+  void moveCamera(double lat, double lng, double zoom, double bearing, double pitch);
+
+  /// Update map options including bounds and gesture settings.
+  @async
+  void updateMapOptions(
+      double minZoom,
+      double maxZoom,
+      double minPitch,
+      double maxPitch,
+      double boundsWest,
+      double boundsSouth,
+      double boundsEast,
+      double boundsNorth,
+      bool rotateEnabled,
+      bool panEnabled,
+      bool zoomEnabled,
+      bool pitchEnabled
+      );
+
+  /// Enable location services and show user location on map.
+  @async
+  void enableLocation(
+      int fastestInterval,
+      int maxWaitTime,
+      bool pulseFade,
+      bool accuracyAnimation,
+      bool compassAnimation,
+      bool pulse
+      );
+
+  /// Fit the map camera to show the specified bounds.
+  @async
+  void fitBounds(
+      double west,
+      double south,
+      double east,
+      double north,
+      double bearing,
+      double pitch,
+      int duration,
+      double paddingLeft,
+      double paddingTop,
+      double paddingRight,
+      double paddingBottom
+      );
+
+  /// Get the meters per pixel at the specified latitude.
+  @async
+  double getMetersPerPixelAtLatitude(double latitude);
+
+  /// Get the visible region bounds.
+  /// Returns [west, south, east, north]
+  @async
+  List<double> getVisibleRegion();
+
+  /// Convert screen coordinates to longitude/latitude.
+  /// Returns [lng, lat]
+  @async
+  List<double> toLngLat(double x, double y);
+
+  /// Convert longitude/latitude to screen coordinates.
+  /// Returns [x, y]
+  @async
+  List<double> toScreenLocation(double lng, double lat);
+
+  /// Query rendered layers at the specified screen location.
+  @async
+  List<Map<String, String?>> queryLayers(double x, double y);
+
+  /// Enable/disable location tracking with bearing mode.
+  @async
+  void trackLocation(bool track, int bearingMode);
 }
 
 @FlutterApi()

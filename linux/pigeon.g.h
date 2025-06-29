@@ -734,6 +734,16 @@ typedef struct {
   MapmetricsMapLibreHostApiGetCameraResponse* (*get_camera)(gpointer user_data);
   MapmetricsMapLibreHostApiGetZoomLevelResponse* (*get_zoom_level)(gpointer user_data);
   MapmetricsMapLibreHostApiGetUserLocationResponse* (*get_user_location)(gpointer user_data);
+  void (*move_camera)(double lat, double lng, double zoom, double bearing, double pitch, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*update_map_options)(double min_zoom, double max_zoom, double min_pitch, double max_pitch, double bounds_west, double bounds_south, double bounds_east, double bounds_north, gboolean rotate_enabled, gboolean pan_enabled, gboolean zoom_enabled, gboolean pitch_enabled, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*enable_location)(int64_t fastest_interval, int64_t max_wait_time, gboolean pulse_fade, gboolean accuracy_animation, gboolean compass_animation, gboolean pulse, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*fit_bounds)(double west, double south, double east, double north, double bearing, double pitch, int64_t duration, double padding_left, double padding_top, double padding_right, double padding_bottom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*get_meters_per_pixel_at_latitude)(double latitude, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*get_visible_region)(MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*to_lng_lat)(double x, double y, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*to_screen_location)(double lng, double lat, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*query_layers)(double x, double y, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*track_location)(gboolean track, int64_t bearing_mode, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
 } MapmetricsMapLibreHostApiVTable;
 
 /**
@@ -1026,6 +1036,201 @@ void mapmetrics_map_libre_host_api_respond_animate_camera(MapmetricsMapLibreHost
  * Responds with an error to MapLibreHostApi.animateCamera. 
  */
 void mapmetrics_map_libre_host_api_respond_error_animate_camera(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_move_camera:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.moveCamera. 
+ */
+void mapmetrics_map_libre_host_api_respond_move_camera(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_move_camera:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.moveCamera. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_move_camera(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_update_map_options:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.updateMapOptions. 
+ */
+void mapmetrics_map_libre_host_api_respond_update_map_options(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_update_map_options:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.updateMapOptions. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_update_map_options(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_enable_location:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.enableLocation. 
+ */
+void mapmetrics_map_libre_host_api_respond_enable_location(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_enable_location:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.enableLocation. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_enable_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_fit_bounds:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.fitBounds. 
+ */
+void mapmetrics_map_libre_host_api_respond_fit_bounds(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_fit_bounds:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.fitBounds. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_fit_bounds(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_get_meters_per_pixel_at_latitude:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @return_value: location to write the value returned by this method.
+ *
+ * Responds to MapLibreHostApi.getMetersPerPixelAtLatitude. 
+ */
+void mapmetrics_map_libre_host_api_respond_get_meters_per_pixel_at_latitude(MapmetricsMapLibreHostApiResponseHandle* response_handle, double return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_get_meters_per_pixel_at_latitude:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.getMetersPerPixelAtLatitude. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_get_meters_per_pixel_at_latitude(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_get_visible_region:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @return_value: location to write the value returned by this method.
+ *
+ * Responds to MapLibreHostApi.getVisibleRegion. 
+ */
+void mapmetrics_map_libre_host_api_respond_get_visible_region(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_get_visible_region:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.getVisibleRegion. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_get_visible_region(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_to_lng_lat:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @return_value: location to write the value returned by this method.
+ *
+ * Responds to MapLibreHostApi.toLngLat. 
+ */
+void mapmetrics_map_libre_host_api_respond_to_lng_lat(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_to_lng_lat:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.toLngLat. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_to_lng_lat(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_to_screen_location:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @return_value: location to write the value returned by this method.
+ *
+ * Responds to MapLibreHostApi.toScreenLocation. 
+ */
+void mapmetrics_map_libre_host_api_respond_to_screen_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_to_screen_location:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.toScreenLocation. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_to_screen_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_query_layers:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @return_value: location to write the value returned by this method.
+ *
+ * Responds to MapLibreHostApi.queryLayers. 
+ */
+void mapmetrics_map_libre_host_api_respond_query_layers(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_query_layers:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.queryLayers. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_query_layers(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_track_location:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.trackLocation. 
+ */
+void mapmetrics_map_libre_host_api_respond_track_location(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_track_location:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.trackLocation. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_track_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 G_DECLARE_FINAL_TYPE(MapmetricsMapLibreFlutterApiGetOptionsResponse, mapmetrics_map_libre_flutter_api_get_options_response, MAPMETRICS, MAP_LIBRE_FLUTTER_API_GET_OPTIONS_RESPONSE, GObject)
 
