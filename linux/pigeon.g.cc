@@ -2066,6 +2066,123 @@ static MapmetricsMapLibreHostApiTrackLocationResponse* mapmetrics_map_libre_host
   return self;
 }
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiRemoveLayerResponse, mapmetrics_map_libre_host_api_remove_layer_response, MAPMETRICS, MAP_LIBRE_HOST_API_REMOVE_LAYER_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiRemoveLayerResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiRemoveLayerResponse, mapmetrics_map_libre_host_api_remove_layer_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_remove_layer_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiRemoveLayerResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_REMOVE_LAYER_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_remove_layer_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_remove_layer_response_init(MapmetricsMapLibreHostApiRemoveLayerResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_remove_layer_response_class_init(MapmetricsMapLibreHostApiRemoveLayerResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_remove_layer_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiRemoveLayerResponse* mapmetrics_map_libre_host_api_remove_layer_response_new() {
+  MapmetricsMapLibreHostApiRemoveLayerResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_REMOVE_LAYER_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_remove_layer_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiRemoveLayerResponse* mapmetrics_map_libre_host_api_remove_layer_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiRemoveLayerResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_REMOVE_LAYER_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_remove_layer_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiRemoveSourceResponse, mapmetrics_map_libre_host_api_remove_source_response, MAPMETRICS, MAP_LIBRE_HOST_API_REMOVE_SOURCE_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiRemoveSourceResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiRemoveSourceResponse, mapmetrics_map_libre_host_api_remove_source_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_remove_source_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiRemoveSourceResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_REMOVE_SOURCE_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_remove_source_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_remove_source_response_init(MapmetricsMapLibreHostApiRemoveSourceResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_remove_source_response_class_init(MapmetricsMapLibreHostApiRemoveSourceResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_remove_source_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiRemoveSourceResponse* mapmetrics_map_libre_host_api_remove_source_response_new() {
+  MapmetricsMapLibreHostApiRemoveSourceResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_REMOVE_SOURCE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_remove_source_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiRemoveSourceResponse* mapmetrics_map_libre_host_api_remove_source_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiRemoveSourceResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_REMOVE_SOURCE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_remove_source_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse, mapmetrics_map_libre_host_api_update_geo_json_source_response, MAPMETRICS, MAP_LIBRE_HOST_API_UPDATE_GEO_JSON_SOURCE_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse, mapmetrics_map_libre_host_api_update_geo_json_source_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_update_geo_json_source_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_UPDATE_GEO_JSON_SOURCE_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_update_geo_json_source_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_update_geo_json_source_response_init(MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_update_geo_json_source_response_class_init(MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_update_geo_json_source_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse* mapmetrics_map_libre_host_api_update_geo_json_source_response_new() {
+  MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_UPDATE_GEO_JSON_SOURCE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_update_geo_json_source_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse* mapmetrics_map_libre_host_api_update_geo_json_source_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_UPDATE_GEO_JSON_SOURCE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_update_geo_json_source_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 struct _MapmetricsMapLibreHostApi {
   GObject parent_instance;
 
@@ -2645,6 +2762,47 @@ static void mapmetrics_map_libre_host_api_track_location_cb(FlBasicMessageChanne
   self->vtable->track_location(track, bearing_mode, handle, self->user_data);
 }
 
+static void mapmetrics_map_libre_host_api_remove_layer_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->remove_layer == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  const gchar* id = fl_value_get_string(value0);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->remove_layer(id, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_remove_source_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->remove_source == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  const gchar* id = fl_value_get_string(value0);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->remove_source(id, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_update_geo_json_source_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->update_geo_json_source == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  const gchar* id = fl_value_get_string(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  const gchar* data = fl_value_get_string(value1);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->update_geo_json_source(id, data, handle, self->user_data);
+}
+
 void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix, const MapmetricsMapLibreHostApiVTable* vtable, gpointer user_data, GDestroyNotify user_data_free_func) {
   g_autofree gchar* dot_suffix = suffix != nullptr ? g_strdup_printf(".%s", suffix) : g_strdup("");
   g_autoptr(MapmetricsMapLibreHostApi) api_data = mapmetrics_map_libre_host_api_new(vtable, user_data, user_data_free_func);
@@ -2734,6 +2892,15 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(track_location_channel, mapmetrics_map_libre_host_api_track_location_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* remove_layer_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeLayer%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) remove_layer_channel = fl_basic_message_channel_new(messenger, remove_layer_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(remove_layer_channel, mapmetrics_map_libre_host_api_remove_layer_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* remove_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeSource%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) remove_source_channel = fl_basic_message_channel_new(messenger, remove_source_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(remove_source_channel, mapmetrics_map_libre_host_api_remove_source_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* update_geo_json_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateGeoJsonSource%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) update_geo_json_source_channel = fl_basic_message_channel_new(messenger, update_geo_json_source_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(update_geo_json_source_channel, mapmetrics_map_libre_host_api_update_geo_json_source_cb, g_object_ref(api_data), g_object_unref);
 }
 
 void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix) {
@@ -2824,6 +2991,15 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(track_location_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* remove_layer_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeLayer%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) remove_layer_channel = fl_basic_message_channel_new(messenger, remove_layer_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(remove_layer_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* remove_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeSource%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) remove_source_channel = fl_basic_message_channel_new(messenger, remove_source_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(remove_source_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* update_geo_json_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateGeoJsonSource%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) update_geo_json_source_channel = fl_basic_message_channel_new(messenger, update_geo_json_source_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(update_geo_json_source_channel, nullptr, nullptr, nullptr);
 }
 
 void mapmetrics_map_libre_host_api_respond_add_fill_layer(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
@@ -3207,6 +3383,54 @@ void mapmetrics_map_libre_host_api_respond_error_track_location(MapmetricsMapLib
   g_autoptr(GError) error = nullptr;
   if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
     g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "trackLocation", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_remove_layer(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiRemoveLayerResponse) response = mapmetrics_map_libre_host_api_remove_layer_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "removeLayer", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_remove_layer(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiRemoveLayerResponse) response = mapmetrics_map_libre_host_api_remove_layer_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "removeLayer", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_remove_source(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiRemoveSourceResponse) response = mapmetrics_map_libre_host_api_remove_source_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "removeSource", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_remove_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiRemoveSourceResponse) response = mapmetrics_map_libre_host_api_remove_source_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "removeSource", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_update_geo_json_source(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse) response = mapmetrics_map_libre_host_api_update_geo_json_source_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "updateGeoJsonSource", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_update_geo_json_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse) response = mapmetrics_map_libre_host_api_update_geo_json_source_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "updateGeoJsonSource", error->message);
   }
 }
 

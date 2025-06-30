@@ -230,25 +230,46 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> removeLayer(String id) async {
-    // TODO: Implement Pigeon method for removeLayer
-    print('iOS StyleController: removeLayer not yet implemented via Pigeon');
+    print('iOS StyleController: removeLayer called for id: $id');
+
+    // TODO: Implement native iOS removeLayer method
+    try {
+      await _hostApi.removeLayer(id);
+      print('iOS StyleController: Successfully removed layer: $id');
+    } catch (e) {
+      print('iOS StyleController: Error removing layer $id: $e');
+      rethrow;
+    }
   }
 
   @override
   Future<void> removeSource(String id) async {
-    // TODO: Implement Pigeon method for removeSource
-    print('iOS StyleController: removeSource not yet implemented via Pigeon');
+    print('iOS StyleController: removeSource called for id: $id');
+
+    // TODO: Implement native iOS removeSource method
+    try {
+      await _hostApi.removeSource(id);
+      print('iOS StyleController: Successfully removed source: $id');
+    } catch (e) {
+      print('iOS StyleController: Error removing source $id: $e');
+      rethrow;
+    }
   }
 
-  @override
   Future<void> updateGeoJsonSource({
     required String id,
     required String data,
   }) async {
-    // TODO: Implement Pigeon method for updateGeoJsonSource
-    print(
-      'iOS StyleController: updateGeoJsonSource not yet implemented via Pigeon',
-    );
+    print('iOS StyleController: updateGeoJsonSource called for id: $id');
+
+    // TODO: Implement native iOS updateGeoJsonSource method
+    try {
+      await _hostApi.updateGeoJsonSource(id, data);
+      print('iOS StyleController: Successfully updated source: $id');
+    } catch (e) {
+      print('iOS StyleController: Error updating source $id: $e');
+      rethrow;
+    }
   }
 
   NSArray _getLayers() {

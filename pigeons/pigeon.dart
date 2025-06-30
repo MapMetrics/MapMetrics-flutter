@@ -246,6 +246,16 @@ abstract class MapLibreHostApi {
   /// Enable/disable location tracking with bearing mode.
   @async
   void trackLocation(bool track, int bearingMode);
+
+  @async
+  void removeLayer(String id);
+
+  @async
+  void removeSource(String id);
+
+  @async
+  void updateGeoJsonSource(String id, String data);
+
 }
 
 @FlutterApi()

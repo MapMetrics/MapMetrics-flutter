@@ -576,6 +576,9 @@ protocol MapLibreHostApi {
   func queryLayers(x: Double, y: Double, completion: @escaping (Result<[[String: String?]], Error>) -> Void)
   /// Enable/disable location tracking with bearing mode.
   func trackLocation(track: Bool, bearingMode: Int64, completion: @escaping (Result<Void, Error>) -> Void)
+  func removeLayer(id: String, completion: @escaping (Result<Void, Error>) -> Void)
+  func removeSource(id: String, completion: @escaping (Result<Void, Error>) -> Void)
+  func updateGeoJsonSource(id: String, data: String, completion: @escaping (Result<Void, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -1153,6 +1156,58 @@ class MapLibreHostApiSetup {
       }
     } else {
       trackLocationChannel.setMessageHandler(nil)
+    }
+    let removeLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeLayerChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        api.removeLayer(id: idArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      removeLayerChannel.setMessageHandler(nil)
+    }
+    let removeSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      removeSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        api.removeSource(id: idArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      removeSourceChannel.setMessageHandler(nil)
+    }
+    let updateGeoJsonSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateGeoJsonSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      updateGeoJsonSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        let dataArg = args[1] as! String
+        api.updateGeoJsonSource(id: idArg, data: dataArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      updateGeoJsonSourceChannel.setMessageHandler(nil)
     }
   }
 }

@@ -714,6 +714,16 @@ class MapLibreHostApi {
     bool track,
     int64_t bearing_mode,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  virtual void RemoveLayer(
+    const std::string& id,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  virtual void RemoveSource(
+    const std::string& id,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  virtual void UpdateGeoJsonSource(
+    const std::string& id,
+    const std::string& data,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
 
   // The codec used by MapLibreHostApi.
   static const flutter::StandardMessageCodec& GetCodec();
