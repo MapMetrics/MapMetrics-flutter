@@ -662,4 +662,29 @@ class MapLibreMapController(
         // Android implementation - you can use your existing JNI code
         callback(Result.success(Unit))
     }
+
+    override fun removeLayer(
+        id: String,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun removeSource(
+        id: String,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun updateGeoJsonSource(
+        id: String,
+        data: String,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
 }

@@ -165,180 +165,177 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     // MARK: - MapLibreHostApi Implementation
 
     func addFillLayer(
-        id _: String, sourceId _: String, layout _: [String: Any],
-        paint _: [String: Any], belowLayerId _: String?,
+        id: String,
+        sourceId: String,
+        layout: [String: Any],
+        paint: [String: Any],
+        belowLayerId: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        guard let style = _mapView.style else {
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        guard let source = style.source(withIdentifier: sourceId) else {
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+            return
+        }
+
+        let layer = MLNFillStyleLayer(identifier: id, source: source)
+        applyFillProperties(to: layer, paint: paint, layout: layout)
+
+        if let belowLayerId = belowLayerId {
+            if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+        } else {
+            style.addLayer(layer)
+        }
+
         completion(.success(()))
+    }
+
+    private func applyFillProperties(to layer: MLNFillStyleLayer, paint: [String: Any], layout: [String: Any]) {
+        // Apply paint properties
+        paint.forEach { key, value in
+            switch key {
+            case "fill-color": layer.fillColor = parseColor(value)
+            case "fill-opacity": layer.fillOpacity = parseValue(value)
+            case "fill-outline-color": layer.fillOutlineColor = parseColor(value)
+            case "fill-pattern": layer.fillPattern = NSExpression(forConstantValue: value)
+            default: break
+            }
+        }
+
+        // Apply layout properties
+        layout.forEach { key, value in
+            switch key {
+            case "visibility": layer.isVisible = (value as? String == "visible")
+            case "fill-sort-key": layer.fillSortKey = parseValue(value)
+            default: break
+            }
+        }
     }
 
     func addCircleLayer(
-      id: String,
-      sourceId: String,
-      layout: [String: Any],
-      paint: [String: Any],
-      belowLayerId: String?,
-      completion: @escaping (Result<Void, Error>) -> Void
+        id: String,
+        sourceId: String,
+        layout: [String: Any],
+        paint: [String: Any],
+        belowLayerId: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
     ) {
-      print("iOS: addCircleLayer called with id: \(id), sourceId: \(sourceId)")
-      print("iOS: Paint properties: \(paint)")
-
-      guard let style = _mapView.style else {
-        print("iOS: Error - Style not available for addCircleLayer")
-        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
-        return
-      }
-
-      // Check if layer already exists and remove it first
-      if let existingLayer = style.layer(withIdentifier: id) {
-        print("iOS: Removing existing layer with id: \(id)")
-        style.removeLayer(existingLayer)
-      }
-
-      guard let source = style.source(withIdentifier: sourceId) else {
-        print("iOS: Error - Source not found with ID: \(sourceId)")
-        completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
-        return
-      }
-
-      print("iOS: Creating circle layer with source: \(sourceId)")
-      let circleLayer = MLNCircleStyleLayer(identifier: id, source: source)
-
-      // Apply paint properties with basic type handling
-      for (key, value) in paint {
-        print("iOS: Processing paint property \(key) = \(value) (type: \(type(of: value)))")
-
-        switch key {
-        case "circle-radius":
-          if let radius = value as? NSNumber {
-            circleLayer.circleRadius = NSExpression(forConstantValue: radius)
-            print("iOS: Set circle-radius to \(radius)")
-          } else if let radius = value as? Double {
-            circleLayer.circleRadius = NSExpression(forConstantValue: NSNumber(value: radius))
-            print("iOS: Set circle-radius to \(radius)")
-          } else if let radius = value as? Int {
-            circleLayer.circleRadius = NSExpression(forConstantValue: NSNumber(value: radius))
-            print("iOS: Set circle-radius to \(radius)")
-          }
-
-        case "circle-color":
-          var color: UIColor? = nil
-          if let colorArray = value as? [Any], colorArray.count >= 3 {
-            // Handle RGBA array format [r, g, b, a] where values are typically 0-1
-            if let r = colorArray[0] as? Double,
-               let g = colorArray[1] as? Double,
-               let b = colorArray[2] as? Double {
-              let a = colorArray.count > 3 ? (colorArray[3] as? Double ?? 1.0) : 1.0
-              color = UIColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: CGFloat(a))
-              print("iOS: Set circle-color from RGBA array: [\(r), \(g), \(b), \(a)]")
-            }
-          } else if let colorString = value as? String {
-            color = UIColor(hexString: colorString) ?? UIColor.red
-            print("iOS: Set circle-color from hex string: \(colorString)")
-          }
-
-          if let color = color {
-            circleLayer.circleColor = NSExpression(forConstantValue: color)
-          } else {
-            print("iOS: Warning - Could not convert circle-color value: \(value)")
-            circleLayer.circleColor = NSExpression(forConstantValue: UIColor.red)
-          }
-
-        case "circle-opacity":
-          if let opacity = value as? NSNumber {
-            circleLayer.circleOpacity = NSExpression(forConstantValue: opacity)
-            print("iOS: Set circle-opacity to \(opacity)")
-          } else if let opacity = value as? Double {
-            circleLayer.circleOpacity = NSExpression(forConstantValue: NSNumber(value: opacity))
-            print("iOS: Set circle-opacity to \(opacity)")
-          }
-
-        case "circle-stroke-width":
-          if let strokeWidth = value as? NSNumber {
-            circleLayer.circleStrokeWidth = NSExpression(forConstantValue: strokeWidth)
-            print("iOS: Set circle-stroke-width to \(strokeWidth)")
-          } else if let strokeWidth = value as? Double {
-            circleLayer.circleStrokeWidth = NSExpression(forConstantValue: NSNumber(value: strokeWidth))
-            print("iOS: Set circle-stroke-width to \(strokeWidth)")
-          } else if let strokeWidth = value as? Int {
-            circleLayer.circleStrokeWidth = NSExpression(forConstantValue: NSNumber(value: strokeWidth))
-            print("iOS: Set circle-stroke-width to \(strokeWidth)")
-          }
-
-        case "circle-stroke-color":
-          var strokeColor: UIColor? = nil
-          if let colorArray = value as? [Any], colorArray.count >= 3 {
-            if let r = colorArray[0] as? Double,
-               let g = colorArray[1] as? Double,
-               let b = colorArray[2] as? Double {
-              let a = colorArray.count > 3 ? (colorArray[3] as? Double ?? 1.0) : 1.0
-              strokeColor = UIColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: CGFloat(a))
-              print("iOS: Set circle-stroke-color from RGBA array: [\(r), \(g), \(b), \(a)]")
-            }
-          } else if let colorString = value as? String {
-            strokeColor = UIColor(hexString: colorString) ?? UIColor.white
-            print("iOS: Set circle-stroke-color from hex string: \(colorString)")
-          }
-
-          if let strokeColor = strokeColor {
-            circleLayer.circleStrokeColor = NSExpression(forConstantValue: strokeColor)
-          } else {
-            print("iOS: Warning - Could not convert circle-stroke-color value: \(value)")
-            circleLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
-          }
-
-        case "circle-stroke-opacity":
-          if let strokeOpacity = value as? NSNumber {
-            circleLayer.circleStrokeOpacity = NSExpression(forConstantValue: strokeOpacity)
-            print("iOS: Set circle-stroke-opacity to \(strokeOpacity)")
-          } else if let strokeOpacity = value as? Double {
-            circleLayer.circleStrokeOpacity = NSExpression(forConstantValue: NSNumber(value: strokeOpacity))
-            print("iOS: Set circle-stroke-opacity to \(strokeOpacity)")
-          }
-
-        default:
-          print("iOS: Unknown paint property: \(key)")
+        guard let style = _mapView.style else {
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
         }
-      }
 
-      // Apply layout properties
-      for (key, value) in layout {
-        print("iOS: Processing layout property \(key) = \(value)")
-        switch key {
-        case "visibility":
-          if let visibility = value as? String {
-            circleLayer.isVisible = (visibility == "visible")
-            print("iOS: Set visibility to \(visibility)")
-          }
-        default:
-          print("iOS: Unknown layout property: \(key)")
+        guard let source = style.source(withIdentifier: sourceId) else {
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+            return
         }
-      }
 
-      // Add the layer to the style
-      if let belowLayerId = belowLayerId {
-        if let belowLayer = style.layer(withIdentifier: belowLayerId) {
-          style.insertLayer(circleLayer, below: belowLayer)
-          print("iOS: Circle layer '\(id)' added below layer '\(belowLayerId)'")
+        // Check if this is a clustered source by looking for existing cluster layers
+        let hasClusterLayers = style.layer(withIdentifier: "\(sourceId)-clusters") != nil ||
+                              style.layer(withIdentifier: "\(sourceId)-unclustered") != nil
+
+        if hasClusterLayers {
+            print("iOS: Skipping addCircleLayer for clustered source: \(sourceId) - cluster visualization already exists")
+            completion(.success(()))
+            return
+        }
+
+        print("iOS: Adding circle layer for non-clustered source: \(sourceId)")
+        let layer = MLNCircleStyleLayer(identifier: id, source: source)
+        applyCircleProperties(to: layer, paint: paint, layout: layout)
+
+        if let belowLayerId = belowLayerId {
+            if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
         } else {
-          print("iOS: Warning - Below layer '\(belowLayerId)' not found, adding to top")
-          style.addLayer(circleLayer)
+            style.addLayer(layer)
         }
-      } else {
-        style.addLayer(circleLayer)
-        print("iOS: Circle layer '\(id)' added to top of style")
-      }
 
-      print("iOS: Successfully added circle layer '\(id)'")
-      completion(.success(()))
+        completion(.success(()))
+    }
+
+    private func applyCircleProperties(to layer: MLNCircleStyleLayer, paint: [String: Any], layout: [String: Any]) {
+        // Apply paint properties
+        paint.forEach { key, value in
+            switch key {
+            case "circle-radius": layer.circleRadius = parseValue(value)
+            case "circle-color": layer.circleColor = parseColor(value)
+            case "circle-opacity": layer.circleOpacity = parseValue(value)
+            case "circle-stroke-width": layer.circleStrokeWidth = parseValue(value)
+            case "circle-stroke-color": layer.circleStrokeColor = parseColor(value)
+            case "circle-stroke-opacity": layer.circleStrokeOpacity = parseValue(value)
+            case "circle-blur": layer.circleBlur = parseValue(value)
+            default: break
+            }
+        }
+
+        // Apply layout properties
+        layout.forEach { key, value in
+            switch key {
+            case "visibility": layer.isVisible = (value as? String == "visible")
+            case "circle-sort-key": layer.circleSortKey = parseValue(value)
+            default: break
+            }
+        }
     }
 
     func addBackgroundLayer(
-        id _: String, layout _: [String: Any], paint _: [String: Any],
-        belowLayerId _: String?,
+        id: String,
+        layout: [String: Any],
+        paint: [String: Any],
+        belowLayerId: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        guard let style = _mapView.style else {
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        let layer = MLNBackgroundStyleLayer(identifier: id)
+        applyBackgroundProperties(to: layer, paint: paint, layout: layout)
+
+        if let belowLayerId = belowLayerId {
+            if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+        } else {
+            style.addLayer(layer)
+        }
+
         completion(.success(()))
+    }
+
+    private func applyBackgroundProperties(to layer: MLNBackgroundStyleLayer, paint: [String: Any], layout: [String: Any]) {
+        // Apply paint properties
+        paint.forEach { key, value in
+            switch key {
+            case "background-color": layer.backgroundColor = parseColor(value)
+            case "background-opacity": layer.backgroundOpacity = parseValue(value)
+            case "background-pattern": layer.backgroundPattern = NSExpression(forConstantValue: value)
+            default: break
+            }
+        }
+
+        // Apply layout properties
+        layout.forEach { key, value in
+            switch key {
+            case "visibility": layer.isVisible = (value as? String == "visible")
+            default: break
+            }
+        }
     }
 
     func addFillExtrusionLayer(
@@ -565,13 +562,67 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         completion(.success(()))
     }
 
-    func addSymbolLayer(
-        id _: String, sourceId _: String, layout _: [String: Any],
-        paint _: [String: Any], belowLayerId _: String?,
-        completion: @escaping (Result<Void, Error>) -> Void
-    ) {
-        completion(.success(()))
+func addSymbolLayer(
+    id: String,
+    sourceId: String,
+    layout: [String: Any],
+    paint: [String: Any],
+    belowLayerId: String?,
+    completion: @escaping (Result<Void, Error>) -> Void
+) {
+    guard let style = _mapView.style else {
+        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+        return
     }
+
+    guard let source = style.source(withIdentifier: sourceId) else {
+        completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+        return
+    }
+
+    let layer = MLNSymbolStyleLayer(identifier: id, source: source)
+    applySymbolProperties(to: layer, paint: paint, layout: layout)
+
+    if let belowLayerId = belowLayerId {
+        if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+            style.insertLayer(layer, below: belowLayer)
+        } else {
+            style.addLayer(layer)
+        }
+    } else {
+        style.addLayer(layer)
+    }
+
+    completion(.success(()))
+}
+
+private func applySymbolProperties(to layer: MLNSymbolStyleLayer, paint: [String: Any], layout: [String: Any]) {
+    // Apply paint properties
+    paint.forEach { key, value in
+        switch key {
+        case "icon-opacity": layer.iconOpacity = parseValue(value)
+        case "icon-color": layer.iconColor = parseColor(value)
+        case "text-opacity": layer.textOpacity = parseValue(value)
+        case "text-color": layer.textColor = parseColor(value)
+        case "text-halo-color": layer.textHaloColor = parseColor(value)
+        case "text-halo-width": layer.textHaloWidth = parseValue(value)
+        default: break
+        }
+    }
+
+    // Apply layout properties
+    layout.forEach { key, value in
+        switch key {
+        case "visibility": layer.isVisible = (value as? String == "visible")
+        case "icon-image": layer.iconImageName = NSExpression(forConstantValue: value)
+        case "icon-size": layer.iconScale = parseValue(value)
+        case "text-field": layer.text = NSExpression(forConstantValue: value)
+        case "text-size": layer.textFontSize = parseValue(value)
+        case "text-font": layer.textFontNames = NSExpression(forConstantValue: value)
+        default: break
+        }
+    }
+}
 
     func loadImage(
         url _: String,
@@ -596,119 +647,99 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     }
 
     func addClusteredGeoJsonSource(
-        id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double,
+        id: String,
+        data: String,
+        clustered: Bool,
+        clusterRadius: Double,
+        clusterMaxZoom: Double,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        print("Swift: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
+        do {
+            print("iOS: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
 
-        guard let style = _mapView.style else {
-            print("Swift: Error - Style not available")
-            completion(
-                .failure(
-                    NSError(
-                        domain: "MapLibre", code: 1,
-                        userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
-            return
-        }
-
-        print("Swift: Style is available, creating clustering options")
-
-        // Create clustering options
-        var options: [MLNShapeSourceOption: Any] = [:]
-        if clustered {
-            options[.clustered] = true
-            options[.clusterRadius] = clusterRadius
-            options[.maximumZoomLevelForClustering] = clusterMaxZoom
-            print(
-                "Swift: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)"
-            )
-        }
-
-        // Create the shape source
-        let source: MLNShapeSource
-        if data.hasPrefix("http://") || data.hasPrefix("https://") {
-            // Handle URL source
-            print("Swift: Creating URL source")
-            guard let url = URL(string: data) else {
-                print("Swift: Error - Invalid URL: \(data)")
-                completion(
-                    .failure(
-                        NSError(
-                            domain: "MapLibre", code: 2,
-                            userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])))
+            guard let style = _mapView.style else {
+                print("iOS: Error - Style not available")
+                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
                 return
             }
-            source = MLNShapeSource(identifier: id, url: url, options: options)
-        } else {
-            // Handle GeoJSON data
-            print("Swift: Creating GeoJSON data source with \(data.count) characters")
-            guard let dataBytes = data.data(using: .utf8),
-                let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue)
-            else {
-                print("Swift: Error - Invalid GeoJSON data")
-                completion(
-                    .failure(
-                        NSError(
-                            domain: "MapLibre", code: 3,
-                            userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])))
-                return
+
+            var options: [MLNShapeSourceOption: Any] = [:]
+            if clustered {
+                options[.clustered] = true
+                options[.clusterRadius] = NSNumber(value: clusterRadius)
+                options[.maximumZoomLevelForClustering] = NSNumber(value: clusterMaxZoom)
+                print("iOS: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
             }
-            source = MLNShapeSource(identifier: id, shape: shape, options: options)
+
+            let source: MLNShapeSource
+            if data.hasPrefix("http://") || data.hasPrefix("https://") {
+                print("iOS: Creating URL source")
+                guard let url = URL(string: data) else {
+                    throw NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])
+                }
+                source = MLNShapeSource(identifier: id, url: url, options: options)
+            } else {
+                print("iOS: Creating GeoJSON data source with \(data.count) characters")
+                guard let dataBytes = data.data(using: .utf8),
+                      let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
+                    throw NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])
+                }
+                source = MLNShapeSource(identifier: id, shape: shape, options: options)
+            }
+
+            style.addSource(source)
+            print("iOS: Successfully added clustered source with ID: \(id)")
+
+            // Replace the clustering visualization section in your addClusteredGeoJsonSource method:
+
+            if clustered {
+                print("iOS: Adding visualization layers for clusters")
+
+                // Add layer for unclustered points (individual points only)
+                let unclusteredLayer = MLNCircleStyleLayer(identifier: "\(id)-unclustered", source: source)
+                unclusteredLayer.circleRadius = NSExpression(forConstantValue: 8)
+                unclusteredLayer.circleColor = NSExpression(forConstantValue: UIColor(hexString: "#11b4da") ?? UIColor.blue)
+                unclusteredLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+                unclusteredLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+                unclusteredLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                // Show only individual points that are NOT part of clusters
+                unclusteredLayer.predicate = NSPredicate(format: "point_count == nil")
+                style.addLayer(unclusteredLayer)
+                print("iOS: Added unclustered points layer with predicate: point_count == nil")
+
+                // Add layer for clusters only
+                let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
+                clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
+                clustersLayer.circleColor = NSExpression(forConstantValue: UIColor.systemOrange)
+                clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+                clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+                clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                // Show only cluster points (multiple points grouped together)
+                clustersLayer.predicate = NSPredicate(format: "point_count != nil")
+                style.addLayer(clustersLayer)
+                print("iOS: Added clusters layer with predicate: point_count != nil")
+
+                // Add layer for cluster count labels
+                let clusterCountLayer = MLNSymbolStyleLayer(identifier: "\(id)-cluster-count", source: source)
+                clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
+                clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
+                clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                // Same predicate as clusters
+                clusterCountLayer.predicate = NSPredicate(format: "point_count != nil")
+                style.addLayer(clusterCountLayer)
+                print("iOS: Added cluster count labels layer with predicate: point_count != nil")
+            } else {
+                print("iOS: No visualization layers added - clustering disabled")
+            }
+
+            completion(.success(()))
+        } catch {
+            print("iOS: Error adding clustered source: \(error.localizedDescription)")
+            completion(.failure(error))
         }
-
-        // Add the source to the style
-        print("Swift: Adding source to style")
-        style.addSource(source)
-        print("Swift: Successfully added clustered source with ID: \(id)")
-
-        // Add visualization layers for the clusters
-        if clustered {
-            print("Swift: Adding visualization layers for clusters")
-
-            // Add layer for unclustered points (individual points)
-            let unclusteredLayer = MLNCircleStyleLayer(
-                identifier: "\(id)-unclustered", source: source)
-            unclusteredLayer.circleRadius = NSExpression(forConstantValue: 8)
-            unclusteredLayer.circleColor = NSExpression(forConstantValue: UIColor.systemBlue)
-            unclusteredLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
-            unclusteredLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
-            unclusteredLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
-
-            // Filter to show only unclustered points
-            unclusteredLayer.predicate = NSPredicate(format: "point_count == nil")
-
-            style.addLayer(unclusteredLayer)
-            print("Swift: Added unclustered points layer")
-
-            // Add layer for clusters (colored circles)
-            let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
-            clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
-            clustersLayer.circleColor = NSExpression(forConstantValue: UIColor.systemOrange)
-            clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
-            clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
-            clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
-
-            // Filter to show only clusters
-            clustersLayer.predicate = NSPredicate(format: "point_count != nil")
-
-            style.addLayer(clustersLayer)
-            print("Swift: Added clusters layer")
-
-            // Add layer for cluster count labels
-            let clusterCountLayer = MLNSymbolStyleLayer(
-                identifier: "\(id)-cluster-count", source: source)
-            clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
-            clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
-            clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor.white)
-
-            // Filter to show only clusters
-            clusterCountLayer.predicate = NSPredicate(format: "point_count != nil")
-
-            style.addLayer(clusterCountLayer)
-            print("Swift: Added cluster count labels layer")
-        }
-
-        completion(.success(()))
     }
 
     // Test method for debugging Pigeon generation
@@ -1123,5 +1154,31 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       }
 
       completion(.success(()))
+    }
+
+    // MARK: - Helper Methods for Property Parsing
+
+    private func parseValue(_ value: Any) -> NSExpression {
+        if let num = value as? NSNumber {
+            return NSExpression(forConstantValue: num)
+        }
+        if let double = value as? Double {
+            return NSExpression(forConstantValue: NSNumber(value: double))
+        }
+        if let int = value as? Int {
+            return NSExpression(forConstantValue: NSNumber(value: int))
+        }
+        return NSExpression(forConstantValue: NSNumber(value: 0))
+    }
+
+    private func parseColor(_ value: Any) -> NSExpression {
+        if let colorArray = value as? [Double], colorArray.count >= 3 {
+            let a = colorArray.count > 3 ? colorArray[3] : 1.0
+            return NSExpression(forConstantValue: UIColor(red: colorArray[0], green: colorArray[1], blue: colorArray[2], alpha: a))
+        }
+        if let colorString = value as? String {
+            return NSExpression(forConstantValue: UIColor(hexString: colorString) ?? UIColor.red)
+        }
+        return NSExpression(forConstantValue: UIColor.red)
     }
 }

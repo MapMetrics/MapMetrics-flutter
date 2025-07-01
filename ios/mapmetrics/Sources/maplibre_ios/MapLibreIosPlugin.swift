@@ -119,17 +119,6 @@ public class MapLibreIosPlugin: NSObject, FlutterPlugin {
                 currentStyle.addSource(source)
                 print("iOS: addClusteredGeoJsonSource - Source added to style successfully")
 
-                // Add a default circle layer to visualize the clusters
-                let circleLayer = MLNCircleStyleLayer(identifier: "\(id)-circles", source: source)
-                circleLayer.circleRadius = NSExpression(forConstantValue: 20)
-                circleLayer.circleColor = NSExpression(forConstantValue: UIColor.red)
-                circleLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
-                circleLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
-                circleLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor.white)
-
-                currentStyle.addLayer(circleLayer)
-                print("iOS: addClusteredGeoJsonSource - Circle layer added for visualization")
-
                 result(nil)
             } else {
                 print("iOS: addClusteredGeoJsonSource - No current style available")
