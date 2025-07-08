@@ -266,27 +266,111 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     }
 
     private func applyCircleProperties(to layer: MLNCircleStyleLayer, paint: [String: Any], layout: [String: Any]) {
-        // Apply paint properties
+
+        // Apply paint properties with proper mapping
         paint.forEach { key, value in
+            print("iOS: Setting paint property \(key) = \(value)")
+
             switch key {
-            case "circle-radius": layer.circleRadius = parseValue(value)
-            case "circle-color": layer.circleColor = parseColor(value)
-            case "circle-opacity": layer.circleOpacity = parseValue(value)
-            case "circle-stroke-width": layer.circleStrokeWidth = parseValue(value)
-            case "circle-stroke-color": layer.circleStrokeColor = parseColor(value)
-            case "circle-stroke-opacity": layer.circleStrokeOpacity = parseValue(value)
-            case "circle-blur": layer.circleBlur = parseValue(value)
-            default: break
+            case "circle-radius":
+                layer.circleRadius = createExpression(from: value)
+            case "circle-color":
+                layer.circleColor = createExpression(from: value)
+            case "circle-opacity":
+                layer.circleOpacity = createExpression(from: value)
+            case "circle-stroke-width":
+                layer.circleStrokeWidth = createExpression(from: value)
+            case "circle-stroke-color":
+                layer.circleStrokeColor = createExpression(from: value)
+            case "circle-stroke-opacity":
+                layer.circleStrokeOpacity = createExpression(from: value)
+            case "circle-blur":
+                layer.circleBlur = createExpression(from: value)
+            default:
+                print("iOS: Unknown circle paint property: \(key)")
             }
         }
 
         // Apply layout properties
         layout.forEach { key, value in
+            print("iOS: Setting layout property \(key) = \(value)")
+
             switch key {
-            case "visibility": layer.isVisible = (value as? String == "visible")
-            case "circle-sort-key": layer.circleSortKey = parseValue(value)
-            default: break
+            case "visibility":
+                layer.isVisible = (value as? String == "visible")
+            case "circle-sort-key":
+                layer.circleSortKey = createExpression(from: value)
+            default:
+                print("iOS: Unknown circle layout property: \(key)")
             }
+        }
+    }
+    // The key method - this creates NSExpression from any value type
+    private func createExpression(from value: Any) -> NSExpression {
+        print("iOS: Creating expression from: \(value) (type: \(type(of: value)))")
+
+        // Handle different value types
+        switch value {
+        case let arrayValue as [Any]:
+            // This is likely a MapLibre expression array
+            if !arrayValue.isEmpty && arrayValue.first is String {
+                print("iOS: Found expression array, converting...")
+                do {
+                    // Try MapLibre's expression converter
+                    return try NSExpression(mglJSONObject: arrayValue)
+                } catch {
+                    print("iOS: mglJSONObject failed: \(error), using constant value")
+                    return NSExpression(forConstantValue: arrayValue)
+                }
+            } else {
+                // Regular array
+                return NSExpression(forConstantValue: arrayValue)
+            }
+
+        case let stringValue as String:
+            // Handle color strings and regular strings
+            if isColorString(stringValue) {
+                if let color = getColorFromNameOrHex(stringValue) {
+                    return NSExpression(forConstantValue: color)
+                }
+            }
+            return NSExpression(forConstantValue: stringValue)
+
+        default:
+            // Numbers, etc.
+            return NSExpression(forConstantValue: value)
+        }
+    }
+
+    private func isColorString(_ string: String) -> Bool {
+        return string.hasPrefix("#") ||
+            string.hasPrefix("rgb") ||
+            string.hasPrefix("rgba") ||
+            ["white", "black", "red", "blue", "green", "yellow", "orange", "purple", "gray", "grey", "brown", "pink", "cyan", "magenta"].contains(string.lowercased())
+    }
+
+    private func getColorFromNameOrHex(_ colorString: String) -> UIColor? {
+        // First try hex parsing
+        if let hexColor = UIColor(hexString: colorString) {
+            return hexColor
+        }
+
+        // Then try color names
+        switch colorString.lowercased() {
+        case "white": return UIColor.white
+        case "black": return UIColor.black
+        case "red": return UIColor.red
+        case "blue": return UIColor.blue
+        case "green": return UIColor.green
+        case "yellow": return UIColor.yellow
+        case "orange": return UIColor.orange
+        case "purple": return UIColor.purple
+        case "gray", "grey": return UIColor.gray
+        case "brown": return UIColor.brown
+        case "pink": return UIColor.systemPink
+        case "cyan": return UIColor.cyan
+        case "magenta": return UIColor.magenta
+        default: return nil
         }
     }
 
@@ -596,33 +680,53 @@ func addSymbolLayer(
     completion(.success(()))
 }
 
-private func applySymbolProperties(to layer: MLNSymbolStyleLayer, paint: [String: Any], layout: [String: Any]) {
-    // Apply paint properties
-    paint.forEach { key, value in
-        switch key {
-        case "icon-opacity": layer.iconOpacity = parseValue(value)
-        case "icon-color": layer.iconColor = parseColor(value)
-        case "text-opacity": layer.textOpacity = parseValue(value)
-        case "text-color": layer.textColor = parseColor(value)
-        case "text-halo-color": layer.textHaloColor = parseColor(value)
-        case "text-halo-width": layer.textHaloWidth = parseValue(value)
-        default: break
-        }
-    }
+    private func applySymbolProperties(to layer: MLNSymbolStyleLayer, paint: [String: Any], layout: [String: Any]) {
+        print("iOS: Applying symbol properties using proper MapLibre setters")
 
-    // Apply layout properties
-    layout.forEach { key, value in
-        switch key {
-        case "visibility": layer.isVisible = (value as? String == "visible")
-        case "icon-image": layer.iconImageName = NSExpression(forConstantValue: value)
-        case "icon-size": layer.iconScale = parseValue(value)
-        case "text-field": layer.text = NSExpression(forConstantValue: value)
-        case "text-size": layer.textFontSize = parseValue(value)
-        case "text-font": layer.textFontNames = NSExpression(forConstantValue: value)
-        default: break
+        // Apply paint properties
+        paint.forEach { key, value in
+            print("iOS: Setting symbol paint property \(key) = \(value)")
+
+            switch key {
+            case "icon-opacity":
+                layer.iconOpacity = createExpression(from: value)
+            case "icon-color":
+                layer.iconColor = createExpression(from: value)
+            case "text-opacity":
+                layer.textOpacity = createExpression(from: value)
+            case "text-color":
+                layer.textColor = createExpression(from: value)
+            case "text-halo-color":
+                layer.textHaloColor = createExpression(from: value)
+            case "text-halo-width":
+                layer.textHaloWidth = createExpression(from: value)
+            default:
+                print("iOS: Unknown symbol paint property: \(key)")
+            }
+        }
+
+        // Apply layout properties with proper mapping
+        layout.forEach { key, value in
+            print("iOS: Setting symbol layout property \(key) = \(value)")
+
+            switch key {
+            case "visibility":
+                layer.isVisible = (value as? String == "visible")
+            case "icon-image":
+                layer.iconImageName = createExpression(from: value)
+            case "icon-size":
+                layer.iconScale = createExpression(from: value)
+            case "text-field":
+                layer.text = createExpression(from: value)
+            case "text-size":
+                layer.textFontSize = createExpression(from: value)
+            case "text-font":
+                layer.textFontNames = createExpression(from: value)
+            default:
+                print("iOS: Unknown symbol layout property: \(key)")
+            }
         }
     }
-}
 
     func loadImage(
         url _: String,

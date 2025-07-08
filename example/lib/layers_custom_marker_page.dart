@@ -115,7 +115,9 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
                     ),
                   ),
                 ),
-                const MapScalebar(),
+                const MapScalebar(
+                  padding: EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 50),
+                ),
                 const SourceAttribution(),
                 const MapControlButtons(),
                 const MapCompass(),
