@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_example/animation_page.dart';
+import 'package:maplibre_example/clustering_page.dart';
 import 'package:maplibre_example/controller_page.dart';
 import 'package:maplibre_example/events_page.dart';
 import 'package:maplibre_example/gestures_page.dart';
@@ -122,6 +123,11 @@ class MenuPage extends StatelessWidget {
                   label: 'Circles',
                   iconData: Icons.circle,
                   location: LayersCirclePage.location,
+                ),
+                ItemCard(
+                  label: 'Clustering',
+                  iconData: Icons.group_work,
+                  location: ClusteringPage.location,
                 ),
                 ItemCard(
                   label: 'Markers',

@@ -28,12 +28,13 @@ class StyleControllerIos implements StyleController {
     MLNStyleLayer? ffiStyleLayer;
     switch (layer) {
       case BackgroundStyleLayer():
-        ffiStyleLayer = MLNBackgroundStyleLayer.alloc()
-            .initWithIdentifier_(layer.id.toNSString());
-        (ffiStyleLayer as MLNBackgroundStyleLayer).backgroundColor =
-            NSExpression.expressionWithFormat_(
-              layer.color.toHexString(alpha: false).toNSString(),
-            );
+        ffiStyleLayer = MLNBackgroundStyleLayer.alloc().initWithIdentifier_(
+          layer.id.toNSString(),
+        );
+        (ffiStyleLayer as MLNBackgroundStyleLayer)
+            .backgroundColor = NSExpression.expressionWithFormat_(
+          layer.color.toHexString(alpha: false).toNSString(),
+        );
       case StyleLayerWithSource():
         final ffiSource = _ffiStyle.sourceWithIdentifier_(
           layer.sourceId.toNSString(),
@@ -44,52 +45,28 @@ class StyleControllerIos implements StyleController {
         switch (layer) {
           case FillStyleLayer():
             ffiStyleLayer = MLNFillStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
           case CircleStyleLayer():
             ffiStyleLayer = MLNCircleStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
           case FillExtrusionStyleLayer():
             ffiStyleLayer = MLNFillExtrusionStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
           case HeatmapStyleLayer():
             ffiStyleLayer = MLNHeatmapStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
           case HillshadeStyleLayer():
             ffiStyleLayer = MLNHillshadeStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
           case LineStyleLayer():
             ffiStyleLayer = MLNLineStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
           case RasterStyleLayer():
             ffiStyleLayer = MLNRasterStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
           case SymbolStyleLayer():
             ffiStyleLayer = MLNSymbolStyleLayer.alloc()
-                .initWithIdentifier_source_(
-              layer.id.toNSString(),
-              ffiSource,
-            );
+                .initWithIdentifier_source_(layer.id.toNSString(), ffiSource);
         }
     }
     if (ffiStyleLayer == null) {
@@ -121,8 +98,32 @@ class StyleControllerIos implements StyleController {
   @override
   Future<void> addSource(Source source) async {
     final MLNSource ffiSource;
+
+    bool isClusteringDisabled = true;
+
     switch (source) {
       case GeoJsonSource():
+        if (source.cluster) {
+          isClusteringDisabled = false;
+          // Use the new Pigeon method for clustering
+          print(
+            'iOS StyleController: Calling addClusteredGeoJsonSource via Pigeon',
+          );
+          try {
+            await _hostApi.addClusteredGeoJsonSource(
+              id: source.id,
+              data: source.data,
+              clustered: source.cluster,
+              clusterRadius: source.clusterRadius.toDouble(),
+              clusterMaxZoom: (source.clusterMaxZoom ?? 16.0).toDouble(),
+            );
+            print(
+              'iOS: Successfully added clustered source via Pigeon: ${source.id}',
+            );
+          } catch (e) {
+            print('iOS: Error adding clustered source via Pigeon: $e');
+          }
+        }
         final shapeSource = MLNShapeSource.new1();
         if (source.data.startsWith('{')) {
           shapeSource.initWithIdentifier_shape_options_(
@@ -142,6 +143,7 @@ class StyleControllerIos implements StyleController {
           );
         }
         ffiSource = shapeSource;
+
       case RasterDemSource():
         final demSource = ffiSource = MLNRasterDEMSource.new1();
         if (source.url case final String url) {
@@ -221,7 +223,11 @@ class StyleControllerIos implements StyleController {
           'The Source is not supported: ${source.runtimeType}',
         );
     }
-    _ffiStyle.addSource_(ffiSource);
+
+    if (isClusteringDisabled == true) {
+      // Add the source to the native style
+      _ffiStyle.addSource_(ffiSource);
+    }
   }
 
   @override

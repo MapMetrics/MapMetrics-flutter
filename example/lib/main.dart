@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maplibre_example/animation_page.dart';
+import 'package:maplibre_example/clustering_page.dart';
 import 'package:maplibre_example/controller_page.dart';
 import 'package:maplibre_example/events_page.dart';
 import 'package:maplibre_example/gestures_page.dart';
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
         ParametersPage.location: (context) => const ParametersPage(),
         ControllerPage.location: (context) => const ControllerPage(),
         TwoMapsPage.location: (context) => const TwoMapsPage(),
+        ClusteringPage.location: (context) => const ClusteringPage(),
       },
     );
   }
