@@ -28,12 +28,12 @@ class StyleControllerIos implements StyleController {
     MLNStyleLayer? ffiStyleLayer;
     switch (layer) {
       case BackgroundStyleLayer():
-        ffiStyleLayer =
-            MLNBackgroundStyleLayer.new1()
-              ..initWithIdentifier_(layer.id.toNSString())
-              ..backgroundColor = NSExpression.expressionWithFormat_(
-                layer.color.toHexString(alpha: false).toNSString(),
-              );
+        ffiStyleLayer = MLNBackgroundStyleLayer.alloc()
+            .initWithIdentifier_(layer.id.toNSString());
+        (ffiStyleLayer as MLNBackgroundStyleLayer).backgroundColor =
+            NSExpression.expressionWithFormat_(
+              layer.color.toHexString(alpha: false).toNSString(),
+            );
       case StyleLayerWithSource():
         final ffiSource = _ffiStyle.sourceWithIdentifier_(
           layer.sourceId.toNSString(),
@@ -43,69 +43,78 @@ class StyleControllerIos implements StyleController {
         }
         switch (layer) {
           case FillStyleLayer():
-            ffiStyleLayer =
-                MLNFillStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNFillStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
           case CircleStyleLayer():
-            ffiStyleLayer =
-                MLNCircleStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNCircleStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
           case FillExtrusionStyleLayer():
-            ffiStyleLayer =
-                MLNFillExtrusionStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNFillExtrusionStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
           case HeatmapStyleLayer():
-            ffiStyleLayer =
-                MLNHeatmapStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNHeatmapStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
           case HillshadeStyleLayer():
-            ffiStyleLayer =
-                MLNHillshadeStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNHillshadeStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
           case LineStyleLayer():
-            ffiStyleLayer =
-                MLNLineStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNLineStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
           case RasterStyleLayer():
-            ffiStyleLayer =
-                MLNRasterStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNRasterStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
           case SymbolStyleLayer():
-            ffiStyleLayer =
-                MLNSymbolStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            ffiStyleLayer = MLNSymbolStyleLayer.alloc()
+                .initWithIdentifier_source_(
+              layer.id.toNSString(),
+              ffiSource,
+            );
         }
     }
-
     if (ffiStyleLayer == null) {
       throw UnimplementedError(
         'The Layer is not supported: ${layer.runtimeType}',
       );
     }
-    ffiStyleLayer.setProperties(layer.paint);
-    ffiStyleLayer.setProperties(layer.layout);
+
+    // Set properties AFTER the layer is properly initialized
+    try {
+      ffiStyleLayer.setProperties(layer.paint);
+      ffiStyleLayer.setProperties(layer.layout);
+    } catch (e) {
+      debugPrint('Error setting layer properties: $e');
+      // Continue anyway - the layer might still work
+    }
+
     if (layer.minZoom case final double minZoom) {
       ffiStyleLayer.minimumZoomLevel = minZoom;
     }
     if (layer.maxZoom case final double maxZoom) {
       ffiStyleLayer.maximumZoomLevel = maxZoom;
     }
+
+    // Add the layer to the style
     _ffiStyle.addLayer_(ffiStyleLayer);
   }
 
@@ -230,20 +239,30 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> removeLayer(String id) async {
-    final ffiId = id.toNSString();
-    final ffiLayer = _ffiStyle.layerWithIdentifier_(ffiId);
-    if (ffiLayer == null) return;
-    _ffiStyle.removeLayer_(ffiLayer);
-    ffiId.release();
+    try {
+      final ffiId = id.toNSString();
+      final ffiLayer = _ffiStyle.layerWithIdentifier_(ffiId);
+      if (ffiLayer != null) {
+        _ffiStyle.removeLayer_(ffiLayer);
+      }
+      // Don't release ffiId here - let ARC handle it
+    } catch (e) {
+      debugPrint('Error removing layer $id: $e');
+    }
   }
 
   @override
   Future<void> removeSource(String id) async {
-    final ffiId = id.toNSString();
-    final ffiSource = _ffiStyle.sourceWithIdentifier_(ffiId);
-    if (ffiSource == null) return;
-    _ffiStyle.removeSource_(ffiSource);
-    ffiId.release();
+    try {
+      final ffiId = id.toNSString();
+      final ffiSource = _ffiStyle.sourceWithIdentifier_(ffiId);
+      if (ffiSource != null) {
+        _ffiStyle.removeSource_(ffiSource);
+      }
+      // Don't release ffiId here - let ARC handle it
+    } catch (e) {
+      debugPrint('Error removing source $id: $e');
+    }
   }
 
   @override
@@ -251,13 +270,27 @@ class StyleControllerIos implements StyleController {
     required String id,
     required String data,
   }) async {
-    final source = _ffiStyle.sourceWithIdentifier_(id.toNSString())!;
-    final shapeSource = MLNShapeSource.castFrom(source);
-    shapeSource.shape = MLNShape.shapeWithData_encoding_error_(
-      data.toNSDataUTF8()!,
-      4, // utf-8
-      nullptr,
-    );
+    try {
+      final sourceId = id.toNSString();
+      final source = _ffiStyle.sourceWithIdentifier_(sourceId);
+      if (source == null) {
+        debugPrint('Source $id not found for update');
+        return;
+      }
+
+      final shapeSource = MLNShapeSource.castFrom(source);
+      final newShape = MLNShape.shapeWithData_encoding_error_(
+        data.toNSDataUTF8()!,
+        4, // utf-8
+        nullptr,
+      );
+
+      if (newShape != null) {
+        shapeSource.shape = newShape;
+      }
+    } catch (e) {
+      debugPrint('Error updating GeoJSON source $id: $e');
+    }
   }
 
   NSArray _getLayers() => _ffiStyle.layers;

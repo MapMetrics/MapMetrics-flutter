@@ -124,6 +124,16 @@ abstract interface class MapLibreHostApi {
   /// Add an image to the map.
   @async
   void addImage(String id, Uint8List bytes);
+
+  /// Add a GeoJSON source with clustering to the map style.
+  @async
+  void addClusteredGeoJsonSource({
+    required String id,
+    required String data,
+    required bool clustered,
+    required double clusterRadius,
+    required double clusterMaxZoom,
+  });
 }
 
 @FlutterApi()
