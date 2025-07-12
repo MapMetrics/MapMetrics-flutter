@@ -24,7 +24,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'MapMetrics Demo',
       home: Scaffold(
-        body: MapLibreMap(
+        body: MapMetricsView(
           acceptLicense: true,
           options: options ?? MapOptions(initCenter: Position(0, 0)),
           onMapCreated: onMapCreated,

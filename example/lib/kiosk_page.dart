@@ -35,7 +35,7 @@ class _KioskPageState extends State<KioskPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: MapLibreMap(
+      body: MapMetricsView(
         acceptLicense: true,
         options: MapOptions(initStyle: _styleUrl, initCenter: Position(0, 0)),
         onMapCreated: (controller) => _controller = controller,

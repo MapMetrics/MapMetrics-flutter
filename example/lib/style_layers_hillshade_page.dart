@@ -20,7 +20,7 @@ class _StyleLayersHillshadePageState extends State<StyleLayersHillshadePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Hillshade Style Layer')),
-      body: MapLibreMap(
+      body: MapMetricsView(
         acceptLicense: true,
         options: MapOptions(
           initCenter: Position(11.39085, 47.27574),

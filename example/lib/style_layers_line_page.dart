@@ -17,7 +17,7 @@ class _StyleLayersLinePageState extends State<StyleLayersLinePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Line Style Layer')),
-      body: MapLibreMap(
+      body: MapMetricsView(
         acceptLicense: true,
         options: MapOptions(initZoom: 7, initCenter: Position(9.17, 47.68)),
         onStyleLoaded: _onStyleLoaded,

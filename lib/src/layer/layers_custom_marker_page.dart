@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mapmetrics/mapmetrics.dart';
+
 @immutable
 class CustomMarkerPage extends StatefulWidget {
   const CustomMarkerPage({super.key});
+
   static const location = '/custom-marker';
 
   @override
@@ -48,7 +50,7 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
+            child: MapMetricsView(
               acceptLicense: true,
               key: _mapKey,
               options: MapOptions(
@@ -64,23 +66,22 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
                   _addMarker(event.point);
                 }
               },
-              children: [
+              mapChildren: [
                 WidgetLayer(
                   allowInteraction: true,
                   markers: List.generate(
                     _markerPositions.length,
-                        (index) => Marker(
+                    (index) => Marker(
                       size: const Size(70, 80),
                       point: _markerPositions[index],
                       child: GestureDetector(
                         onTap: () => _onTap(index),
-                        onLongPressStart: (details) =>
-                            _onLongPress(index, details),
+                        onLongPressStart:
+                            (details) => _onLongPress(index, details),
                         onPanStart: (details) => _onPanStart(details, index),
-                        onPanUpdate: (details) async =>
-                            _onPanUpdate(details, index),
-                        onPanEnd: (details) async =>
-                            _onPanEnd(details, index),
+                        onPanUpdate:
+                            (details) async => _onPanUpdate(details, index),
+                        onPanEnd: (details) async => _onPanEnd(details, index),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -91,7 +92,9 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(6),
@@ -114,7 +117,14 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
                     ),
                   ),
                 ),
-                const MapScalebar(),
+                const MapScalebar(
+                  padding: EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    top: 12,
+                    bottom: 50,
+                  ),
+                ),
                 const SourceAttribution(),
                 const MapControlButtons(),
                 const MapCompass(),
@@ -133,12 +143,13 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
   }
 
   Future<Position> _toLngLat(Offset eventOffset) async {
-    final pixelRatio = (!kIsWeb && Platform.isAndroid)
-        ? MediaQuery.devicePixelRatioOf(context)
-        : 1.0;
+    final pixelRatio =
+        (!kIsWeb && Platform.isAndroid)
+            ? MediaQuery.devicePixelRatioOf(context)
+            : 1.0;
 
     final mapRenderBox =
-    _mapKey.currentContext?.findRenderObject() as RenderBox?;
+        _mapKey.currentContext?.findRenderObject() as RenderBox?;
 
     assert(mapRenderBox != null, 'RenderBox of Map should never be null');
 
@@ -219,19 +230,20 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
   Future<bool> _showConfirmationDialogDelete(int index) async {
     final isConfirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete ${_markerLabels[index]}?'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop(false),
+      builder:
+          (context) => AlertDialog(
+            title: Text('Delete ${_markerLabels[index]}?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+              TextButton(
+                child: const Text('Delete'),
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
           ),
-          TextButton(
-            child: const Text('Delete'),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
     );
     return isConfirmed ?? false;
   }
@@ -239,19 +251,20 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
   Future<bool> _showConfirmationDialogMove() async {
     final isConfirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Accept new position?'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Discard'),
-            onPressed: () => Navigator.of(context).pop(false),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Accept new position?'),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Discard'),
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+              TextButton(
+                child: const Text('Accept'),
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
           ),
-          TextButton(
-            child: const Text('Accept'),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
     );
     return isConfirmed ?? false;
   }
@@ -259,17 +272,20 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
   Future<void> _showMarkerDetails(int index) async {
     await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(_markerLabels[index]),
-        content: Text('Details of ${_markerLabels[index]} at:\n'
-            'LatLng: ${_markerPositions[index].lat}, ${_markerPositions[index].lng}'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Close'),
-            onPressed: () => Navigator.of(context).pop(),
+      builder:
+          (context) => AlertDialog(
+            title: Text(_markerLabels[index]),
+            content: Text(
+              'Details of ${_markerLabels[index]} at:\n'
+              'LatLng: ${_markerPositions[index].lat}, ${_markerPositions[index].lng}',
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Close'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 }

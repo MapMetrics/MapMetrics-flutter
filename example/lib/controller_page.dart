@@ -205,7 +205,7 @@ pitch: ${camera.pitch}'''),
             ),
           ),
           Expanded(
-            child: MapLibreMap(
+            child: MapMetricsView(
               acceptLicense: true,
               options: MapOptions(
                 initCenter: Position(9.17, 47.68),

@@ -24,7 +24,8 @@ class _StyledMapPageState extends State<StyledMapPage> {
           initStyle: MapStyles.testMap,
         ),
         mapChildren: [
-          const MapScalebar(),
+          const MapScalebar(                  padding: EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 50),
+          ),
           const SourceAttribution(),
           MapControlButtons(
             showZoomInOutButton: true,

@@ -79,7 +79,7 @@ class _LayersMixedPageState extends State<LayersMixedPage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
+            child: MapMetricsView(
               acceptLicense: true,
               options: MapOptions(
                 initZoom: 7,

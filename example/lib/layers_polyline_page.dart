@@ -22,7 +22,7 @@ class _LayersPolylinePageState extends State<LayersPolylinePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Polyline Layers')),
-      body: MapLibreMap(
+      body: MapMetricsView(
         acceptLicense: true,
         options: MapOptions(initZoom: 7, initCenter: Position(9.17, 47.68)),
         onEvent: (event) {

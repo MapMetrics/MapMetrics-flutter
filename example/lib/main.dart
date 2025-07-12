@@ -12,7 +12,6 @@ import 'package:maplibre_example/layers_polyline_page.dart';
 import 'package:maplibre_example/menu_page.dart';
 import 'package:maplibre_example/offline_page.dart';
 import 'package:maplibre_example/parameters_page.dart';
-import 'package:maplibre_example/permissions_page.dart';
 import 'package:maplibre_example/style_layers_circle_page.dart';
 import 'package:maplibre_example/style_layers_fill_extrusion_page.dart';
 import 'package:maplibre_example/style_layers_fill_page.dart';
@@ -57,7 +56,6 @@ class MyApp extends StatelessWidget {
         WidgetLayerInteractivePage.location:
             (context) => const WidgetLayerInteractivePage(),
         OfflinePage.location: (context) => const OfflinePage(),
-        PermissionsPage.location: (context) => const PermissionsPage(),
         StyleLayersSymbolPage.location:
             (context) => const StyleLayersSymbolPage(),
         StyleLayersCirclePage.location:

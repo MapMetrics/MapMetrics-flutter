@@ -24,7 +24,7 @@ class _AnimationPageState extends State<AnimationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Animation')),
-      body: MapLibreMap(
+      body: MapMetricsView(
         acceptLicense: true,
         options: MapOptions(
           initZoom: 14,

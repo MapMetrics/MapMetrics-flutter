@@ -20,7 +20,7 @@ class _EventsPageState extends State<EventsPage> {
       appBar: AppBar(title: const Text('Events')),
       body: Stack(
         children: [
-          MapLibreMap(
+          MapMetricsView(
             acceptLicense: true,
             options: MapOptions(initCenter: Position(9.17, 47.68)),
             onEvent: _onEvent,

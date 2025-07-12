@@ -87,7 +87,7 @@ class _UserLocationPageState extends State<UserLocationPage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
+            child: MapMetricsView(
               acceptLicense: true,
               options: MapOptions(
                 initZoom: 1,

@@ -7,6 +7,7 @@ import 'package:mapmetrics/mapmetrics.dart';
 @immutable
 class WidgetLayerInteractivePage extends StatefulWidget {
   const WidgetLayerInteractivePage({super.key});
+
   static const location = '/widget-layer-interactive';
 
   @override
@@ -42,7 +43,7 @@ class _WidgetLayerPageState extends State<WidgetLayerInteractivePage> {
             ),
           ),
           Expanded(
-            child: MapLibreMap(
+            child: MapMetricsView(
               acceptLicense: true,
               key: _mapKey,
               options: MapOptions(
@@ -59,7 +60,7 @@ class _WidgetLayerPageState extends State<WidgetLayerInteractivePage> {
                   setState(() {});
                 }
               },
-              children: [
+              mapChildren: [
                 WidgetLayer(
                   allowInteraction: true,
                   markers: List.generate(
@@ -86,7 +87,14 @@ class _WidgetLayerPageState extends State<WidgetLayerInteractivePage> {
                   ),
                 ),
                 // display the UI widgets above the widget markers.
-                const MapScalebar(),
+                const MapScalebar(
+                  padding: EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    top: 12,
+                    bottom: 50,
+                  ),
+                ),
                 const SourceAttribution(),
                 const MapControlButtons(),
                 const MapCompass(),

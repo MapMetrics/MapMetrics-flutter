@@ -19,7 +19,7 @@ class _StyleLayersSymbolPageState extends State<StyleLayersSymbolPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Symbol Style Layer')),
-      body: MapLibreMap(
+      body: MapMetricsView(
         acceptLicense: true,
         options: MapOptions(initZoom: 3, initCenter: Position(9.17, 47.68)),
         onStyleLoaded: (style) async {
