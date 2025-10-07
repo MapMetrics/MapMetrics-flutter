@@ -140,6 +140,18 @@ abstract interface class MapController {
     bool trackLocation = true,
     BearingTrackMode trackBearing = BearingTrackMode.gps,
   });
+
+  /// Enable or disable manual dragging of the location marker
+  /// When enabled, clicking on the location marker will enable drag mode
+  /// and you can then click or long-press anywhere on the map to move it
+  Future<void> setLocationDraggable({bool draggable = true});
+
+  /// Set the navigation route for improved road snapping
+  /// When a route is set, the location icon will snap to the route line
+  Future<void> setNavigationRoute(List<Position> routePoints);
+
+  /// Clear the navigation route
+  Future<void> clearNavigationRoute();
 }
 
 /// The mode how the bearing should get tracked on the map.

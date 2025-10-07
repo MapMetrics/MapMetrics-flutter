@@ -24,3 +24,4 @@ export 'src/ui/map_scalebar.dart';
 export 'src/ui/source_attribution.dart';
 export 'src/utils.dart';
 export 'src/widget_layer.dart';
+export 'src/widgets/draggable_location_marker.dart';

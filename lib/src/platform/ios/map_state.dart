@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ffi';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mapmetrics/mapmetrics.dart';
@@ -312,4 +313,22 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   @override
   List<Offset> toScreenLocationsSync(List<Position> lngLats) =>
       lngLats.map(toScreenLocationSync).toList(growable: false);
+
+  @override
+  Future<void> setLocationDraggable({bool draggable = true}) async {
+    // iOS implementation not yet available
+    debugPrint('📍 Location marker drag feature is not yet implemented on iOS');
+  }
+
+  @override
+  Future<void> setNavigationRoute(List<Position> routePoints) async {
+    // iOS implementation not yet available
+    debugPrint('📍 Road snapping feature is not yet implemented on iOS');
+  }
+
+  @override
+  Future<void> clearNavigationRoute() async {
+    // iOS implementation not yet available
+    debugPrint('📍 Road snapping feature is not yet implemented on iOS');
+  }
 }
