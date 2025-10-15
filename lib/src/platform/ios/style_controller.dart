@@ -199,14 +199,14 @@ class StyleControllerIos implements StyleController {
           }
 
           // TODO: iOS vector tile overzooming limitation
-          // The MapLibre iOS SDK requires zoom levels to be passed through the options
-          // dictionary as NSNumber objects during source initialization. However, creating
-          // NSNumber objects from Dart FFI is not straightforward with the current bindings.
-          // This means POI vector tiles may disappear when zooming beyond the server's
-          // maxZoom level (typically 16) because iOS cannot overzoom properly.
-          // Workaround: Use higher resolution tiles on the server side, or implement
-          // NSNumber creation in the FFI bindings, or use a Pigeon method channel.
+          // The maplibre_ffi.dart file shadows objective_c's NSNumber class,
+          // preventing access to NSNumber.numberWithInt_() needed to create
+          // zoom level options. Solutions:
+          // 1. Use Pigeon method channel to create options dictionary in native Swift
+          // 2. Regenerate maplibre_ffi.dart without NSNumber export
+          // 3. Server-side: Increase tile maxZoom to 18+ (current workaround)
           debugPrint('⚠️ iOS: VectorSource zoom options not set - overzooming beyond z${source.maxZoom} may not work');
+
           vectorSource.initWithIdentifier_tileURLTemplates_options_(
             source.id.toNSString(),
             ffiUrls,
