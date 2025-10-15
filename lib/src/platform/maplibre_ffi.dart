@@ -19072,9 +19072,7 @@ class MLNTileSource extends MLNSource {
   }
 }
 
-late final _class_MLNVectorTileSource = objc.getClass(
-  "MapLibre.MLNVectorTileSource",
-);
+late final _class_MLNVectorTileSource = objc.getClass("MLNVectorTileSource");
 late final _sel_initWithIdentifier_configurationURL_ = objc.registerName(
   "initWithIdentifier:configurationURL:",
 );

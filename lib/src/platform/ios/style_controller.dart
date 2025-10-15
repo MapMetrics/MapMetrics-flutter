@@ -25,6 +25,13 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> addLayer(StyleLayer layer, {String? belowLayerId}) async {
+    // Check if layer already exists to prevent duplicate layer crash
+    final existingLayer = _ffiStyle.layerWithIdentifier_(layer.id.toNSString());
+    if (existingLayer != null) {
+      debugPrint('⚠️ iOS: Layer "${layer.id}" already exists, skipping addLayer');
+      return;
+    }
+
     MLNStyleLayer? ffiStyleLayer;
     switch (layer) {
       case BackgroundStyleLayer():
@@ -111,6 +118,13 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> addSource(Source source) async {
+    // Check if source already exists to prevent duplicate source crash
+    final existingSource = _ffiStyle.sourceWithIdentifier_(source.id.toNSString());
+    if (existingSource != null) {
+      debugPrint('⚠️ iOS: Source "${source.id}" already exists, skipping addSource');
+      return;
+    }
+
     final MLNSource ffiSource;
     switch (source) {
       case GeoJsonSource():
@@ -183,6 +197,16 @@ class StyleControllerIos implements StyleController {
           for (final url in source.tiles ?? <String>[]) {
             ffiUrls.addObject_(url.toNSString());
           }
+
+          // TODO: iOS vector tile overzooming limitation
+          // The MapLibre iOS SDK requires zoom levels to be passed through the options
+          // dictionary as NSNumber objects during source initialization. However, creating
+          // NSNumber objects from Dart FFI is not straightforward with the current bindings.
+          // This means POI vector tiles may disappear when zooming beyond the server's
+          // maxZoom level (typically 16) because iOS cannot overzoom properly.
+          // Workaround: Use higher resolution tiles on the server side, or implement
+          // NSNumber creation in the FFI bindings, or use a Pigeon method channel.
+          debugPrint('⚠️ iOS: VectorSource zoom options not set - overzooming beyond z${source.maxZoom} may not work');
           vectorSource.initWithIdentifier_tileURLTemplates_options_(
             source.id.toNSString(),
             ffiUrls,

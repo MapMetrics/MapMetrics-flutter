@@ -132,7 +132,23 @@ class StyleControllerAndroid implements StyleController {
         // TODO apply other properties
         jniSource.setVolatile(source.volatile.toJBoolean());
       case VectorSource():
-        jniSource = jni.VectorSource.new$3(jniId, source.url!.toJString());
+        if (source.url case final String url) {
+          jniSource = jni.VectorSource.new$3(jniId, url.toJString());
+        } else {
+          // Handle tiles array like RasterSource
+          final tiles = source.tiles!.map((e) => e.toJString());
+          final tilesArray = JArray.of(JString.nullableType, tiles);
+          final tileSet =
+              jni.TileSet(
+                  '{}'.toJString(),
+                  tilesArray.as(JArray.type(JString.type)),
+                )
+                ..setMaxZoom(source.maxZoom)
+                ..setMinZoom(source.minZoom);
+          jniSource = jni.VectorSource.new$4(jniId, tileSet);
+          tilesArray.release();
+          tileSet.release();
+        }
         // TODO apply other properties
         jniSource.setVolatile(source.volatile.toJBoolean());
       case ImageSource():

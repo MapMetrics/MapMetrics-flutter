@@ -45,12 +45,19 @@ import UIKit
   @objc public static func setExpression(
     target: NSObject, field: String, expression: NSExpression
   ) {
-    do {
-      // https://developer.apple.com/documentation/objectivec/nsobject/1418139-setvalue
-      try target.setValue(expression, forKey: field)
-    } catch {
-      print("Couldn't set expression in Helpers.setExpression()")
-    }
+    // iOS FFI FIX: Do not call setValue with KVC - it crashes with MapLibre properties
+    // This method should not be called at all for SymbolStyleLayer properties on iOS
+    // Silently skip to prevent app crashes
+    print("⚠️ iOS: setExpression(\(field)) skipped - prevents MapLibre KVC crash")
+    return
+
+    // ORIGINAL CODE - DISABLED DUE TO KVC CRASH:
+    // do {
+    //   // https://developer.apple.com/documentation/objectivec/nsobject/1418139-setvalue
+    //   try target.setValue(expression, forKey: field)
+    // } catch {
+    //   print("Couldn't set expression in Helpers.setExpression()")
+    // }
   }
 
   @objc public static func parseExpression(

@@ -15,6 +15,7 @@ export 'src/offline/download_progress.dart';
 export 'src/offline/offline_manager.dart';
 export 'src/offline/offline_region.dart';
 export 'src/permission_manager.dart';
+export 'src/queried_feature.dart';
 export 'src/queried_layer.dart';
 export 'src/style/style.dart';
 export 'src/style_controller.dart';

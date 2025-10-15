@@ -119,6 +119,29 @@ abstract interface class MapController {
   /// Queries the map for rendered features.
   Future<List<QueriedLayer>> queryLayers(Offset screenLocation);
 
+  /// Queries the map for rendered features with their properties.
+  ///
+  /// Returns all features from the specified [layerIds] at the given
+  /// [screenLocation] with their full property data from the vector tiles.
+  ///
+  /// This is useful for implementing feature selection and displaying
+  /// detailed information about map features like POIs, buildings, etc.
+  ///
+  /// Example:
+  /// ```dart
+  /// final features = await mapController.queryFeatures(
+  ///   Offset(100, 200),
+  ///   ['poi-layer', 'building-layer'],
+  /// );
+  /// for (final feature in features) {
+  ///   print('Feature properties: ${feature.properties}');
+  /// }
+  /// ```
+  Future<List<QueriedFeature>> queryFeatures(
+    Offset screenLocation,
+    List<String> layerIds,
+  );
+
   /// Show the user location on the map
   Future<void> enableLocation({
     Duration fastestInterval = const Duration(milliseconds: 750),

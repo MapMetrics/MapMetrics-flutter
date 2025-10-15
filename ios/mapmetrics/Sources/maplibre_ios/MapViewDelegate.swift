@@ -244,16 +244,37 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     id: String, bytes: FlutterStandardTypedData,
     completion: @escaping (Result<Void, Error>) -> Void
   ) {
-    // Main Thread Checker: UI API called on a background thread: -[UIView frame]
-    // DispatchQueue.main.async {
-    print("addImage before")
-    var style = _mapView.style!
-    var imageData = bytes.data
-    var image = UIImage(data: imageData, scale: UIScreen.main.scale)!
-    style.setImage(image, forName: id)
-    print("addImage afters")
-    print("added image: \(style.image(forName: id))")
-    // }
-    completion(.success(()))
+    print("🟢 SWIFT: addImage called for \(id) with \(bytes.data.count) bytes")
+
+    // CRITICAL: UI operations must run on main thread
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else {
+        print("❌ SWIFT ERROR: self is nil")
+        completion(.failure(NSError(domain: "MapLibre", code: -3, userInfo: [NSLocalizedDescriptionKey: "View deallocated"])))
+        return
+      }
+
+      print("🟡 SWIFT: On main thread, checking style for \(id)")
+
+      guard let style = self._mapView?.style else {
+        print("❌ SWIFT ERROR: Style is nil for image \(id)")
+        completion(.failure(NSError(domain: "MapLibre", code: -1, userInfo: [NSLocalizedDescriptionKey: "Style is nil"])))
+        return
+      }
+
+      let imageData = bytes.data
+      print("🟡 SWIFT: Creating UIImage for \(id) from \(imageData.count) bytes")
+
+      guard let image = UIImage(data: imageData, scale: UIScreen.main.scale) else {
+        print("❌ SWIFT ERROR: Failed to create UIImage for \(id), data length: \(imageData.count)")
+        completion(.failure(NSError(domain: "MapLibre", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to create UIImage"])))
+        return
+      }
+
+      print("🟡 SWIFT: Setting image in style for \(id)")
+      style.setImage(image, forName: id)
+      print("✅ SWIFT SUCCESS: Added image \(id) to MapLibre style")
+      completion(.success(()))
+    }
   }
 }

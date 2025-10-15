@@ -7,6 +7,8 @@ import 'package:maplibre_example/kiosk_page.dart';
 import 'package:maplibre_example/layers_circle_page.dart';
 import 'package:maplibre_example/layers_marker_page.dart';
 import 'package:maplibre_example/layers_mixed_page.dart';
+import 'package:maplibre_example/layers_poi_page.dart';
+import 'package:maplibre_example/layers_poi_vector_page.dart';
 import 'package:maplibre_example/layers_polygon_page.dart';
 import 'package:maplibre_example/layers_polyline_page.dart';
 import 'package:maplibre_example/menu_page.dart';
@@ -74,6 +76,8 @@ class MyApp extends StatelessWidget {
         LayersMixedPage.location: (context) => const LayersMixedPage(),
         LayersCirclePage.location: (context) => const LayersCirclePage(),
         LayersMarkerPage.location: (context) => const LayersMarkerPage(),
+        LayersPOIPage.location: (context) => const LayersPOIPage(),
+        LayersPOIVectorPage.location: (context) => const LayersPOIVectorPage(),
         LayersPolylinePage.location: (context) => const LayersPolylinePage(),
         LayersPolygonPage.location: (context) => const LayersPolygonPage(),
         ParametersPage.location: (context) => const ParametersPage(),

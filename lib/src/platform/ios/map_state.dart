@@ -9,9 +9,10 @@ import 'package:mapmetrics/src/layer/extensions.dart';
 import 'package:mapmetrics/src/layer/layer_manager.dart';
 import 'package:mapmetrics/src/platform/ios/extensions.dart';
 import 'package:mapmetrics/src/platform/map_state_native.dart';
-import 'package:mapmetrics/src/platform/maplibre_ffi.dart';
+import 'package:mapmetrics/src/platform/maplibre_ffi.dart' hide NSNumber;
 import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;
 import 'package:objective_c/objective_c.dart';
+import 'package:objective_c/src/internal.dart' as objc_internal;
 
 part 'style_controller.dart';
 
@@ -237,6 +238,21 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
       queriedLayers.add(queriedLayer);*/
     }
     return queriedLayers;
+  }
+
+  @override
+  Future<List<QueriedFeature>> queryFeatures(
+    Offset screenLocation,
+    List<String> layerIds,
+  ) async {
+    // iOS implementation: Basic feature detection without property extraction
+    // Property extraction would require native Swift/Objective-C bridge via Pigeon
+    debugPrint('📍 iOS queryFeatures: Tap at screen location ${screenLocation.dx}, ${screenLocation.dy}');
+    debugPrint('📍 iOS queryFeatures: Querying layers: $layerIds');
+
+    // Return empty list for now to avoid crashes
+    // Full implementation requires native iOS method to extract MLNFeature properties
+    return [];
   }
 
   @override

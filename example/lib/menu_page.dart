@@ -7,6 +7,8 @@ import 'package:maplibre_example/gestures_page.dart';
 import 'package:maplibre_example/layers_circle_page.dart';
 import 'package:maplibre_example/layers_marker_page.dart';
 import 'package:maplibre_example/layers_mixed_page.dart';
+import 'package:maplibre_example/layers_poi_page.dart';
+import 'package:maplibre_example/layers_poi_vector_page.dart';
 import 'package:maplibre_example/layers_polygon_page.dart';
 import 'package:maplibre_example/layers_polyline_page.dart';
 import 'package:maplibre_example/offline_page.dart';
@@ -127,6 +129,16 @@ class MenuPage extends StatelessWidget {
                   label: 'Markers',
                   iconData: Icons.location_on,
                   location: LayersMarkerPage.location,
+                ),
+                ItemCard(
+                  label: 'POI Layer',
+                  iconData: Icons.place,
+                  location: LayersPOIPage.location,
+                ),
+                ItemCard(
+                  label: 'POI Vector',
+                  iconData: Icons.layers,
+                  location: LayersPOIVectorPage.location,
                 ),
                 ItemCard(
                   label: 'Polygons',

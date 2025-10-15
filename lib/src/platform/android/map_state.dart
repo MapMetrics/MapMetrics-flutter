@@ -444,6 +444,74 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   }
 
   @override
+  Future<List<QueriedFeature>> queryFeatures(
+    Offset screenLocation,
+    List<String> layerIds,
+  ) async {
+    if (_jniMapLibreMap == null) {
+      throw Exception(
+        "queryFeatures can't be called before the map is initialized.",
+      );
+    }
+
+    final queriedFeatures = <QueriedFeature>[];
+
+    for (final layerId in layerIds) {
+      final jLayerId = JString.fromString(layerId);
+      final queryLayerIds = JArray<JString?>(JString.nullableType, 1)
+        ..[0] = jLayerId;
+
+      // Query rendered features with the JNI API
+      final jniFeatures = _jniMapLibreMap!.queryRenderedFeatures(
+        jni.PointF.new$1(screenLocation.dx, screenLocation.dy),
+        queryLayerIds,
+      );
+
+      queryLayerIds.release();
+      jLayerId.release();
+
+      // Extract properties from each feature
+      for (var i = 0; i < jniFeatures.length; i++) {
+        final feature = jniFeatures[i];
+        if (feature == null) continue;
+
+        // Get feature properties as JSON string
+        final jsonString = feature.toJson();
+        if (jsonString == null) {
+          feature.release();
+          continue;
+        }
+
+        // Parse JSON to extract properties
+        try {
+          final jsonStr = jsonString.toDartString(releaseOriginal: true);
+          final featureData = jsonDecode(jsonStr) as Map<String, dynamic>;
+          final properties = featureData['properties'] as Map<String, dynamic>? ?? {};
+
+          // Get source layer from feature geometry if available
+          // For vector tiles, this information is embedded in the feature
+          String? sourceLayer;
+
+          queriedFeatures.add(QueriedFeature(
+            layerId: layerId,
+            sourceId: '', // Source ID is typically the layer's source, will be empty for now
+            sourceLayer: sourceLayer,
+            properties: properties,
+          ));
+        } catch (e) {
+          debugPrint('Error parsing feature JSON: $e');
+        }
+
+        feature.release();
+      }
+
+      jniFeatures.release();
+    }
+
+    return queriedFeatures;
+  }
+
+  @override
   Future<void> enableLocation({
     Duration fastestInterval = const Duration(milliseconds: 750),
     Duration maxWaitTime = const Duration(seconds: 1),
