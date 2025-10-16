@@ -97,4 +97,28 @@ import UIKit
     }
     return nil
   }
+  private static var maps: [Int64: MLNMapView] = [:]
+
+      static func addMap(viewId: Int64, map: MLNMapView) {
+          maps[viewId] = map
+          print("MapLibreRegistry: Added map for viewId: \(viewId)")
+      }
+
+      static func getMap(viewId: Int64) -> MLNMapView? {
+          return maps[viewId]
+      }
+
+      static func removeMap(viewId: Int64) {
+          maps.removeValue(forKey: viewId)
+          print("MapLibreRegistry: Removed map for viewId: \(viewId)")
+      }
+
+      static func getAllMaps() -> [Int64: MLNMapView] {
+          return maps
+      }
+
+      static func clear() {
+          maps.removeAll()
+          print("MapLibreRegistry: Cleared all maps")
+      }
 }

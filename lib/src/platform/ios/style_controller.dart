@@ -25,186 +25,188 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> addLayer(StyleLayer layer, {String? belowLayerId}) async {
-    MLNStyleLayer? ffiStyleLayer;
+    print(
+      'iOS StyleController: Creating layer for source: ${layer.runtimeType}',
+    );
+
     switch (layer) {
       case BackgroundStyleLayer():
-        ffiStyleLayer =
-            MLNBackgroundStyleLayer.new1()
-              ..initWithIdentifier_(layer.id.toNSString())
-              ..backgroundColor = NSExpression.expressionWithFormat_(
-                layer.color.toHexString(alpha: false).toNSString(),
-              );
-      case StyleLayerWithSource():
-        final ffiSource = _ffiStyle.sourceWithIdentifier_(
-          layer.sourceId.toNSString(),
+        print('iOS StyleController: Adding background layer via Pigeon');
+        await _hostApi.addBackgroundLayer(
+          id: layer.id,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
         );
-        if (ffiSource == null) {
-          throw Exception('Source "${layer.sourceId}" does not exist.');
-        }
-        switch (layer) {
-          case FillStyleLayer():
-            ffiStyleLayer =
-                MLNFillStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-          case CircleStyleLayer():
-            ffiStyleLayer =
-                MLNCircleStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-          case FillExtrusionStyleLayer():
-            ffiStyleLayer =
-                MLNFillExtrusionStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-          case HeatmapStyleLayer():
-            ffiStyleLayer =
-                MLNHeatmapStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-          case HillshadeStyleLayer():
-            ffiStyleLayer =
-                MLNHillshadeStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-          case LineStyleLayer():
-            ffiStyleLayer =
-                MLNLineStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-          case RasterStyleLayer():
-            ffiStyleLayer =
-                MLNRasterStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-          case SymbolStyleLayer():
-            ffiStyleLayer =
-                MLNSymbolStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
-        }
-    }
+        print('iOS StyleController: Background layer added successfully');
 
-    if (ffiStyleLayer == null) {
-      throw UnimplementedError(
-        'The Layer is not supported: ${layer.runtimeType}',
-      );
+      case CircleStyleLayer():
+        print('iOS StyleController: Adding circle layer via Pigeon');
+        await _hostApi.addCircleLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Circle layer added successfully');
+
+      case FillStyleLayer():
+        print('iOS StyleController: Adding fill layer via Pigeon');
+        await _hostApi.addFillLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Fill layer added successfully');
+
+      case LineStyleLayer():
+        print('iOS StyleController: Adding line layer via Pigeon');
+        await _hostApi.addLineLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Line layer added successfully');
+
+      case SymbolStyleLayer():
+        print('iOS StyleController: Adding symbol layer via Pigeon');
+        await _hostApi.addSymbolLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Symbol layer added successfully');
+
+      case FillExtrusionStyleLayer():
+        print('iOS StyleController: Adding fill extrusion layer via Pigeon');
+        await _hostApi.addFillExtrusionLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Fill extrusion layer added successfully');
+
+      case HeatmapStyleLayer():
+        print('iOS StyleController: Adding heatmap layer via Pigeon');
+        await _hostApi.addHeatmapLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Heatmap layer added successfully');
+
+      case HillshadeStyleLayer():
+        print('iOS StyleController: Adding hillshade layer via Pigeon');
+        await _hostApi.addHillshadeLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Hillshade layer added successfully');
+
+      case RasterStyleLayer():
+        print('iOS StyleController: Adding raster layer via Pigeon');
+        await _hostApi.addRasterLayer(
+          id: layer.id,
+          sourceId: layer.sourceId,
+          layout: layer.layout ?? {},
+          paint: layer.paint ?? {},
+          belowLayerId: belowLayerId,
+        );
+        print('iOS StyleController: Raster layer added successfully');
+
+      default:
+        throw UnimplementedError(
+          'The Layer is not supported: ${layer.runtimeType}',
+        );
     }
-    ffiStyleLayer.setProperties(layer.paint);
-    ffiStyleLayer.setProperties(layer.layout);
-    if (layer.minZoom case final double minZoom) {
-      ffiStyleLayer.minimumZoomLevel = minZoom;
-    }
-    if (layer.maxZoom case final double maxZoom) {
-      ffiStyleLayer.maximumZoomLevel = maxZoom;
-    }
-    _ffiStyle.addLayer_(ffiStyleLayer);
   }
 
   @override
   Future<void> addSource(Source source) async {
-    final MLNSource ffiSource;
+    print(
+      'iOS StyleController: addSource called for ${source.runtimeType} with ID: ${source.id}',
+    );
+
     switch (source) {
       case GeoJsonSource():
-        final shapeSource = MLNShapeSource.new1();
-        if (source.data.startsWith('{')) {
-          shapeSource.initWithIdentifier_shape_options_(
-            source.id.toNSString(),
-            MLNShape.shapeWithData_encoding_error_(
-              source.data.toNSDataUTF8()!,
-              nsUTF8StringEncoding,
-              nullptr,
-            ),
-            NSDictionary.new1(),
-          );
-        } else {
-          shapeSource.initWithIdentifier_URL_options_(
-            source.id.toNSString(),
-            source.data.toNSURL()!,
-            NSDictionary.new1(),
-          );
-        }
-        ffiSource = shapeSource;
-      case RasterDemSource():
-        final demSource = ffiSource = MLNRasterDEMSource.new1();
-        if (source.url case final String url) {
-          demSource.initWithIdentifier_configurationURL_tileSize_(
-            source.id.toNSString(),
-            url.toNSURL()!,
-            source.tileSize.toDouble(),
-          );
-        } else {
-          final ffiUrls = NSMutableArray.new1();
-          for (final url in source.tiles ?? <String>[]) {
-            ffiUrls.addObject_(url.toNSString());
-          }
-          demSource.initWithIdentifier_tileURLTemplates_options_(
-            source.id.toNSString(),
-            ffiUrls,
-            NSDictionary.new1(),
-          );
-        }
-      case RasterSource():
-        final rasterSource = ffiSource = MLNRasterTileSource.new1();
-        if (source.url case final String url) {
-          rasterSource.initWithIdentifier_configurationURL_tileSize_(
-            source.id.toNSString(),
-            url.toNSURL()!,
-            source.tileSize.toDouble(),
-          );
-        } else {
-          final ffiUrls = NSMutableArray.new1()..init();
-          for (final url in source.tiles ?? <String>[]) {
-            ffiUrls.addObject_(url.toNSString());
-          }
-          rasterSource.initWithIdentifier_tileURLTemplates_options_(
-            source.id.toNSString(),
-            ffiUrls,
-            NSDictionary.new1(),
-          );
-        }
-      case VectorSource():
-        final vectorSource = ffiSource = MLNVectorTileSource.new1();
-        if (source.url case final String url) {
-          vectorSource.initWithIdentifier_configurationURLString_(
-            source.id.toNSString(),
-            url.toNSString(),
-          );
-        } else {
-          final ffiUrls = NSMutableArray.new1()..init();
-          for (final url in source.tiles ?? <String>[]) {
-            ffiUrls.addObject_(url.toNSString());
-          }
-          vectorSource.initWithIdentifier_tileURLTemplates_options_(
-            source.id.toNSString(),
-            ffiUrls,
-            NSDictionary.new1(),
-          );
-        }
-      case ImageSource():
-        final coordinates =
-            Struct.create<MLNCoordinateQuad>()
-              ..bottomLeft =
-                  source.coordinates.bottomLeft.toCLLocationCoordinate2D()
-              ..bottomRight =
-                  source.coordinates.bottomRight.toCLLocationCoordinate2D()
-              ..topLeft = source.coordinates.topLeft.toCLLocationCoordinate2D()
-              ..topRight =
-                  source.coordinates.topRight.toCLLocationCoordinate2D();
-        final imageSource = ffiSource = MLNImageSource.new1();
-        imageSource.initWithIdentifier_coordinateQuad_URL_(
-          source.id.toNSString(),
-          coordinates,
-          source.url.toNSURL()!,
+        print(
+          'iOS StyleController: Processing GeoJsonSource with cluster: ${source.cluster}',
         );
+        if (source.cluster) {
+          // Use the new Pigeon method for clustering
+          print(
+            'iOS StyleController: Calling addClusteredGeoJsonSource via Pigeon',
+          );
+          try {
+            await _hostApi.addClusteredGeoJsonSource(
+              id: source.id,
+              data: source.data,
+              clustered: source.cluster,
+              clusterRadius: source.clusterRadius.toDouble(),
+              clusterMaxZoom: (source.clusterMaxZoom ?? 16.0).toDouble(),
+            );
+            print(
+              'iOS: Successfully added clustered source via Pigeon: ${source.id}',
+            );
+          } catch (e) {
+            print('iOS: Error adding clustered source via Pigeon: $e');
+          }
+        } else {
+          // For non-clustered sources, we'll use the same Pigeon method with clustering disabled
+          print('iOS StyleController: Using Pigeon for non-clustered source');
+          try {
+            await _hostApi.addClusteredGeoJsonSource(
+              id: source.id,
+              data: source.data,
+              clustered: false,
+              clusterRadius: 0.0,
+              clusterMaxZoom: 0.0,
+            );
+            print('iOS: Added regular GeoJSON source via Pigeon: ${source.id}');
+          } catch (e) {
+            print('iOS: Error adding regular source via Pigeon: $e');
+          }
+        }
+      case RasterDemSource():
+        // TODO: Implement Pigeon method for RasterDemSource
+        print(
+          'iOS StyleController: RasterDemSource not yet implemented via Pigeon',
+        );
+        throw UnimplementedError(
+          'RasterDemSource not yet implemented via Pigeon',
+        );
+      case RasterSource():
+        // TODO: Implement Pigeon method for RasterSource
+        print(
+          'iOS StyleController: RasterSource not yet implemented via Pigeon',
+        );
+        throw UnimplementedError('RasterSource not yet implemented via Pigeon');
+      case VectorSource():
+        // TODO: Implement Pigeon method for VectorSource
+        print(
+          'iOS StyleController: VectorSource not yet implemented via Pigeon',
+        );
+        throw UnimplementedError('VectorSource not yet implemented via Pigeon');
+      case ImageSource():
+        // TODO: Implement Pigeon method for ImageSource
+        print(
+          'iOS StyleController: ImageSource not yet implemented via Pigeon',
+        );
+        throw UnimplementedError('ImageSource not yet implemented via Pigeon');
       case VideoSource():
         throw UnimplementedError('Video source is only supported on web.');
       default:
@@ -212,7 +214,6 @@ class StyleControllerIos implements StyleController {
           'The Source is not supported: ${source.runtimeType}',
         );
     }
-    _ffiStyle.addSource_(ffiSource);
   }
 
   @override
@@ -223,44 +224,59 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> removeImage(String id) async {
-    final ffiId = id.toNSString();
-    _ffiStyle.removeImageForName_(ffiId);
-    ffiId.release();
+    // TODO: Implement Pigeon method for removeImage
+    print('iOS StyleController: removeImage not yet implemented via Pigeon');
   }
 
   @override
   Future<void> removeLayer(String id) async {
-    final ffiId = id.toNSString();
-    final ffiLayer = _ffiStyle.layerWithIdentifier_(ffiId);
-    if (ffiLayer == null) return;
-    _ffiStyle.removeLayer_(ffiLayer);
-    ffiId.release();
+    print('iOS StyleController: removeLayer called for id: $id');
+
+    // TODO: Implement native iOS removeLayer method
+    try {
+      await _hostApi.removeLayer(id);
+      print('iOS StyleController: Successfully removed layer: $id');
+    } catch (e) {
+      print('iOS StyleController: Error removing layer $id: $e');
+      rethrow;
+    }
   }
 
   @override
   Future<void> removeSource(String id) async {
-    final ffiId = id.toNSString();
-    final ffiSource = _ffiStyle.sourceWithIdentifier_(ffiId);
-    if (ffiSource == null) return;
-    _ffiStyle.removeSource_(ffiSource);
-    ffiId.release();
+    print('iOS StyleController: removeSource called for id: $id');
+
+    // TODO: Implement native iOS removeSource method
+    try {
+      await _hostApi.removeSource(id);
+      print('iOS StyleController: Successfully removed source: $id');
+    } catch (e) {
+      print('iOS StyleController: Error removing source $id: $e');
+      rethrow;
+    }
   }
 
-  @override
   Future<void> updateGeoJsonSource({
     required String id,
     required String data,
   }) async {
-    final source = _ffiStyle.sourceWithIdentifier_(id.toNSString())!;
-    final shapeSource = MLNShapeSource.castFrom(source);
-    shapeSource.shape = MLNShape.shapeWithData_encoding_error_(
-      data.toNSDataUTF8()!,
-      4, // utf-8
-      nullptr,
-    );
+    print('iOS StyleController: updateGeoJsonSource called for id: $id');
+
+    // TODO: Implement native iOS updateGeoJsonSource method
+    try {
+      await _hostApi.updateGeoJsonSource(id, data);
+      print('iOS StyleController: Successfully updated source: $id');
+    } catch (e) {
+      print('iOS StyleController: Error updating source $id: $e');
+      rethrow;
+    }
   }
 
-  NSArray _getLayers() => _ffiStyle.layers;
+  NSArray _getLayers() {
+    // TODO: Implement Pigeon method for getting layers
+    print('iOS StyleController: _getLayers not yet implemented via Pigeon');
+    return NSArray.new1();
+  }
 
   @override
   void setProjection(MapProjection projection) {
@@ -270,12 +286,18 @@ class StyleControllerIos implements StyleController {
   @override
   List<String> getAttributionsSync() {
     final attributions = <String>[];
-    final sources = _ffiStyle.sources.allObjects;
+    if (_ffiStyle.sources == null) {
+      // Stub or not available, return empty
+      return attributions;
+    }
+    final sources = _ffiStyle.sources.allObjects as NSArray?;
+    if (sources == null) return attributions;
     for (var i = 0; i < sources.count; i++) {
       final source = sources.objectAtIndex_(i);
       if (!MLNTileSource.isInstance(source)) continue;
       final tileSource = MLNTileSource.castFrom(source);
-      final attrInfos = tileSource.attributionInfos;
+      final attrInfos = tileSource.attributionInfos as NSArray?;
+      if (attrInfos == null) continue;
       for (var j = 0; j < attrInfos.count; j++) {
         final attr = MLNAttributionInfo.castFrom(attrInfos.objectAtIndex_(j));
         attributions.add(

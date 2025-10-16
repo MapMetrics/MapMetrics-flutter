@@ -21,8 +21,14 @@ let package = Package(
       dependencies: [
         .product(name: "MapLibre", package: "maplibre-gl-native-distribution"),
       ],
+      sources: [
+        "Sources/maplibre_ios",
+      ],
       cSettings: [
         .headerSearchPath("include/mapmetrics"),
+      ],
+      swiftSettings: [
+        .define("SWIFT_PACKAGE"),
       ]
     ),
   ]

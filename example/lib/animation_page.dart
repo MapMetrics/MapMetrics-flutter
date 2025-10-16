@@ -19,17 +19,18 @@ const _sourceId = 'AnimatedPath';
 
 class _AnimationPageState extends State<AnimationPage> {
   Timer? _timer;
+  MapController? _controller;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Animation')),
-      body: MapLibreMap(
-        acceptLicense: true,
+      body: MapMetricsView(
         options: MapOptions(
-          initZoom: 14,
-          initCenter: Position(-122.01971, 45.632472),
+          initCenter: Position(-74.006, 40.7128),
+          initZoom: 9,
         ),
+        onMapCreated: (controller) => _controller = controller,
         onStyleLoaded: _onStyleLoaded,
       ),
     );

@@ -24,9 +24,11 @@ class _StyleLayersRasterPageState extends State<StyleLayersRasterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Raster Style Layer')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initCenter: Position(9, 48), initZoom: 7),
+      body: MapMetricsView(
+        options: MapOptions(
+          initCenter: Position(-74.006, 40.7128),
+          initZoom: 9,
+        ),
         onStyleLoaded: _onStyleLoaded,
       ),
     );

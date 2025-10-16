@@ -205,11 +205,10 @@ pitch: ${camera.pitch}'''),
             ),
           ),
           Expanded(
-            child: MapLibreMap(
-              acceptLicense: true,
+            child: MapMetricsView(
               options: MapOptions(
-                initCenter: Position(9.17, 47.68),
-                initZoom: 3,
+                initCenter: Position(-74.006, 40.7128),
+                initZoom: 9,
               ),
               onMapCreated: (controller) => _controller = controller,
             ),

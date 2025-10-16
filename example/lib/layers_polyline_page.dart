@@ -21,25 +21,11 @@ class _LayersPolylinePageState extends State<LayersPolylinePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Polyline Layers')),
-      body: MapLibreMap(
-        acceptLicense: true,
-        options: MapOptions(initZoom: 7, initCenter: Position(9.17, 47.68)),
-        onEvent: (event) {
-          if (event case MapEventClick()) {
-            setState(() {
-              _polylines.first.coordinates.add(event.point);
-            });
-          }
-        },
+      appBar: AppBar(title: const Text('Polyline Layer')),
+      body: MapMetricsView(
+        options: MapOptions(initCenter: Position(9.17, 47.68), initZoom: 7),
         layers: [
-          PolylineLayer(
-            polylines: _polylines,
-            color: Colors.red,
-            width: 4,
-            blur: 3,
-            dashArray: const [5, 5],
-          ),
+          PolylineLayer(polylines: _polylines, color: Colors.blue, width: 3),
         ],
       ),
     );

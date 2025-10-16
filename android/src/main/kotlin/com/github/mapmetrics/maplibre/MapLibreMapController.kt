@@ -102,8 +102,11 @@ class MapLibreMapController(
             MapLibre.getInstance(context) // needs to be called before MapView gets created
             mapView = MapView(context, options)
             lifecycleProvider.getLifecycle()?.addObserver(this)
-            mapView.getMapAsync(this)
-            mapViewContainer.addView(mapView)
+            MapLibre.initializeSessionWithToken(context, "") {
+                mapView.getMapAsync(this)
+                mapViewContainer.addView(mapView)
+            }
+
         }
     }
 
@@ -387,6 +390,301 @@ class MapLibreMapController(
     ) {
         val bitmap = BitmapFactory.decodeStream(bytes.inputStream())
         mapLibreMap.style?.addImage(id, bitmap)
+        callback(Result.success(Unit))
+    }
+
+    override fun addClusteredGeoJsonSource(
+        id: String,
+        data: String,
+        clustered: Boolean,
+        clusterRadius: Double,
+        clusterMaxZoom: Double,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        try {
+            println("Android: addClusteredGeoJsonSource called with id: $id, clustered: $clustered")
+            val style = mapLibreMap.style
+            if (style == null) {
+                println("Android: Error - Style not available")
+                callback(Result.failure(Exception("Style not available")))
+                return
+            }
+
+            val options = org.maplibre.android.style.sources.GeoJsonOptions()
+            if (clustered) {
+                options.withCluster(true)
+                options.withClusterRadius(clusterRadius.toInt())
+                options.withClusterMaxZoom(clusterMaxZoom.toInt())
+                println("Android: Clustering enabled with radius: $clusterRadius, maxZoom: $clusterMaxZoom")
+            }
+
+            val source = if (data.startsWith("http://") || data.startsWith("https://")) {
+                println("Android: Creating URL source")
+                org.maplibre.android.style.sources.GeoJsonSource(id, data, options)
+            } else {
+                println("Android: Creating GeoJSON data source with ${data.length} characters")
+                org.maplibre.android.style.sources.GeoJsonSource(id, data, options)
+            }
+            style.addSource(source)
+            println("Android: Successfully added clustered source with ID: $id")
+
+            // Add visualization layers for clusters if clustering is enabled
+            if (clustered) {
+                println("Android: Adding visualization layers for clusters")
+
+                // Add layer for unclustered points (individual points)
+                val unclusteredLayer = CircleLayer("$id-unclustered", id)
+                unclusteredLayer.setProperties(
+                    org.maplibre.android.style.layers.PropertyFactory.circleRadius(8f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleColor("#11b4da"),
+                    org.maplibre.android.style.layers.PropertyFactory.circleOpacity(0.8f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth(2f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor("#ffffff")
+                )
+                unclusteredLayer.setFilter(org.maplibre.android.style.expressions.Expression.not(
+                    org.maplibre.android.style.expressions.Expression.has("point_count")
+                ))
+                style.addLayer(unclusteredLayer)
+                println("Android: Added unclustered points layer")
+
+                // Add layer for clusters (colored circles)
+                val clustersLayer = CircleLayer("$id-clusters", id)
+                clustersLayer.setProperties(
+                    org.maplibre.android.style.layers.PropertyFactory.circleRadius(20f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleColor("#f1f075"),
+                    org.maplibre.android.style.layers.PropertyFactory.circleOpacity(0.8f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth(2f),
+                    org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor("#ffffff")
+                )
+                clustersLayer.setFilter(org.maplibre.android.style.expressions.Expression.has("point_count"))
+                style.addLayer(clustersLayer)
+                println("Android: Added clusters layer")
+
+                // Add layer for cluster count labels
+                val clusterCountLayer = SymbolLayer("$id-cluster-count", id)
+                clusterCountLayer.setProperties(
+                    org.maplibre.android.style.layers.PropertyFactory.textField(
+                        org.maplibre.android.style.expressions.Expression.get("point_count_abbreviated")
+                    ),
+                    org.maplibre.android.style.layers.PropertyFactory.textSize(12f),
+                    org.maplibre.android.style.layers.PropertyFactory.textColor("#ffffff")
+                )
+                clusterCountLayer.setFilter(org.maplibre.android.style.expressions.Expression.has("point_count"))
+                style.addLayer(clusterCountLayer)
+                println("Android: Added cluster count labels layer")
+            }
+
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error adding clustered source: ${e.message}")
+            callback(Result.failure(e))
+        }
+    }
+
+    override fun testMethod(
+        value: String,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        println("Android: testMethod called with value: $value")
+        callback(Result.success(Unit))
+    }
+
+    override fun animateCamera(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+        bearing: Double,
+        pitch: Double,
+        duration: Long,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        try {
+            val cameraUpdate = org.maplibre.android.camera.CameraUpdateFactory.newCameraPosition(
+                CameraPosition.Builder()
+                    .target(LatLng(latitude, longitude))
+                    .zoom(zoom)
+                    .bearing(bearing)
+                    .tilt(pitch)
+                    .build()
+            )
+
+            val animationDuration = if (duration > 0) duration.toInt() else 200
+            mapLibreMap.animateCamera(cameraUpdate, animationDuration)
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error animating camera: ${e.message}")
+            callback(Result.failure(e))
+        }
+    }
+
+    override fun getCamera(): MapCamera {
+        val position = mapLibreMap.cameraPosition
+        val target = position.target ?: LatLng(0.0, 0.0)
+        return MapCamera(
+            LngLat(target.longitude, target.latitude),
+            position.zoom,
+            position.tilt,
+            position.bearing
+        )
+    }
+
+    override fun getZoomLevel(): Double {
+        return mapLibreMap.cameraPosition.zoom
+    }
+
+    override fun getUserLocation(): LngLat {
+        val userLocation = mapLibreMap.locationComponent.lastKnownLocation
+        return if (userLocation != null) {
+            LngLat(userLocation.longitude, userLocation.latitude)
+        } else {
+            LngLat(0.0, 0.0) // Default location if user location is not available
+        }
+    }
+
+    // Add these methods to your MapLibreMapController.kt class
+
+    override fun moveCamera(
+        lat: Double,
+        lng: Double,
+        zoom: Double,
+        bearing: Double,
+        pitch: Double,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // This is just a stub since Android uses JNI directly
+        callback(Result.success(Unit))
+    }
+
+    override fun updateMapOptions(
+        minZoom: Double,
+        maxZoom: Double,
+        minPitch: Double,
+        maxPitch: Double,
+        boundsWest: Double,
+        boundsSouth: Double,
+        boundsEast: Double,
+        boundsNorth: Double,
+        rotateEnabled: Boolean,
+        panEnabled: Boolean,
+        zoomEnabled: Boolean,
+        pitchEnabled: Boolean,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun enableLocation(
+        fastestInterval: Long,
+        maxWaitTime: Long,
+        pulseFade: Boolean,
+        accuracyAnimation: Boolean,
+        compassAnimation: Boolean,
+        pulse: Boolean,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun fitBounds(
+        west: Double,
+        south: Double,
+        east: Double,
+        north: Double,
+        bearing: Double,
+        pitch: Double,
+        duration: Long,
+        paddingLeft: Double,
+        paddingTop: Double,
+        paddingRight: Double,
+        paddingBottom: Double,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun getMetersPerPixelAtLatitude(
+        latitude: Double,
+        callback: (Result<Double>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // For now, return a placeholder value
+        callback(Result.success(156543.03392)) // meters per pixel at equator at zoom 0
+    }
+
+    override fun getVisibleRegion(
+        callback: (Result<List<Double>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // Return [west, south, east, north]
+        callback(Result.success(listOf(-180.0, -85.0, 180.0, 85.0)))
+    }
+
+    override fun toLngLat(
+        x: Double,
+        y: Double,
+        callback: (Result<List<Double>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // For now, return placeholder coordinates
+        // Return [lng, lat]
+        callback(Result.success(listOf(0.0, 0.0)))
+    }
+
+    override fun toScreenLocation(
+        lng: Double,
+        lat: Double,
+        callback: (Result<List<Double>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        // For now, return placeholder screen coordinates
+        // Return [x, y]
+        callback(Result.success(listOf(0.0, 0.0)))
+    }
+
+    override fun queryLayers(
+        x: Double,
+        y: Double,
+        callback: (Result<List<Map<String, String?>>>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(emptyList()))
+    }
+
+    override fun trackLocation(
+        track: Boolean,
+        bearingMode: Long,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun removeLayer(
+        id: String,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun removeSource(
+        id: String,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
+        callback(Result.success(Unit))
+    }
+
+    override fun updateGeoJsonSource(
+        id: String,
+        data: String,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android implementation - you can use your existing JNI code
         callback(Result.success(Unit))
     }
 }

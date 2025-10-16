@@ -2,258 +2,1287 @@ import Flutter
 import MapLibre
 
 class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
-  MapLibreHostApi, UIGestureRecognizerDelegate
+    MapLibreHostApi, UIGestureRecognizerDelegate
 {
-  private var _view: UIView = .init()
-  private var _mapView: MLNMapView!
-  private var _viewId: Int64
-  private var _flutterApi: MapLibreFlutterApi
-  private var _mapOptions: MapOptions? = nil
+    private var _view: UIView = .init()
+    private var _mapView: MLNMapView!
+    private var _viewId: Int64
+    private var _flutterApi: MapLibreFlutterApi
+    private var _mapOptions: MapOptions? = nil
 
-  init(
-    frame _: CGRect,
-    viewId: Int64,
-    binaryMessenger: FlutterBinaryMessenger
-  ) {
-    print("### init new MapViewDelegate ### \(viewId) ###")
-    var channelSuffix = String(viewId)
-    _viewId = viewId
-    _flutterApi = MapLibreFlutterApi(
-      binaryMessenger: binaryMessenger,
-      messageChannelSuffix: channelSuffix
-    )
-    super.init() // self can be used after calling super.init()
-    MapLibreHostApiSetup.setUp(
-      binaryMessenger: binaryMessenger, api: self,
-      messageChannelSuffix: channelSuffix
-    )
-    // get and apply the MapOptions from Flutter
-    _flutterApi.getOptions { result in
-      switch result {
-      case let .success(mapOptions):
-        self._mapOptions = mapOptions
-        // init map view
-        self._mapView = MLNMapView(frame: self._view.bounds)
-        MapLibreRegistry.addMap(viewId: viewId, map: self._mapView)
-        self._mapView.autoresizingMask = [
-          .flexibleWidth, .flexibleHeight,
-        ]
-        self._view.addSubview(self._mapView)
-        self._mapView.delegate = self
-        // disable the default UI because they are rebuilt in Flutter
-        self._mapView.compassView.isHidden = true
-        self._mapView.attributionButton.isHidden = true
-        self._mapView.logoView.isHidden = true
-        // set options
-        DispatchQueue.main.async {
-          var currentCenter = self._mapView.camera.centerCoordinate
-          var center = CLLocationCoordinate2D(
-            latitude: mapOptions.center?.lat
-              ?? currentCenter.latitude,
-            longitude: mapOptions.center?.lng
-              ?? currentCenter.longitude
-          )
-          self._mapView.setCenter(
-            center, zoomLevel: mapOptions.zoom,
-            direction: mapOptions.bearing, animated: false
-          )
+    init(
+        frame _: CGRect,
+        viewId: Int64,
+        binaryMessenger: FlutterBinaryMessenger
+    ) {
+        print("### init new MapViewDelegate ### \(viewId) ###")
+        var channelSuffix = String(viewId)
+        _viewId = viewId
+        _flutterApi = MapLibreFlutterApi(
+            binaryMessenger: binaryMessenger,
+            messageChannelSuffix: channelSuffix
+        )
+        super.init()  // self can be used after calling super.init()
+        MapLibreHostApiSetup.setUp(
+            binaryMessenger: binaryMessenger, api: self,
+            messageChannelSuffix: channelSuffix
+        )
+        // get and apply the MapOptions from Flutter
+        _flutterApi.getOptions { result in
+            switch result {
+            case let .success(mapOptions):
+                self._mapOptions = mapOptions
+                // init map view
+                self._mapView = MLNMapView(frame: self._view.bounds)
+                MapLibreRegistry.addMap(viewId: viewId, map: self._mapView)
+                self._mapView.autoresizingMask = [
+                    .flexibleWidth, .flexibleHeight,
+                ]
+                self._view.addSubview(self._mapView)
+                self._mapView.delegate = self
+                // disable the default UI because they are rebuilt in Flutter
+                self._mapView.compassView.isHidden = true
+                self._mapView.attributionButton.isHidden = true
+                self._mapView.logoView.isHidden = true
+                // set options
+                DispatchQueue.main.async {
+                    var currentCenter = self._mapView.camera.centerCoordinate
+                    var center = CLLocationCoordinate2D(
+                        latitude: mapOptions.center?.lat
+                            ?? currentCenter.latitude,
+                        longitude: mapOptions.center?.lng
+                            ?? currentCenter.longitude
+                    )
+                    self._mapView.setCenter(
+                        center, zoomLevel: mapOptions.zoom,
+                        direction: mapOptions.bearing, animated: false
+                    )
+                }
+
+                self._mapView.showAttribution(false)
+
+                self._mapView.minimumZoomLevel = mapOptions.minZoom
+                self._mapView.maximumZoomLevel = mapOptions.maxZoom
+                self._mapView.minimumPitch = mapOptions.minPitch
+                self._mapView.maximumPitch = mapOptions.maxPitch
+
+                self._mapView.styleURL = URL(string: mapOptions.style)
+
+                self._mapView.allowsRotating = mapOptions.gestures.rotate
+                self._mapView.allowsScrolling = mapOptions.gestures.pan
+                self._mapView.allowsTilting = mapOptions.gestures.tilt
+                self._mapView.allowsZooming = mapOptions.gestures.zoom
+
+                self._flutterApi.onMapReady { _ in }
+                // tap gestures
+                self._mapView.addGestureRecognizer(
+                    UITapGestureRecognizer(
+                        target: self, action: #selector(self.onTap(sender:))
+                    ))
+                self._mapView.addGestureRecognizer(
+                    UILongPressGestureRecognizer(
+                        target: self,
+                        action: #selector(self.onLongPress(sender:))
+                    ))
+            case let .failure(error):
+                print(error)
+            }
+        }
+    }
+
+    func dispose() throws {
+        print("### dispose MapLibre view ### \(_viewId) ###")
+        MapLibreRegistry.removeMap(viewId: _viewId)
+        _mapView.removeFromSuperview()
+        _mapView.delegate = nil
+        _mapView = nil
+        _view.removeFromSuperview()
+    }
+
+    @objc func onTap(sender: UITapGestureRecognizer) {
+        var screenPosition = sender.location(in: _mapView)
+        var point = _mapView.convert(screenPosition, toCoordinateFrom: _mapView)  // Remove asterisks
+        _flutterApi.onClick(
+            point: LngLat(lng: point.longitude, lat: point.latitude)
+        ) { _ in }
+    }
+
+    @objc func onLongPress(sender: UILongPressGestureRecognizer) {
+        var screenPosition = sender.location(in: _mapView)
+        var point = _mapView.convert(screenPosition, toCoordinateFrom: _mapView)  // Remove asterisks
+        _flutterApi.onLongClick(
+            point: LngLat(lng: point.longitude, lat: point.latitude)
+        ) { _ in }
+    }
+
+    func view() -> UIView {
+        _view
+    }
+
+    func gestureRecognizer(
+        _: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
+    ) -> Bool {
+        // Do not override the default behavior
+        true
+    }
+
+    // MLNMapViewDelegate method called when map has finished loading
+    func mapView(_ mapView: MLNMapView, didFinishLoading style: MLNStyle) {
+        print("iOS: MapViewDelegate - didFinishLoading called, setting current style")
+        MapLibreIosPlugin.setCurrentStyle(style)
+        print("iOS: MapViewDelegate - Current style set successfully")
+
+        var camera = _mapView.camera
+        camera.pitch = _mapOptions!.pitch
+        _mapView.setCamera(camera, animated: false)
+        _mapView = mapView
+        print("mapView didFinishLoading, call onStyleLoaded")
+        _flutterApi.onStyleLoaded { _ in }  // Remove asterisk
+    }
+
+    func mapView(_: MLNMapView, regionDidChangeAnimated _: Bool) {
+        onCameraMoved()
+    }
+
+    func mapViewRegionIsChanging(_: MLNMapView) {
+        onCameraMoved()
+    }
+
+    func onCameraMoved() {
+        var mlnCamera = _mapView.camera
+        var center = LngLat(
+            lng: mlnCamera.centerCoordinate.longitude,
+            lat: mlnCamera.centerCoordinate.latitude
+        )
+        var pigeonCamera = MapCamera(
+            center: center, zoom: mlnCamera.altitude, pitch: mlnCamera.pitch,
+            bearing: mlnCamera.heading
+        )
+        _flutterApi.onMoveCamera(camera: pigeonCamera) { _ in }  // Remove asterisks
+    }
+
+    // MARK: - MapLibreHostApi Implementation
+
+    func addFillLayer(
+        id: String,
+        sourceId: String,
+        layout: [String: Any],
+        paint: [String: Any],
+        belowLayerId: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        guard let style = _mapView.style else {
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
         }
 
-        self._mapView.showAttribution(false)
+        guard let source = style.source(withIdentifier: sourceId) else {
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+            return
+        }
 
-        self._mapView.minimumZoomLevel = mapOptions.minZoom
-        self._mapView.maximumZoomLevel = mapOptions.maxZoom
-        self._mapView.minimumPitch = mapOptions.minPitch
-        self._mapView.maximumPitch = mapOptions.maxPitch
+        let layer = MLNFillStyleLayer(identifier: id, source: source)
+        applyFillProperties(to: layer, paint: paint, layout: layout)
 
-        self._mapView.styleURL = URL(string: mapOptions.style)
+        if let belowLayerId = belowLayerId {
+            if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+        } else {
+            style.addLayer(layer)
+        }
 
-        self._mapView.allowsRotating = mapOptions.gestures.rotate
-        self._mapView.allowsScrolling = mapOptions.gestures.pan
-        self._mapView.allowsTilting = mapOptions.gestures.tilt
-        self._mapView.allowsZooming = mapOptions.gestures.zoom
+        completion(.success(()))
+    }
 
-        self._flutterApi.onMapReady { _ in }
-        // tap gestures
-        self._mapView.addGestureRecognizer(
-          UITapGestureRecognizer(
-            target: self, action: #selector(self.onTap(sender:))
-          ))
-        self._mapView.addGestureRecognizer(
-          UILongPressGestureRecognizer(
-            target: self,
-            action: #selector(self.onLongPress(sender:))
-          ))
-      case let .failure(error):
-        print(error)
+    private func applyFillProperties(to layer: MLNFillStyleLayer, paint: [String: Any], layout: [String: Any]) {
+        // Apply paint properties
+        paint.forEach { key, value in
+            switch key {
+            case "fill-color": layer.fillColor = parseColor(value)
+            case "fill-opacity": layer.fillOpacity = parseValue(value)
+            case "fill-outline-color": layer.fillOutlineColor = parseColor(value)
+            case "fill-pattern": layer.fillPattern = NSExpression(forConstantValue: value)
+            default: break
+            }
+        }
+
+        // Apply layout properties
+        layout.forEach { key, value in
+            switch key {
+            case "visibility": layer.isVisible = (value as? String == "visible")
+            case "fill-sort-key": layer.fillSortKey = parseValue(value)
+            default: break
+            }
+        }
+    }
+
+    func addCircleLayer(
+        id: String,
+        sourceId: String,
+        layout: [String: Any],
+        paint: [String: Any],
+        belowLayerId: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        guard let style = _mapView.style else {
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        guard let source = style.source(withIdentifier: sourceId) else {
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+            return
+        }
+
+        // Check if this is a clustered source by looking for existing cluster layers
+        let hasClusterLayers = style.layer(withIdentifier: "\(sourceId)-clusters") != nil ||
+                              style.layer(withIdentifier: "\(sourceId)-unclustered") != nil
+
+        if hasClusterLayers {
+            print("iOS: Skipping addCircleLayer for clustered source: \(sourceId) - cluster visualization already exists")
+            completion(.success(()))
+            return
+        }
+
+        print("iOS: Adding circle layer for non-clustered source: \(sourceId)")
+        let layer = MLNCircleStyleLayer(identifier: id, source: source)
+        applyCircleProperties(to: layer, paint: paint, layout: layout)
+
+        if let belowLayerId = belowLayerId {
+            if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+        } else {
+            style.addLayer(layer)
+        }
+
+        completion(.success(()))
+    }
+
+    private func applyCircleProperties(to layer: MLNCircleStyleLayer, paint: [String: Any], layout: [String: Any]) {
+
+        // Apply paint properties with proper mapping
+        paint.forEach { key, value in
+            print("iOS: Setting paint property \(key) = \(value)")
+
+            switch key {
+            case "circle-radius":
+                layer.circleRadius = createExpression(from: value)
+            case "circle-color":
+                layer.circleColor = createExpression(from: value)
+            case "circle-opacity":
+                layer.circleOpacity = createExpression(from: value)
+            case "circle-stroke-width":
+                layer.circleStrokeWidth = createExpression(from: value)
+            case "circle-stroke-color":
+                layer.circleStrokeColor = createExpression(from: value)
+            case "circle-stroke-opacity":
+                layer.circleStrokeOpacity = createExpression(from: value)
+            case "circle-blur":
+                layer.circleBlur = createExpression(from: value)
+            default:
+                print("iOS: Unknown circle paint property: \(key)")
+            }
+        }
+
+        // Apply layout properties
+        layout.forEach { key, value in
+            print("iOS: Setting layout property \(key) = \(value)")
+
+            switch key {
+            case "visibility":
+                layer.isVisible = (value as? String == "visible")
+            case "circle-sort-key":
+                layer.circleSortKey = createExpression(from: value)
+            default:
+                print("iOS: Unknown circle layout property: \(key)")
+            }
+        }
+    }
+    // The key method - this creates NSExpression from any value type
+    private func createExpression(from value: Any) -> NSExpression {
+        print("iOS: Creating expression from: \(value) (type: \(type(of: value)))")
+
+        // Handle different value types
+        switch value {
+        case let arrayValue as [Any]:
+            // This is likely a MapLibre expression array
+            if !arrayValue.isEmpty && arrayValue.first is String {
+                print("iOS: Found expression array, converting...")
+                do {
+                    // Try MapLibre's expression converter
+                    return try NSExpression(mglJSONObject: arrayValue)
+                } catch {
+                    print("iOS: mglJSONObject failed: \(error), using constant value")
+                    return NSExpression(forConstantValue: arrayValue)
+                }
+            } else {
+                // Regular array
+                return NSExpression(forConstantValue: arrayValue)
+            }
+
+        case let stringValue as String:
+            // Handle color strings and regular strings
+            if isColorString(stringValue) {
+                if let color = getColorFromNameOrHex(stringValue) {
+                    return NSExpression(forConstantValue: color)
+                }
+            }
+            return NSExpression(forConstantValue: stringValue)
+
+        default:
+            // Numbers, etc.
+            return NSExpression(forConstantValue: value)
+        }
+    }
+
+    private func isColorString(_ string: String) -> Bool {
+        return string.hasPrefix("#") ||
+            string.hasPrefix("rgb") ||
+            string.hasPrefix("rgba") ||
+            ["white", "black", "red", "blue", "green", "yellow", "orange", "purple", "gray", "grey", "brown", "pink", "cyan", "magenta"].contains(string.lowercased())
+    }
+
+    private func getColorFromNameOrHex(_ colorString: String) -> UIColor? {
+        // First try hex parsing
+        if let hexColor = UIColor(hexString: colorString) {
+            return hexColor
+        }
+
+        // Then try color names
+        switch colorString.lowercased() {
+        case "white": return UIColor.white
+        case "black": return UIColor.black
+        case "red": return UIColor.red
+        case "blue": return UIColor.blue
+        case "green": return UIColor.green
+        case "yellow": return UIColor.yellow
+        case "orange": return UIColor.orange
+        case "purple": return UIColor.purple
+        case "gray", "grey": return UIColor.gray
+        case "brown": return UIColor.brown
+        case "pink": return UIColor.systemPink
+        case "cyan": return UIColor.cyan
+        case "magenta": return UIColor.magenta
+        default: return nil
+        }
+    }
+
+    func addBackgroundLayer(
+        id: String,
+        layout: [String: Any],
+        paint: [String: Any],
+        belowLayerId: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        guard let style = _mapView.style else {
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        let layer = MLNBackgroundStyleLayer(identifier: id)
+        applyBackgroundProperties(to: layer, paint: paint, layout: layout)
+
+        if let belowLayerId = belowLayerId {
+            if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+        } else {
+            style.addLayer(layer)
+        }
+
+        completion(.success(()))
+    }
+
+    private func applyBackgroundProperties(to layer: MLNBackgroundStyleLayer, paint: [String: Any], layout: [String: Any]) {
+        // Apply paint properties
+        paint.forEach { key, value in
+            switch key {
+            case "background-color": layer.backgroundColor = parseColor(value)
+            case "background-opacity": layer.backgroundOpacity = parseValue(value)
+            case "background-pattern": layer.backgroundPattern = NSExpression(forConstantValue: value)
+            default: break
+            }
+        }
+
+        // Apply layout properties
+        layout.forEach { key, value in
+            switch key {
+            case "visibility": layer.isVisible = (value as? String == "visible")
+            default: break
+            }
+        }
+    }
+
+    func addFillExtrusionLayer(
+        id _: String, sourceId _: String, layout _: [String: Any],
+        paint _: [String: Any], belowLayerId _: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        completion(.success(()))
+    }
+
+    func addHeatmapLayer(
+        id _: String, sourceId _: String, layout _: [String: Any],
+        paint _: [String: Any], belowLayerId _: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        completion(.success(()))
+    }
+
+    func addHillshadeLayer(
+        id _: String, sourceId _: String, layout _: [String: Any],
+        paint _: [String: Any], belowLayerId _: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        completion(.success(()))
+    }
+
+    func addLineLayer(
+      id: String,
+      sourceId: String,
+      layout: [String: Any],
+      paint: [String: Any],
+      belowLayerId: String?,
+      completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+      print("iOS: addLineLayer called with id: \(id), sourceId: \(sourceId)")
+      print("iOS: Paint properties: \(paint)")
+      print("iOS: Layout properties: \(layout)")
+
+      guard let style = _mapView.style else {
+        print("iOS: Error - Style not available for addLineLayer")
+        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+        return
+      }
+
+      // Check if layer already exists and remove it first
+      if let existingLayer = style.layer(withIdentifier: id) {
+        print("iOS: Removing existing line layer with id: \(id)")
+        style.removeLayer(existingLayer)
+      }
+
+      guard let source = style.source(withIdentifier: sourceId) else {
+        print("iOS: Error - Source not found with ID: \(sourceId)")
+        completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+        return
+      }
+
+      print("iOS: Creating line layer with source: \(sourceId)")
+      let lineLayer = MLNLineStyleLayer(identifier: id, source: source)
+
+      // Apply paint properties
+      for (key, value) in paint {
+        print("iOS: Processing paint property \(key) = \(value) (type: \(type(of: value)))")
+
+        switch key {
+        case "line-width":
+          if let width = value as? NSNumber {
+            lineLayer.lineWidth = NSExpression(forConstantValue: width)
+            print("iOS: Set line-width to \(width)")
+          } else if let width = value as? Double {
+            lineLayer.lineWidth = NSExpression(forConstantValue: NSNumber(value: width))
+            print("iOS: Set line-width to \(width)")
+          } else if let width = value as? Int {
+            lineLayer.lineWidth = NSExpression(forConstantValue: NSNumber(value: width))
+            print("iOS: Set line-width to \(width)")
+          }
+
+        case "line-color":
+          var color: UIColor? = nil
+          if let colorArray = value as? [Any], colorArray.count >= 3 {
+            // Handle RGBA array format [r, g, b, a]
+            if let r = colorArray[0] as? Double,
+               let g = colorArray[1] as? Double,
+               let b = colorArray[2] as? Double {
+              let a = colorArray.count > 3 ? (colorArray[3] as? Double ?? 1.0) : 1.0
+              color = UIColor(red: CGFloat(r), green: CGFloat(g), blue: CGFloat(b), alpha: CGFloat(a))
+              print("iOS: Set line-color from RGBA array: [\(r), \(g), \(b), \(a)]")
+            }
+          } else if let colorString = value as? String {
+            color = UIColor(hexString: colorString) ?? UIColor.black
+            print("iOS: Set line-color from hex string: \(colorString)")
+          }
+
+          if let color = color {
+            lineLayer.lineColor = NSExpression(forConstantValue: color)
+          } else {
+            print("iOS: Warning - Could not convert line-color value: \(value)")
+            lineLayer.lineColor = NSExpression(forConstantValue: UIColor.black)
+          }
+
+        case "line-opacity":
+          if let opacity = value as? NSNumber {
+            lineLayer.lineOpacity = NSExpression(forConstantValue: opacity)
+            print("iOS: Set line-opacity to \(opacity)")
+          } else if let opacity = value as? Double {
+            lineLayer.lineOpacity = NSExpression(forConstantValue: NSNumber(value: opacity))
+            print("iOS: Set line-opacity to \(opacity)")
+          }
+
+        case "line-gap-width":
+          if let gapWidth = value as? NSNumber {
+            lineLayer.lineGapWidth = NSExpression(forConstantValue: gapWidth)
+            print("iOS: Set line-gap-width to \(gapWidth)")
+          } else if let gapWidth = value as? Double {
+            lineLayer.lineGapWidth = NSExpression(forConstantValue: NSNumber(value: gapWidth))
+            print("iOS: Set line-gap-width to \(gapWidth)")
+          } else if let gapWidth = value as? Int {
+            lineLayer.lineGapWidth = NSExpression(forConstantValue: NSNumber(value: gapWidth))
+            print("iOS: Set line-gap-width to \(gapWidth)")
+          }
+
+        case "line-blur":
+          if let blur = value as? NSNumber {
+            lineLayer.lineBlur = NSExpression(forConstantValue: blur)
+            print("iOS: Set line-blur to \(blur)")
+          } else if let blur = value as? Double {
+            lineLayer.lineBlur = NSExpression(forConstantValue: NSNumber(value: blur))
+            print("iOS: Set line-blur to \(blur)")
+          } else if let blur = value as? Int {
+            lineLayer.lineBlur = NSExpression(forConstantValue: NSNumber(value: blur))
+            print("iOS: Set line-blur to \(blur)")
+          }
+
+        case "line-dasharray":
+          if let dashArray = value as? [Any] {
+            let numberArray = dashArray.compactMap { item -> NSNumber? in
+              if let number = item as? NSNumber {
+                return number
+              } else if let double = item as? Double {
+                return NSNumber(value: double)
+              } else if let int = item as? Int {
+                return NSNumber(value: int)
+              }
+              return nil
+            }
+            if !numberArray.isEmpty {
+              lineLayer.lineDashPattern = NSExpression(forConstantValue: numberArray)
+              print("iOS: Set line-dasharray to \(numberArray)")
+            }
+          } else if let dashArray = value as? [NSNumber] {
+            lineLayer.lineDashPattern = NSExpression(forConstantValue: dashArray)
+            print("iOS: Set line-dasharray to \(dashArray)")
+          }
+
+        default:
+          print("iOS: Unknown paint property: \(key)")
+        }
+      }
+
+      // Apply layout properties
+      for (key, value) in layout {
+        print("iOS: Processing layout property \(key) = \(value)")
+        switch key {
+        case "visibility":
+          if let visibility = value as? String {
+            lineLayer.isVisible = (visibility == "visible")
+            print("iOS: Set visibility to \(visibility)")
+          }
+        case "line-cap":
+          if let lineCap = value as? String {
+            switch lineCap {
+            case "butt":
+              lineLayer.lineCap = NSExpression(forConstantValue: "butt")
+            case "round":
+              lineLayer.lineCap = NSExpression(forConstantValue: "round")
+            case "square":
+              lineLayer.lineCap = NSExpression(forConstantValue: "square")
+            default:
+              print("iOS: Unknown line-cap value: \(lineCap)")
+            }
+            print("iOS: Set line-cap to \(lineCap)")
+          }
+        case "line-join":
+          if let lineJoin = value as? String {
+            switch lineJoin {
+            case "bevel":
+              lineLayer.lineJoin = NSExpression(forConstantValue: "bevel")
+            case "round":
+              lineLayer.lineJoin = NSExpression(forConstantValue: "round")
+            case "miter":
+              lineLayer.lineJoin = NSExpression(forConstantValue: "miter")
+            default:
+              print("iOS: Unknown line-join value: \(lineJoin)")
+            }
+            print("iOS: Set line-join to \(lineJoin)")
+          }
+        default:
+          print("iOS: Unknown layout property: \(key)")
+        }
+      }
+
+      // Add the layer to the style
+      if let belowLayerId = belowLayerId {
+        if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+          style.insertLayer(lineLayer, below: belowLayer)
+          print("iOS: Line layer '\(id)' added below layer '\(belowLayerId)'")
+        } else {
+          print("iOS: Warning - Below layer '\(belowLayerId)' not found, adding to top")
+          style.addLayer(lineLayer)
+        }
+      } else {
+        style.addLayer(lineLayer)
+        print("iOS: Line layer '\(id)' added to top of style")
+      }
+
+      print("iOS: Successfully added line layer '\(id)'")
+      completion(.success(()))
+    }
+
+    func addRasterLayer(
+        id _: String, sourceId _: String, layout _: [String: Any],
+        paint _: [String: Any], belowLayerId _: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        completion(.success(()))
+    }
+
+func addSymbolLayer(
+    id: String,
+    sourceId: String,
+    layout: [String: Any],
+    paint: [String: Any],
+    belowLayerId: String?,
+    completion: @escaping (Result<Void, Error>) -> Void
+) {
+    guard let style = _mapView.style else {
+        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+        return
+    }
+
+    guard let source = style.source(withIdentifier: sourceId) else {
+        completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+        return
+    }
+
+    let layer = MLNSymbolStyleLayer(identifier: id, source: source)
+    applySymbolProperties(to: layer, paint: paint, layout: layout)
+
+    if let belowLayerId = belowLayerId {
+        if let belowLayer = style.layer(withIdentifier: belowLayerId) {
+            style.insertLayer(layer, below: belowLayer)
+        } else {
+            style.addLayer(layer)
+        }
+    } else {
+        style.addLayer(layer)
+    }
+
+    completion(.success(()))
+}
+
+    private func applySymbolProperties(to layer: MLNSymbolStyleLayer, paint: [String: Any], layout: [String: Any]) {
+        print("iOS: Applying symbol properties using proper MapLibre setters")
+
+        // Apply paint properties
+        paint.forEach { key, value in
+            print("iOS: Setting symbol paint property \(key) = \(value)")
+
+            switch key {
+            case "icon-opacity":
+                layer.iconOpacity = createExpression(from: value)
+            case "icon-color":
+                layer.iconColor = createExpression(from: value)
+            case "text-opacity":
+                layer.textOpacity = createExpression(from: value)
+            case "text-color":
+                layer.textColor = createExpression(from: value)
+            case "text-halo-color":
+                layer.textHaloColor = createExpression(from: value)
+            case "text-halo-width":
+                layer.textHaloWidth = createExpression(from: value)
+            default:
+                print("iOS: Unknown symbol paint property: \(key)")
+            }
+        }
+
+        // Apply layout properties with proper mapping
+        layout.forEach { key, value in
+            print("iOS: Setting symbol layout property \(key) = \(value)")
+
+            switch key {
+            case "visibility":
+                layer.isVisible = (value as? String == "visible")
+            case "icon-image":
+                layer.iconImageName = createExpression(from: value)
+            case "icon-size":
+                layer.iconScale = createExpression(from: value)
+            case "text-field":
+                layer.text = createExpression(from: value)
+            case "text-size":
+                layer.textFontSize = createExpression(from: value)
+            case "text-font":
+                layer.textFontNames = createExpression(from: value)
+            default:
+                print("iOS: Unknown symbol layout property: \(key)")
+            }
+        }
+    }
+
+    func loadImage(
+        url _: String,
+        completion _: @escaping (Result<FlutterStandardTypedData, Error>) ->
+            Void
+    ) {
+        // completion(.success((bytes)))
+    }
+
+    func addImage(
+        id: String, bytes: FlutterStandardTypedData,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        print("addImage before")
+        var style = _mapView.style!
+        var imageData = bytes.data
+        var image = UIImage(data: imageData, scale: UIScreen.main.scale)!
+        style.setImage(image, forName: id)
+        print("addImage afters")
+        print("added image: \(style.image(forName: id))")
+        completion(.success(()))
+    }
+
+    func addClusteredGeoJsonSource(
+        id: String,
+        data: String,
+        clustered: Bool,
+        clusterRadius: Double,
+        clusterMaxZoom: Double,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        do {
+            print("iOS: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
+
+            guard let style = _mapView.style else {
+                print("iOS: Error - Style not available")
+                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                return
+            }
+
+            var options: [MLNShapeSourceOption: Any] = [:]
+            if clustered {
+                options[.clustered] = true
+                options[.clusterRadius] = NSNumber(value: clusterRadius)
+                options[.maximumZoomLevelForClustering] = NSNumber(value: clusterMaxZoom)
+                print("iOS: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
+            }
+
+            let source: MLNShapeSource
+            if data.hasPrefix("http://") || data.hasPrefix("https://") {
+                print("iOS: Creating URL source")
+                guard let url = URL(string: data) else {
+                    throw NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])
+                }
+                source = MLNShapeSource(identifier: id, url: url, options: options)
+            } else {
+                print("iOS: Creating GeoJSON data source with \(data.count) characters")
+                guard let dataBytes = data.data(using: .utf8),
+                      let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
+                    throw NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])
+                }
+                source = MLNShapeSource(identifier: id, shape: shape, options: options)
+            }
+
+            style.addSource(source)
+            print("iOS: Successfully added clustered source with ID: \(id)")
+
+            // Replace the clustering visualization section in your addClusteredGeoJsonSource method:
+
+            if clustered {
+                print("iOS: Adding visualization layers for clusters")
+
+                // Add layer for unclustered points (individual points only)
+                let unclusteredLayer = MLNCircleStyleLayer(identifier: "\(id)-unclustered", source: source)
+                unclusteredLayer.circleRadius = NSExpression(forConstantValue: 8)
+                unclusteredLayer.circleColor = NSExpression(forConstantValue: UIColor(hexString: "#11b4da") ?? UIColor.blue)
+                unclusteredLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+                unclusteredLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+                unclusteredLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                // Show only individual points that are NOT part of clusters
+                unclusteredLayer.predicate = NSPredicate(format: "point_count == nil")
+                style.addLayer(unclusteredLayer)
+                print("iOS: Added unclustered points layer with predicate: point_count == nil")
+
+                // Add layer for clusters only
+                let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
+                clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
+                clustersLayer.circleColor = NSExpression(forConstantValue: UIColor.systemOrange)
+                clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+                clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+                clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                // Show only cluster points (multiple points grouped together)
+                clustersLayer.predicate = NSPredicate(format: "point_count != nil")
+                style.addLayer(clustersLayer)
+                print("iOS: Added clusters layer with predicate: point_count != nil")
+
+                // Add layer for cluster count labels
+                let clusterCountLayer = MLNSymbolStyleLayer(identifier: "\(id)-cluster-count", source: source)
+                clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
+                clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
+                clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                // Same predicate as clusters
+                clusterCountLayer.predicate = NSPredicate(format: "point_count != nil")
+                style.addLayer(clusterCountLayer)
+                print("iOS: Added cluster count labels layer with predicate: point_count != nil")
+            } else {
+                print("iOS: No visualization layers added - clustering disabled")
+            }
+
+            completion(.success(()))
+        } catch {
+            print("iOS: Error adding clustered source: \(error.localizedDescription)")
+            completion(.failure(error))
+        }
+    }
+
+    // Test method for debugging Pigeon generation
+    func testMethod(
+        value: String,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        print("Swift: testMethod called with value: \(value)")
+        completion(.success(()))
+    }
+
+    // Animate the camera to a new position (Pigeon API)
+    func animateCamera(
+        latitude: Double,
+        longitude: Double,
+        zoom: Double,
+        bearing: Double,
+        pitch: Double,
+        duration: Int64,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            var camera = self._mapView.camera
+
+            // Use sentinel values (-1.0 or NaN) to indicate "no change"
+            if !latitude.isNaN && latitude != -1.0 {
+                camera.centerCoordinate = CLLocationCoordinate2D(
+                    latitude: latitude, longitude: longitude)
+            }
+            if !bearing.isNaN && bearing != -1.0 {
+                camera.heading = bearing
+            }
+            if !pitch.isNaN && pitch != -1.0 {
+                camera.pitch = pitch
+            }
+
+            // Set camera with animation
+            let animationDuration = duration > 0 ? Double(duration) / 1000.0 : 0.2
+            self._mapView.setCamera(
+                camera, withDuration: animationDuration, animationTimingFunction: nil)
+
+            // Handle zoom separately if needed
+            if !zoom.isNaN && zoom != -1.0 {
+                self._mapView.setZoomLevel(zoom, animated: true)
+            }
+
+            completion(.success(()))
+        }
+    }
+
+    // Get the current camera state
+    func getCamera() -> MapCamera {
+        let camera = _mapView.camera
+        let center = LngLat(
+            lng: camera.centerCoordinate.longitude,
+            lat: camera.centerCoordinate.latitude
+        )
+        return MapCamera(
+            center: center,
+            zoom: _mapView.zoomLevel,
+            pitch: camera.pitch,
+            bearing: camera.heading
+        )
+    }
+
+    // Get the current zoom level
+    func getZoomLevel() -> Double {
+        return _mapView.zoomLevel
+    }
+
+    // Get the user's current location
+    func getUserLocation() -> LngLat {
+        if let userLocation = _mapView.userLocation?.location {
+            return LngLat(
+                lng: userLocation.coordinate.longitude,
+                lat: userLocation.coordinate.latitude
+            )
+        } else {
+            // Return a default location if user location is not available
+            return LngLat(lng: 0.0, lat: 0.0)
+        }
+    }
+
+    // MARK: - New Required Methods
+
+    // Move the camera to a new position without animation
+    func moveCamera(
+        lat: Double,
+        lng: Double,
+        zoom: Double,
+        bearing: Double,
+        pitch: Double,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            var camera = self._mapView.camera
+
+            // Use sentinel values (-1.0 or NaN) to indicate "no change"
+            if !lat.isNaN && lat != -1.0 {
+                camera.centerCoordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+            }
+            if !bearing.isNaN && bearing != -1.0 {
+                camera.heading = bearing
+            }
+            if !pitch.isNaN && pitch != -1.0 {
+                camera.pitch = pitch
+            }
+
+            // Set camera without animation
+            self._mapView.setCamera(camera, animated: false)
+
+            // Handle zoom separately if needed
+            if !zoom.isNaN && zoom != -1.0 {
+                self._mapView.setZoomLevel(zoom, animated: false)
+            }
+
+            completion(.success(()))
+        }
+    }
+
+    // Update map options including bounds and gesture settings
+    func updateMapOptions(
+        minZoom: Double,
+        maxZoom: Double,
+        minPitch: Double,
+        maxPitch: Double,
+        boundsWest: Double,
+        boundsSouth: Double,
+        boundsEast: Double,
+        boundsNorth: Double,
+        rotateEnabled: Bool,
+        panEnabled: Bool,
+        zoomEnabled: Bool,
+        pitchEnabled: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            // Update zoom and pitch limits
+            if !minZoom.isNaN && minZoom != -1.0 {
+                self._mapView.minimumZoomLevel = minZoom
+            }
+            if !maxZoom.isNaN && maxZoom != -1.0 {
+                self._mapView.maximumZoomLevel = maxZoom
+            }
+            if !minPitch.isNaN && minPitch != -1.0 {
+                self._mapView.minimumPitch = minPitch
+            }
+            if !maxPitch.isNaN && maxPitch != -1.0 {
+                self._mapView.maximumPitch = maxPitch
+            }
+
+            // Update bounds if provided
+            if !boundsWest.isNaN && !boundsSouth.isNaN && !boundsEast.isNaN && !boundsNorth.isNaN {
+                let bounds = MLNCoordinateBounds(
+                    sw: CLLocationCoordinate2D(latitude: boundsSouth, longitude: boundsWest),
+                    ne: CLLocationCoordinate2D(latitude: boundsNorth, longitude: boundsEast)
+                )
+                // Note: MLNMapView doesn't have a direct way to set coordinate bounds
+                // This would need to be implemented differently if needed
+            }
+
+            // Update gesture settings
+            self._mapView.allowsRotating = rotateEnabled
+            self._mapView.allowsScrolling = panEnabled
+            self._mapView.allowsZooming = zoomEnabled
+            self._mapView.allowsTilting = pitchEnabled
+
+            completion(.success(()))
+        }
+    }
+
+    // Enable location services and show user location on map
+    func enableLocation(
+        fastestInterval: Int64,
+        maxWaitTime: Int64,
+        pulseFade: Bool,
+        accuracyAnimation: Bool,
+        compassAnimation: Bool,
+        pulse: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            self._mapView.showsUserLocation = true
+            // Note: iOS MapLibre doesn't have all the detailed location settings like Android
+            // The parameters here would need custom implementation if needed
+            completion(.success(()))
+        }
+    }
+
+    // Fit the map camera to show the specified bounds
+    func fitBounds(
+        west: Double,
+        south: Double,
+        east: Double,
+        north: Double,
+        bearing: Double,
+        pitch: Double,
+        duration: Int64,
+        paddingLeft: Double,
+        paddingTop: Double,
+        paddingRight: Double,
+        paddingBottom: Double,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            let bounds = MLNCoordinateBounds(
+                sw: CLLocationCoordinate2D(latitude: south, longitude: west),
+                ne: CLLocationCoordinate2D(latitude: north, longitude: east)
+            )
+
+            let edgeInsets = UIEdgeInsets(
+                top: CGFloat(paddingTop),
+                left: CGFloat(paddingLeft),
+                bottom: CGFloat(paddingBottom),
+                right: CGFloat(paddingRight)
+            )
+
+            let animated = duration > 0
+            self._mapView.setVisibleCoordinateBounds(
+                bounds, edgePadding: edgeInsets, animated: animated)
+
+            completion(.success(()))
+        }
+    }
+
+    // Get the meters per pixel at the specified latitude
+    func getMetersPerPixelAtLatitude(
+        latitude: Double,
+        completion: @escaping (Result<Double, Error>) -> Void
+    ) {
+        let metersPerPixel = _mapView.metersPerPoint(atLatitude: latitude)
+        completion(.success(metersPerPixel))
+    }
+
+    // Get the visible region bounds
+    func getVisibleRegion(
+        completion: @escaping (Result<[Double], Error>) -> Void
+    ) {
+        let bounds = _mapView.visibleCoordinateBounds
+        let result = [
+            bounds.sw.longitude, bounds.sw.latitude, bounds.ne.longitude, bounds.ne.latitude,
+        ]
+        completion(.success(result))
+    }
+
+    // Convert screen coordinates to longitude/latitude
+    func toLngLat(
+        x: Double,
+        y: Double,
+        completion: @escaping (Result<[Double], Error>) -> Void
+    ) {
+        let screenPoint = CGPoint(x: x, y: y)
+        let coordinate = _mapView.convert(screenPoint, toCoordinateFrom: _mapView)  // Remove asterisks
+        let result = [coordinate.longitude, coordinate.latitude]
+        completion(.success(result))
+    }
+
+    // Convert longitude/latitude to screen coordinates
+    func toScreenLocation(
+        lng: Double,
+        lat: Double,
+        completion: @escaping (Result<[Double], Error>) -> Void
+    ) {
+        let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+        let screenPoint = _mapView.convert(coordinate, toPointTo: _mapView)  // Remove asterisks
+        let result = [Double(screenPoint.x), Double(screenPoint.y)]
+        completion(.success(result))
+    }
+
+    // Query rendered layers at the specified screen location
+    func queryLayers(
+        x: Double,
+        y: Double,
+        completion: @escaping (Result<[[String: String?]], Error>) -> Void
+    ) {
+        let screenPoint = CGPoint(x: x, y: y)
+
+        // Query visible features at the point
+        let features = _mapView.visibleFeatures(at: screenPoint)
+
+        var result: [[String: String?]] = []
+        for feature in features {
+            if let layer = feature.attribute(forKey: "layer") as? String,
+                let source = feature.attribute(forKey: "source") as? String
+            {
+                let layerInfo: [String: String?] = [
+                    "layerId": layer,
+                    "sourceId": source,
+                    "sourceLayer": feature.attribute(forKey: "sourceLayer") as? String,
+                ]
+                result.append(layerInfo)
+            }
+        }
+
+        completion(.success(result))
+    }
+
+    // Enable/disable location tracking with bearing mode
+    func trackLocation(
+        track: Bool,
+        bearingMode: Int64,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            if track {
+                // Convert bearingMode to appropriate iOS tracking mode
+                switch bearingMode {
+                case 0:  // none
+                    self._mapView.userTrackingMode = .follow
+                case 1:  // compass
+                    self._mapView.userTrackingMode = .followWithHeading
+                case 2:  // gps
+                    self._mapView.userTrackingMode = .followWithCourse
+                default:
+                    self._mapView.userTrackingMode = .follow
+                }
+            } else {
+                self._mapView.userTrackingMode = .none
+            }
+
+            completion(.success(()))
+        }
+    }
+
+    // Add these methods to your MapLibreView class that implements MapLibreHostApi
+
+    func removeLayer(
+      id: String,
+      completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+      print("iOS: removeLayer called for id: \(id)")
+
+      guard let style = _mapView.style else {
+        print("iOS: Error - Style not available for removeLayer")
+        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+        return
+      }
+
+      if let layer = style.layer(withIdentifier: id) {
+        style.removeLayer(layer)
+        print("iOS: Successfully removed layer: \(id)")
+        completion(.success(()))
+      } else {
+        print("iOS: Warning - Layer not found: \(id)")
+        // Don't fail if layer doesn't exist, just complete successfully
+        completion(.success(()))
       }
     }
-  }
 
-  func dispose() throws {
-    print("### dispose MapLibre view ### \(_viewId) ###")
-    MapLibreRegistry.removeMap(viewId: _viewId)
-    _mapView.removeFromSuperview()
-    _mapView.delegate = nil
-    _mapView = nil
-    _view.removeFromSuperview()
-  }
+    func removeSource(
+      id: String,
+      completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+      print("iOS: removeSource called for id: \(id)")
 
-  @objc func onTap(sender: UITapGestureRecognizer) {
-    var screenPosition = sender.location(in: _mapView)
-    var point = _mapView.convert(screenPosition, toCoordinateFrom: _mapView)
-    _flutterApi.onClick(
-      point: LngLat(lng: point.longitude, lat: point.latitude)
-    ) { _ in }
-  }
+      guard let style = _mapView.style else {
+        print("iOS: Error - Style not available for removeSource")
+        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+        return
+      }
 
-  @objc func onLongPress(sender: UILongPressGestureRecognizer) {
-    var screenPosition = sender.location(in: _mapView)
-    var point = _mapView.convert(screenPosition, toCoordinateFrom: _mapView)
-    _flutterApi.onLongClick(
-      point: LngLat(lng: point.longitude, lat: point.latitude)
-    ) { _ in }
-  }
+      if let source = style.source(withIdentifier: id) {
+        style.removeSource(source)
+        print("iOS: Successfully removed source: \(id)")
+        completion(.success(()))
+      } else {
+        print("iOS: Warning - Source not found: \(id)")
+        // Don't fail if source doesn't exist, just complete successfully
+        completion(.success(()))
+      }
+    }
 
-  func view() -> UIView {
-    _view
-  }
+    func updateGeoJsonSource(
+      id: String,
+      data: String,
+      completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+      print("iOS: updateGeoJsonSource called for id: \(id)")
 
-  func gestureRecognizer(
-    _: UIGestureRecognizer,
-    shouldRecognizeSimultaneouslyWith _: UIGestureRecognizer
-  ) -> Bool {
-    // Do not override the default behavior
-    true
-  }
+      guard let style = _mapView.style else {
+        print("iOS: Error - Style not available for updateGeoJsonSource")
+        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+        return
+      }
 
-  // MLNMapViewDelegate method called when map has finished loading
-  func mapView(_ mapView: MLNMapView, didFinishLoading _: MLNStyle) {
-    // setCamera() can only be used after the map did finish loading
-    var camera = _mapView.camera
-    camera.pitch = _mapOptions!.pitch
-    _mapView.setCamera(camera, animated: false)
+      guard let source = style.source(withIdentifier: id) as? MLNShapeSource else {
+        print("iOS: Error - Source not found or not a GeoJSON source: \(id)")
+        completion(.failure(NSError(domain: "MapLibre", code: 4, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(id)"])))
+        return
+      }
 
-    _mapView = mapView
-    print("mapView didFinishLoading, call onStyleLoaded")
-    _flutterApi.onStyleLoaded { _ in }
-  }
+      // Parse the GeoJSON data
+      if data.hasPrefix("http://") || data.hasPrefix("https://") {
+        // Handle URL source
+        guard let url = URL(string: data) else {
+          print("iOS: Error - Invalid URL: \(data)")
+          completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])))
+          return
+        }
+        source.url = url
+        print("iOS: Updated source with URL: \(data)")
+      } else {
+        // Handle GeoJSON data
+        guard let dataBytes = data.data(using: .utf8),
+              let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
+          print("iOS: Error - Invalid GeoJSON data")
+          completion(.failure(NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])))
+          return
+        }
+        source.shape = shape
+        print("iOS: Updated source with GeoJSON data (\(data.count) characters)")
+      }
 
-  func mapView(_: MLNMapView, regionDidChangeAnimated _: Bool) {
-    onCameraMoved()
-  }
+      completion(.success(()))
+    }
 
-  func mapViewRegionIsChanging(_: MLNMapView) {
-    onCameraMoved()
-  }
+    // MARK: - Helper Methods for Property Parsing
 
-  func onCameraMoved() {
-    var mlnCamera = _mapView.camera
-    var center = LngLat(
-      lng: mlnCamera.centerCoordinate.longitude,
-      lat: mlnCamera.centerCoordinate.latitude
-    )
-    var pigeonCamera = MapCamera(
-      center: center, zoom: mlnCamera.altitude, pitch: mlnCamera.pitch,
-      bearing: mlnCamera.heading
-    )
-    _flutterApi.onMoveCamera(camera: pigeonCamera) { _ in }
-  }
+    private func parseValue(_ value: Any) -> NSExpression {
+        if let num = value as? NSNumber {
+            return NSExpression(forConstantValue: num)
+        }
+        if let double = value as? Double {
+            return NSExpression(forConstantValue: NSNumber(value: double))
+        }
+        if let int = value as? Int {
+            return NSExpression(forConstantValue: NSNumber(value: int))
+        }
+        return NSExpression(forConstantValue: NSNumber(value: 0))
+    }
 
-  func addFillLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addCircleLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addBackgroundLayer(
-    id _: String, layout _: [String: Any], paint _: [String: Any],
-    belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addFillExtrusionLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addHeatmapLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addHillshadeLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addLineLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addRasterLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func addSymbolLayer(
-    id _: String, sourceId _: String, layout _: [String: Any],
-    paint _: [String: Any], belowLayerId _: String?,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    completion(.success(()))
-  }
-
-  func loadImage(
-    url _: String,
-    completion _: @escaping (Result<FlutterStandardTypedData, Error>) ->
-      Void
-  ) {
-    // completion(.success((bytes)))
-  }
-
-  func addImage(
-    id: String, bytes: FlutterStandardTypedData,
-    completion: @escaping (Result<Void, Error>) -> Void
-  ) {
-    // Main Thread Checker: UI API called on a background thread: -[UIView frame]
-    // DispatchQueue.main.async {
-    print("addImage before")
-    var style = _mapView.style!
-    var imageData = bytes.data
-    var image = UIImage(data: imageData, scale: UIScreen.main.scale)!
-    style.setImage(image, forName: id)
-    print("addImage afters")
-    print("added image: \(style.image(forName: id))")
-    // }
-    completion(.success(()))
-  }
+    private func parseColor(_ value: Any) -> NSExpression {
+        if let colorArray = value as? [Double], colorArray.count >= 3 {
+            let a = colorArray.count > 3 ? colorArray[3] : 1.0
+            return NSExpression(forConstantValue: UIColor(red: colorArray[0], green: colorArray[1], blue: colorArray[2], alpha: a))
+        }
+        if let colorString = value as? String {
+            return NSExpression(forConstantValue: UIColor(hexString: colorString) ?? UIColor.red)
+        }
+        return NSExpression(forConstantValue: UIColor.red)
+    }
 }

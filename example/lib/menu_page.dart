@@ -1,11 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:maplibre_example/animation_page.dart';
+import 'package:maplibre_example/clustering_page.dart';
 import 'package:maplibre_example/controller_page.dart';
 import 'package:maplibre_example/events_page.dart';
 import 'package:maplibre_example/gestures_page.dart';
 import 'package:maplibre_example/layers_circle_page.dart';
-import 'package:maplibre_example/layers_marker_page.dart';
+import 'package:maplibre_example/layers_custom_marker_page.dart';
 import 'package:maplibre_example/layers_mixed_page.dart';
 import 'package:maplibre_example/layers_polygon_page.dart';
 import 'package:maplibre_example/layers_polyline_page.dart';
@@ -25,6 +26,7 @@ import 'package:maplibre_example/two_maps_page.dart';
 import 'package:maplibre_example/user_location_page.dart';
 import 'package:maplibre_example/widget_layer_interactive_page.dart';
 import 'package:maplibre_example/widget_layer_page.dart';
+import 'package:mapmetrics/mapmetrics.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -126,7 +128,7 @@ class MenuPage extends StatelessWidget {
                 ItemCard(
                   label: 'Markers',
                   iconData: Icons.location_on,
-                  location: LayersMarkerPage.location,
+                  location: CustomMarkerPage.location,
                 ),
                 ItemCard(
                   label: 'Polygons',
@@ -149,6 +151,11 @@ class MenuPage extends StatelessWidget {
                   label: 'Circle',
                   iconData: Icons.circle,
                   location: StyleLayersCirclePage.location,
+                ),
+                ItemCard(
+                  label: 'Clustering',
+                  iconData: Icons.group_work,
+                  location: ClusteringPage.location,
                 ),
                 ItemCard(
                   label: 'Fill',

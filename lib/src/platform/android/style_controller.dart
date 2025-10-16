@@ -92,6 +92,16 @@ class StyleControllerAndroid implements StyleController {
       case GeoJsonSource():
         final jniOptions = jni.GeoJsonOptions();
         final jniData = source.data.toJString();
+
+        // Apply clustering options
+        if (source.cluster) {
+          jniOptions.withCluster(true);
+          jniOptions.withClusterRadius(source.clusterRadius);
+          if (source.clusterMaxZoom != null) {
+            jniOptions.withClusterMaxZoom(source.clusterMaxZoom!);
+          }
+        }
+
         if (source.data.startsWith('{')) {
           jniSource = jni.GeoJsonSource.new$4(jniId, jniData, jniOptions);
         } else {

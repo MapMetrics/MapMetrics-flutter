@@ -17,23 +17,26 @@ class _StyledMapPageState extends State<StyledMapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Styled Map')),
-      body: MapLibreMap(
-        acceptLicense: true,
+      body: MapMetricsView(
         options: MapOptions(
           initCenter: Position(9.17, 47.68),
           initZoom: 2,
           initStyle: MapStyles.maptilerStreets,
         ),
-        children: [
-          const MapScalebar(),
+        mapChildren: [
+          const MapScalebar(
+            alignment: Alignment.bottomLeft,
+            padding: EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 50),
+          ),
           const SourceAttribution(),
           MapControlButtons(
+            showZoomInOutButton: true,
             showTrackLocation: true,
             onCurrentLocation: (location) {
               print("location" + location.lat.toString());
             },
           ),
-          const MapCompass(),
+          // const MapCompass(),
         ],
         onStyleLoaded: (style) {
           style.setProjection(MapProjection.globe);
