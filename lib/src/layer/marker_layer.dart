@@ -189,12 +189,15 @@ class MarkerLayer extends Layer<Point> {
   @override
   Map<String, Object> getPaint() => {
     'icon-opacity': iconOpacity,
-    'icon-color': iconColor.toHexString(),
-    'icon-halo-color': iconHaloColor.toHexString(alpha: false),
+    // iOS FFI FIX: icon-color and icon-halo-color only work with SDF icons
+    // Skip when iconImage is null to prevent iOS crash
+    // Always use alpha: true for iOS color parsing
+    if (iconImage != null) 'icon-color': iconColor.toHexString(),
+    if (iconImage != null) 'icon-halo-color': iconHaloColor.toHexString(),
     'icon-halo-width': iconHaloWidth,
     'icon-halo-blur': iconHaloBlur,
-    'text-opacity': iconOpacity,
-    'text-color': textColor.toHexString(alpha: false),
+    'text-opacity': textOpacity,
+    'text-color': textColor.toHexString(),
     'text-halo-color': textHaloColor.toHexString(),
     'text-halo-width': textHaloWidth,
     'text-halo-blur': textHaloBlur,

@@ -531,7 +531,7 @@ class _LayersPOIVectorPageState extends State<LayersPOIVectorPage> {
                         try {
                           await _loadSpriteSheet(style);  // Load ALL sprites from sprite sheet
                           await _addPOISource(style);
-                          await _addTestCircleLayer(style);  // Debug circles - ENABLED for debugging
+                          // await _addTestCircleLayer(style);  // Debug circles - DISABLED
                           await _addPOILayer(style);  // Icon layer with dynamic mapping
 
                           _poiSetupComplete = true; // Mark setup as complete

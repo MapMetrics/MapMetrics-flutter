@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MapMetrics Demo',
-      initialRoute: MenuPage.location,
+      initialRoute: LayersMarkerPage.location,
       theme: ThemeData(colorSchemeSeed: Colors.blue),
       darkTheme: ThemeData(
         brightness: Brightness.dark,

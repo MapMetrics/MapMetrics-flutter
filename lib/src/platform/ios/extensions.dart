@@ -100,7 +100,13 @@ NSExpression? parseNSExpression(String propertyName, String json) =>
 NSExpression? _createSimpleExpression(List<dynamic> expression, String propertyName) {
   // Handle ['literal', value] expressions
   if (expression.length == 2 && expression[0] == 'literal') {
-    return NSExpression.expressionForConstantValue_(expression[1].toNSObject());
+    final value = expression[1];
+    // Convert the value to an appropriate Objective-C object
+    // For strings, use NSString; for numbers, convert to string first to avoid NSNumber KVC issues
+    final nsValue = value is String
+        ? value.toNSString()
+        : value.toString().toNSString();
+    return NSExpression.expressionForConstantValue_(nsValue);
   }
 
   // Handle ['get', 'propertyName'] expressions
@@ -146,39 +152,77 @@ extension MLNStyleLayerExt on MLNStyleLayer {
 
   /// Set a layout or paint property for a [MLNStyleLayer].
   void setProperty(String key, Object value) {
-    // convert to a String
-    var rawValue = switch (value) {
-      List() || Map() => jsonEncode(value),
-      String() => value,
-      _ => value.toString(),
-    };
-    // convert html color names to hex strings
-    if (key.contains('color')) {
-      rawValue = htmlColorNames[rawValue] ?? rawValue;
-    }
-    final NSExpression? expression;
-    try {
-      expression = parseNSExpression(key, rawValue);
-    } catch (error, stacktrace) {
-      // iOS has limitations with complex expressions
-      // If parsing fails, try to extract a simple 'get' expression or fallback value
-      debugPrint('⚠️ iOS expression parsing failed for "$key": $error');
+    // iOS FFI FIX: Handle different value types correctly to avoid type crashes
+    // - Color properties: Use parseNSExpression to create MGLColor objects
+    // - Numeric properties: Convert to NSString to avoid NSNumber KVC crashes
+    // - Complex expressions: Use parseNSExpression for proper parsing
+    NSExpression? expression;
 
-      if (value is List) {
-        // Try to create a simple expression from the complex one
-        final simpleExpr = _createSimpleExpression(value as List, key);
+    // convert html color names to hex strings first
+    if (key.contains('color') && value is String) {
+      value = htmlColorNames[value] ?? value;
+    }
+
+    // Create NSExpression based on value type and property type
+    if (value is String) {
+      // iOS FFI FIX: Color properties need parseNSExpression to create MGLColor objects
+      // Other string properties can use NSString directly
+      if (key.contains('color')) {
+        try {
+          // Create a JSON literal expression: "literal", "#RRGGBB"
+          // This is the format parseNSExpression expects for color values
+          final colorExpression = '["literal", "$value"]';
+          expression = parseNSExpression(key, colorExpression);
+        } catch (error) {
+          debugPrint('⚠️ iOS: Color parsing failed for "$key": $error');
+          // Fallback to NSString if parsing fails
+          expression = NSExpression.expressionForConstantValue_(value.toNSString());
+        }
+      } else {
+        // Non-color strings: use NSString directly
+        expression = NSExpression.expressionForConstantValue_(value.toNSString());
+      }
+    } else if (value is num) {
+      // Numeric values: convert to string first to avoid NSNumber
+      expression = NSExpression.expressionForConstantValue_(value.toString().toNSString());
+    } else if (value is bool) {
+      // Boolean values: convert to string
+      expression = NSExpression.expressionForConstantValue_(value.toString().toNSString());
+    } else if (value is List) {
+      // Lists/arrays: convert to JSON string and parse
+      final jsonString = jsonEncode(value);
+      try {
+        expression = parseNSExpression(key, jsonString);
+      } catch (error) {
+        // If parsing fails, try simplified expression
+        debugPrint('⚠️ iOS expression parsing failed for "$key": $error');
+        final simpleExpr = _createSimpleExpression(value, key);
         if (simpleExpr != null) {
           debugPrint('✅ iOS: Using simplified expression for "$key"');
           _applyExpression(this, key, simpleExpr);
           return;
         }
+        debugPrint('⚠️ iOS: Skipping property "$key" due to unsupported expression');
+        return;
       }
+    } else if (value is Map) {
+      // Maps/objects: convert to JSON string and parse
+      final jsonString = jsonEncode(value);
+      try {
+        expression = parseNSExpression(key, jsonString);
+      } catch (error) {
+        debugPrint('⚠️ iOS: Skipping property "$key" due to parse error: $error');
+        return;
+      }
+    } else {
+      // Fallback: convert to string
+      expression = NSExpression.expressionForConstantValue_(value.toString().toNSString());
+    }
 
-      debugPrint('⚠️ iOS: Skipping property "$key" due to unsupported expression');
+    if (expression == null) {
+      debugPrint('⚠️ iOS: Failed to create expression for "$key"');
       return;
     }
-    // print('${expression?.description1 ?? 'no expression!'}');
-    if (expression == null) return;
 
     _applyExpression(this, key, expression);
   }
@@ -281,6 +325,8 @@ extension MLNStyleLayerExt on MLNStyleLayer {
         (this as MLNSymbolStyleLayer).iconRotation = expression;
       case 'icon-size':
         (this as MLNSymbolStyleLayer).iconScale = expression;
+      case 'icon-offset':
+        (this as MLNSymbolStyleLayer).iconOffset = expression;
       case 'icon-keep-upright':
         (this as MLNSymbolStyleLayer).keepsIconUpright = expression;
       case 'text-keep-upright':
@@ -309,10 +355,50 @@ extension MLNStyleLayerExt on MLNStyleLayer {
         (this as MLNSymbolStyleLayer).textRotation = expression;
       case 'text-writing-mode':
         (this as MLNSymbolStyleLayer).textWritingModes = expression;
+      case 'text-offset':
+        (this as MLNSymbolStyleLayer).textOffset = expression;
+      case 'icon-opacity':
+        (this as MLNSymbolStyleLayer).iconOpacity = expression;
+      case 'icon-color':
+        // iOS FFI FIX: icon-color only works with SDF icons
+        // Skip if iconImageName is nil to prevent crash
+        try {
+          (this as MLNSymbolStyleLayer).iconColor = expression;
+        } catch (e) {
+          debugPrint('⚠️ iOS: Skipped icon-color (only works with SDF icons): $e');
+        }
+      case 'icon-halo-color':
+        // iOS FFI FIX: icon-halo-color only works with SDF icons
+        // Skip if iconImageName is nil to prevent crash
+        try {
+          (this as MLNSymbolStyleLayer).iconHaloColor = expression;
+        } catch (e) {
+          debugPrint('⚠️ iOS: Skipped icon-halo-color (only works with SDF icons): $e');
+        }
+      case 'icon-halo-width':
+        (this as MLNSymbolStyleLayer).iconHaloWidth = expression;
+      case 'icon-halo-blur':
+        (this as MLNSymbolStyleLayer).iconHaloBlur = expression;
       case 'icon-translate':
         (this as MLNSymbolStyleLayer).iconTranslation = expression;
       case 'icon-translate-anchor':
         (this as MLNSymbolStyleLayer).iconTranslationAnchor = expression;
+      case 'text-opacity':
+        (this as MLNSymbolStyleLayer).textOpacity = expression;
+      case 'text-color':
+        // iOS FFI FIX: text-color causes crashes with certain color formats
+        // Wrap in try-catch to prevent app crash
+        try {
+          (this as MLNSymbolStyleLayer).textColor = expression;
+        } catch (e) {
+          debugPrint('⚠️ iOS: Skipped text-color due to error: $e');
+        }
+      case 'text-halo-color':
+        (this as MLNSymbolStyleLayer).textHaloColor = expression;
+      case 'text-halo-width':
+        (this as MLNSymbolStyleLayer).textHaloWidth = expression;
+      case 'text-halo-blur':
+        (this as MLNSymbolStyleLayer).textHaloBlur = expression;
       case 'text-translate':
         (this as MLNSymbolStyleLayer).textTranslation = expression;
       case 'text-translate-anchor':

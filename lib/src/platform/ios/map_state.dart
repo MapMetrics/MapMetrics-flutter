@@ -9,7 +9,7 @@ import 'package:mapmetrics/src/layer/extensions.dart';
 import 'package:mapmetrics/src/layer/layer_manager.dart';
 import 'package:mapmetrics/src/platform/ios/extensions.dart';
 import 'package:mapmetrics/src/platform/map_state_native.dart';
-import 'package:mapmetrics/src/platform/maplibre_ffi.dart' hide NSNumber;
+import 'package:mapmetrics/src/platform/maplibre_ffi.dart';
 import 'package:mapmetrics/src/platform/pigeon.g.dart' as pigeon;
 import 'package:objective_c/objective_c.dart';
 import 'package:objective_c/src/internal.dart' as objc_internal;
@@ -23,6 +23,8 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   late final pigeon.MapLibreHostApi _hostApi;
   late final int _viewId;
   MLNMapView? _cachedMapView;
+  MethodChannel? _customMethodChannel;
+  bool _isProcessingStyleLoaded = false;
 
   MLNMapView get _mapView =>
       _cachedMapView ??= MLNMapView.castFrom(
@@ -51,6 +53,20 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     _hostApi = pigeon.MapLibreHostApi(messageChannelSuffix: channelSuffix);
     pigeon.MapLibreFlutterApi.setUp(this, messageChannelSuffix: channelSuffix);
     _viewId = viewId;
+
+    // Set up custom MethodChannel to receive onStyleLoaded (bypasses broken Pigeon callback)
+    _customMethodChannel = MethodChannel('dev.flutter.mapmetrics.custom/map_$viewId');
+    _customMethodChannel!.setMethodCallHandler((call) async {
+      if (call.method == 'onStyleLoaded') {
+        debugPrint('✅ Flutter: Received onStyleLoaded via custom MethodChannel');
+        try {
+          onStyleLoaded();
+        } catch (e, stackTrace) {
+          debugPrint('❌ Flutter ERROR: onStyleLoaded failed: $e');
+          debugPrint('Stack trace: $stackTrace');
+        }
+      }
+    });
   }
 
   @override
@@ -155,15 +171,75 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
 
   @override
   void onStyleLoaded() {
-    // We need to refresh the cached style for when the style reloads.
-    style?.dispose();
-    final styleCtrl = style = StyleControllerIos._(_mapView.style!, _hostApi);
+    debugPrint('📍 onStyleLoaded: Starting...');
+    if (!mounted) {
+      debugPrint('⚠️ onStyleLoaded: Widget not mounted, skipping');
+      return;
+    }
 
-    widget.onEvent?.call(MapEventStyleLoaded(styleCtrl));
-    widget.onStyleLoaded?.call(styleCtrl);
-    layerManager = LayerManager(styleCtrl, widget.layers);
-    // setState is needed to refresh the flutter widgets used in MapLibreMap.children.
-    setState(() {});
+    // Prevent duplicate onStyleLoaded calls from causing crashes
+    if (_isProcessingStyleLoaded) {
+      debugPrint('⚠️ onStyleLoaded: Already processing, skipping duplicate call');
+      return;
+    }
+    _isProcessingStyleLoaded = true;
+
+    try {
+      // We need to refresh the cached style for when the style reloads.
+      style?.dispose();
+      debugPrint('📍 onStyleLoaded: Getting map style...');
+
+      final mapStyle = _mapView.style;
+      if (mapStyle == null) {
+        debugPrint('❌ onStyleLoaded: _mapView.style is null!');
+        _isProcessingStyleLoaded = false;
+        return;
+      }
+
+      final styleCtrl = style = StyleControllerIos._(mapStyle, _hostApi);
+      debugPrint('📍 onStyleLoaded: Created style controller');
+
+      try {
+        widget.onEvent?.call(MapEventStyleLoaded(styleCtrl));
+        debugPrint('📍 onStyleLoaded: Called onEvent');
+      } catch (e, stack) {
+        debugPrint('❌ onStyleLoaded: onEvent failed: $e');
+        debugPrint('Stack: $stack');
+      }
+
+      try {
+        widget.onStyleLoaded?.call(styleCtrl);
+        debugPrint('📍 onStyleLoaded: Called onStyleLoaded');
+      } catch (e, stack) {
+        debugPrint('❌ onStyleLoaded: onStyleLoaded callback failed: $e');
+        debugPrint('Stack: $stack');
+      }
+
+      // setState MUST be called AFTER creating LayerManager to avoid race conditions
+      // setState triggers didUpdateWidget which calls layerManager?.updateLayers()
+      // So layerManager MUST exist before setState is called
+      if (mounted) {
+        // Create LayerManager synchronously BEFORE setState
+        // IMPORTANT: Always create LayerManager even if widget.layers is empty
+        // to maintain consistency with Android implementation
+        try {
+          layerManager = LayerManager(styleCtrl, widget.layers);
+          debugPrint('📍 onStyleLoaded: Created layer manager with ${widget.layers.length} layers');
+        } catch (e, stack) {
+          debugPrint('❌ onStyleLoaded: LayerManager creation failed: $e');
+          debugPrint('Stack: $stack');
+        }
+
+        setState(() {});
+        debugPrint('✅ onStyleLoaded: Complete');
+      }
+    } catch (e, stack) {
+      debugPrint('❌ onStyleLoaded ERROR: $e');
+      debugPrint('Stack: $stack');
+    } finally {
+      // ALWAYS reset the flag in the finally block
+      _isProcessingStyleLoaded = false;
+    }
   }
 
   @override

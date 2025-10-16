@@ -124,6 +124,29 @@ abstract interface class MapLibreHostApi {
   /// Add an image to the map.
   @async
   void addImage(String id, Uint8List bytes);
+
+  /// Add a vector tile source with zoom level options configured in native Swift.
+  /// This bypasses Dart's NSNumber creation limitation by handling everything in Swift.
+  /// Returns the pointer address of the created MLNVectorTileSource as an int.
+  @async
+  int addVectorTileSource({
+    required String sourceId,
+    required List<String> tileUrls,
+    required int minZoom,
+    required int maxZoom,
+  });
+
+  /// Set color properties on a symbol layer safely in Swift.
+  /// This bypasses Dart's color parsing issues by handling MGLColor creation in Swift.
+  /// Colors should be hex strings with alpha channel (#RRGGBBAA format).
+  @async
+  void setSymbolLayerColors({
+    required String layerId,
+    String? iconColor,
+    String? iconHaloColor,
+    String? textColor,
+    String? textHaloColor,
+  });
 }
 
 @FlutterApi()

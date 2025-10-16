@@ -32,6 +32,47 @@ class StyleControllerIos implements StyleController {
       return;
     }
 
+    // iOS FFI FIX: For SymbolStyleLayer, use Pigeon to create layer entirely in Swift
+    // This avoids ALL iOS FFI crashes related to parseNSExpression and color properties
+    if (layer is SymbolStyleLayer) {
+      // Helper function to convert Flutter's #AARRGGBB format to iOS #RRGGBBAA format
+      String convertColorFormat(String flutterColor) {
+        if (flutterColor.length != 9 || !flutterColor.startsWith('#')) {
+          return flutterColor;
+        }
+        // Flutter format: #AARRGGBB → iOS format: #RRGGBBAA
+        final aa = flutterColor.substring(1, 3); // Alpha
+        final rrggbb = flutterColor.substring(3); // RGB
+        return '#$rrggbb$aa';
+      }
+
+      // Convert color formats in paint map
+      final paint = Map<String, Object>.from(layer.paint);
+      if (paint['icon-color'] is String) {
+        paint['icon-color'] = convertColorFormat(paint['icon-color'] as String);
+      }
+      if (paint['icon-halo-color'] is String) {
+        paint['icon-halo-color'] = convertColorFormat(paint['icon-halo-color'] as String);
+      }
+      if (paint['text-color'] is String) {
+        paint['text-color'] = convertColorFormat(paint['text-color'] as String);
+      }
+      if (paint['text-halo-color'] is String) {
+        paint['text-halo-color'] = convertColorFormat(paint['text-halo-color'] as String);
+      }
+
+      debugPrint('✅ iOS: Creating SymbolStyleLayer "${layer.id}" via Pigeon');
+      await _hostApi.addSymbolLayer(
+        id: layer.id,
+        sourceId: layer.sourceId,
+        layout: layer.layout,
+        paint: paint,
+        belowLayerId: belowLayerId,
+      );
+      return;
+    }
+
+    // For other layer types, use FFI as before
     MLNStyleLayer? ffiStyleLayer;
     switch (layer) {
       case BackgroundStyleLayer():
@@ -92,11 +133,8 @@ class StyleControllerIos implements StyleController {
                   ffiSource,
                 );
           case SymbolStyleLayer():
-            ffiStyleLayer =
-                MLNSymbolStyleLayer.new1()..initWithIdentifier_source_(
-                  layer.id.toNSString(),
-                  ffiSource,
-                );
+            // Should not reach here since we handled SymbolStyleLayer above
+            throw UnimplementedError('SymbolStyleLayer should be handled via Pigeon');
         }
     }
 
@@ -105,6 +143,7 @@ class StyleControllerIos implements StyleController {
         'The Layer is not supported: ${layer.runtimeType}',
       );
     }
+
     ffiStyleLayer.setProperties(layer.paint);
     ffiStyleLayer.setProperties(layer.layout);
     if (layer.minZoom case final double minZoom) {
@@ -186,32 +225,31 @@ class StyleControllerIos implements StyleController {
           );
         }
       case VectorSource():
-        final vectorSource = ffiSource = MLNVectorTileSource.new1();
         if (source.url case final String url) {
+          // For URL-based sources, use the FFI method
+          final vectorSource = ffiSource = MLNVectorTileSource.new1();
           vectorSource.initWithIdentifier_configurationURLString_(
             source.id.toNSString(),
             url.toNSString(),
           );
         } else {
-          final ffiUrls = NSMutableArray.new1()..init();
-          for (final url in source.tiles ?? <String>[]) {
-            ffiUrls.addObject_(url.toNSString());
-          }
+          // For tile template sources, use Pigeon method to create source in Swift
+          // This bypasses Dart's NSNumber creation limitation
+          final minZoom = (source.minZoom ?? 0).toInt();
+          final maxZoom = (source.maxZoom ?? 22).toInt();
 
-          // TODO: iOS vector tile overzooming limitation
-          // The maplibre_ffi.dart file shadows objective_c's NSNumber class,
-          // preventing access to NSNumber.numberWithInt_() needed to create
-          // zoom level options. Solutions:
-          // 1. Use Pigeon method channel to create options dictionary in native Swift
-          // 2. Regenerate maplibre_ffi.dart without NSNumber export
-          // 3. Server-side: Increase tile maxZoom to 18+ (current workaround)
-          debugPrint('⚠️ iOS: VectorSource zoom options not set - overzooming beyond z${source.maxZoom} may not work');
+          debugPrint('✅ iOS: Creating VectorSource via Pigeon - minZoom: $minZoom, maxZoom: $maxZoom');
 
-          vectorSource.initWithIdentifier_tileURLTemplates_options_(
-            source.id.toNSString(),
-            ffiUrls,
-            NSDictionary.new1(),
+          await _hostApi.addVectorTileSource(
+            sourceId: source.id,
+            tileUrls: source.tiles ?? [],
+            minZoom: minZoom,
+            maxZoom: maxZoom,
           );
+
+          // Source was created and added in Swift, so we're done
+          // Return early to skip the _ffiStyle.addSource_ call below
+          return;
         }
       case ImageSource():
         final coordinates =
