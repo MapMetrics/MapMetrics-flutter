@@ -383,64 +383,10 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   Future<LngLatBounds> getVisibleRegion() async => getVisibleRegionSync();
 
   @override
-  Future<List<QueriedLayer>> queryLayers(Offset screenLocation) async {
-    if (_jniMapLibreMap == null) {
-      throw Exception(
-        "queryLayers can't be called before the map is initialized.",
-      );
-    }
-    final style = this.style;
-    // there are no sources without a loaded style.
-    if (style == null) return [];
-
-    final jniLayers = style._getLayers();
-    final queriedLayers = <QueriedLayer>[];
-    for (var i = jniLayers.length - 1; i >= 0; i--) {
-      final jniLayer = jniLayers[i]!;
-      JString? jLayerId;
-      late final JString jSourceId;
-      late final JString jSourceLayer;
-      if (jniLayer.isA(jni.LineLayer.type)) {
-        final layer = jniLayer.as(jni.LineLayer.type);
-        jLayerId = layer.getId();
-        jSourceId = layer.getSourceId();
-        jSourceLayer = layer.getSourceLayer();
-        layer.release();
-      } else if (jniLayer.isA(jni.FillLayer.type)) {
-        final layer = jniLayer.as(jni.FillLayer.type);
-        jLayerId = layer.getId();
-        jSourceId = layer.getSourceId();
-        jSourceLayer = layer.getSourceLayer();
-        layer.release();
-      } else if (jniLayer.isA(jni.SymbolLayer.type)) {
-        final layer = jniLayer.as(jni.SymbolLayer.type);
-        jLayerId = layer.getId();
-        jSourceId = layer.getSourceId();
-        jSourceLayer = layer.getSourceLayer();
-        layer.release();
-      }
-      jniLayer.release();
-      if (jLayerId == null) continue; // ignore all other layers
-
-      final queryLayerIds = JArray<JString?>(JString.nullableType, 1)
-        ..[0] = jLayerId;
-      // query one layer at a time
-      final jniFeatures = _jniMapLibreMap!.queryRenderedFeatures(
-        jni.PointF.new$1(screenLocation.dx, screenLocation.dy),
-        queryLayerIds,
-      );
-      queryLayerIds.release();
-      if (jniFeatures.isEmpty) continue; // layer hasn't been clicked if empty
-      jniFeatures.release();
-      final sourceLayer = jSourceLayer.toDartString(releaseOriginal: true);
-      final queriedLayer = QueriedLayer(
-        layerId: jLayerId.toDartString(releaseOriginal: true),
-        sourceId: jSourceId.toDartString(releaseOriginal: true),
-        sourceLayer: sourceLayer.isEmpty ? null : sourceLayer,
-      );
-      queriedLayers.add(queriedLayer);
-    }
-    return queriedLayers;
+  Future<List<Map<String, String>>> queryLayers(Offset screenLocation) async {
+    // Use Pigeon to call the native implementation which extracts all feature properties
+    final result = await _hostApi.queryLayers(screenLocation.dx.toDouble(), screenLocation.dy.toDouble());
+    return result;
   }
 
   @override

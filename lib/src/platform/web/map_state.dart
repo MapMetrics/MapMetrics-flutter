@@ -426,18 +426,30 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
   }
 
   @override
-  Future<List<QueriedLayer>> queryLayers(Offset screenLocation) async {
+  Future<List<Map<String, String>>> queryLayers(Offset screenLocation) async {
     final features = _map.queryRenderedFeatures(
       screenLocation.toJsPoint(),
       null,
     );
     return features.toDart
         .map(
-          (e) => QueriedLayer(
-            layerId: e.layer.id,
-            sourceId: e.source,
-            sourceLayer: e.sourceLayer,
-          ),
+          (e) {
+            final properties = <String, String>{};
+            // Add layer metadata (using empty string instead of null)
+            properties['layerId'] = e.layer.id;
+            properties['sourceId'] = e.source;
+            if (e.sourceLayer != null && e.sourceLayer!.isNotEmpty) {
+              properties['sourceLayer'] = e.sourceLayer!;
+            } else {
+              properties['sourceLayer'] = '';
+            }
+
+            // TODO: Extract all feature properties from e.properties
+            // This requires proper JS interop to iterate over JS object properties
+            // For now, layer metadata is sufficient for web platform
+
+            return properties;
+          },
         )
         .toList(growable: false);
   }

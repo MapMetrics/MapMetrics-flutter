@@ -146,6 +146,15 @@ abstract class MapLibreHostApi {
     required double clusterMaxZoom,
   });
 
+  /// Add a vector source to the map style.
+  @async
+  void addVectorSource({
+    required String id,
+    required List<String> tiles,
+    required double minZoom,
+    required double maxZoom,
+  });
+
   /// Minimal test method to debug Pigeon generation.
   @async
   void testMethod(String value);
@@ -241,7 +250,7 @@ abstract class MapLibreHostApi {
 
   /// Query rendered layers at the specified screen location.
   @async
-  List<Map<String, String?>> queryLayers(double x, double y);
+  List<Map<String, String>> queryLayers(double x, double y);
 
   /// Enable/disable location tracking with bearing mode.
   @async

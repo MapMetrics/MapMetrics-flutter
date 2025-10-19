@@ -1,0 +1,18 @@
+{
+  "tileServerUrl": "https://poi-tile-server-development.jim9710.workers.dev/tiles/{z}/{x}/{y}.mvt",
+  "fallbackSprite": "tourism-m",
+  "iconConfig": {
+    "sizeStops": [
+      [10, 0.3],
+      [12, 0.4],
+      [14, 0.5],
+      [16, 0.7],
+      [18, 0.9],
+      [20, 1.1]
+    ],
+    "allowOverlap": {
+      "zoomThreshold": 16,
+      "ignorePlacement": true
+    }
+  }
+}

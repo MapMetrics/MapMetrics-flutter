@@ -729,6 +729,7 @@ typedef struct {
   void (*load_image)(const gchar* url, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_image)(const gchar* id, const uint8_t* bytes, size_t bytes_length, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_clustered_geo_json_source)(const gchar* id, const gchar* data, gboolean clustered, double cluster_radius, double cluster_max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*add_vector_source)(const gchar* id, FlValue* tiles, double min_zoom, double max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*test_method)(const gchar* value, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*animate_camera)(double latitude, double longitude, double zoom, double bearing, double pitch, int64_t duration, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   MapmetricsMapLibreHostApiGetCameraResponse* (*get_camera)(gpointer user_data);
@@ -1001,6 +1002,25 @@ void mapmetrics_map_libre_host_api_respond_add_clustered_geo_json_source(Mapmetr
  * Responds with an error to MapLibreHostApi.addClusteredGeoJsonSource. 
  */
 void mapmetrics_map_libre_host_api_respond_error_add_clustered_geo_json_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_add_vector_source:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.addVectorSource. 
+ */
+void mapmetrics_map_libre_host_api_respond_add_vector_source(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_add_vector_source:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.addVectorSource. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_add_vector_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 /**
  * mapmetrics_map_libre_host_api_respond_test_method:

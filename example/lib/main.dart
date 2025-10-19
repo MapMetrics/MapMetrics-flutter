@@ -27,6 +27,7 @@ import 'package:maplibre_example/two_maps_page.dart';
 import 'package:maplibre_example/user_location_page.dart';
 import 'package:maplibre_example/widget_layer_interactive_page.dart';
 import 'package:maplibre_example/widget_layer_page.dart';
+import 'package:maplibre_example/poi_demo_page.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 
 void main() {
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MapMetrics Demo',
-      initialRoute: MenuPage.location,
+      initialRoute: PoiDemoPage.route,
       theme: ThemeData(colorSchemeSeed: Colors.blue),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
@@ -83,6 +84,7 @@ class MyApp extends StatelessWidget {
         ControllerPage.location: (context) => const ControllerPage(),
         TwoMapsPage.location: (context) => const TwoMapsPage(),
         ClusteringPage.location: (context) => const ClusteringPage(),
+        PoiDemoPage.route: (context) => const PoiDemoPage(),
       },
     );
   }

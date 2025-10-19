@@ -322,13 +322,10 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }
 
   @override
-  Future<List<QueriedLayer>> queryLayers(Offset screenLocation) async {
+  Future<List<Map<String, String>>> queryLayers(Offset screenLocation) async {
     final result = await _hostApi.queryLayers(screenLocation.dx.toDouble(), screenLocation.dy.toDouble());
-    return result.map((layerData) => QueriedLayer(
-      layerId: layerData['layerId'] as String,
-      sourceId: layerData['sourceId'] as String,
-      sourceLayer: layerData['sourceLayer'] as String?,
-    )).toList();
+    // Return the raw maps with all properties instead of converting to QueriedLayer
+    return result;
   }
 
   @override
@@ -379,6 +376,32 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }) async {
     // Always use Pigeon for location tracking
     await _hostApi.trackLocation(trackLocation, trackBearing.index.toInt());
+  }
+
+  @override
+  Future<void> setLocationDraggable({bool draggable = true}) async {
+    // Enable or disable dragging of the location marker
+    // This feature allows users to manually adjust their location on the map
+    print('iOS: setLocationDraggable called with draggable=$draggable');
+    // TODO: Implement when native iOS support is added
+    // For now, just log that it was called
+  }
+
+  @override
+  Future<void> setNavigationRoute(List<Position> routePoints) async {
+    // Set the navigation route for improved road snapping
+    // When a route is set, the location icon will snap to the route line
+    print('iOS: setNavigationRoute called with ${routePoints.length} points');
+    // TODO: Implement when native iOS support is added
+    // For now, just log that it was called
+  }
+
+  @override
+  Future<void> clearNavigationRoute() async {
+    // Clear the navigation route
+    print('iOS: clearNavigationRoute called');
+    // TODO: Implement when native iOS support is added
+    // For now, just log that it was called
   }
 
   // Sync methods - use cached values when available

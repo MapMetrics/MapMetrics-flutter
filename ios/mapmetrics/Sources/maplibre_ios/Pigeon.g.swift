@@ -541,6 +541,8 @@ protocol MapLibreHostApi {
   func addImage(id: String, bytes: FlutterStandardTypedData, completion: @escaping (Result<Void, Error>) -> Void)
   /// Add a GeoJSON source with clustering to the map style.
   func addClusteredGeoJsonSource(id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Add a vector source to the map style.
+  func addVectorSource(id: String, tiles: [String], minZoom: Double, maxZoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
   /// Minimal test method to debug Pigeon generation.
   func testMethod(value: String, completion: @escaping (Result<Void, Error>) -> Void)
   /// Animate the camera to a new position.
@@ -573,7 +575,7 @@ protocol MapLibreHostApi {
   /// Returns [x, y]
   func toScreenLocation(lng: Double, lat: Double, completion: @escaping (Result<[Double], Error>) -> Void)
   /// Query rendered layers at the specified screen location.
-  func queryLayers(x: Double, y: Double, completion: @escaping (Result<[[String: String?]], Error>) -> Void)
+  func queryLayers(x: Double, y: Double, completion: @escaping (Result<[[String: String]], Error>) -> Void)
   /// Enable/disable location tracking with bearing mode.
   func trackLocation(track: Bool, bearingMode: Int64, completion: @escaping (Result<Void, Error>) -> Void)
   func removeLayer(id: String, completion: @escaping (Result<Void, Error>) -> Void)
@@ -856,6 +858,27 @@ class MapLibreHostApiSetup {
       }
     } else {
       addClusteredGeoJsonSourceChannel.setMessageHandler(nil)
+    }
+    /// Add a vector source to the map style.
+    let addVectorSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addVectorSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addVectorSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        let tilesArg = args[1] as! [String]
+        let minZoomArg = args[2] as! Double
+        let maxZoomArg = args[3] as! Double
+        api.addVectorSource(id: idArg, tiles: tilesArg, minZoom: minZoomArg, maxZoom: maxZoomArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      addVectorSourceChannel.setMessageHandler(nil)
     }
     /// Minimal test method to debug Pigeon generation.
     let testMethodChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)

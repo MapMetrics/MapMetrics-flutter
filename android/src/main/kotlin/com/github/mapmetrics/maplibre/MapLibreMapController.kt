@@ -236,8 +236,18 @@ class MapLibreMapController(
         belowLayerId: String?,
         callback: (Result<Unit>) -> Unit,
     ) {
-        val layer = CircleLayer(id, sourceId)
-        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
+        // Handle source-layer separately if it exists in layout
+        val sourceLayer = layout["source-layer"] as? String
+        val layer = if (sourceLayer != null) {
+            CircleLayer(id, sourceId).withSourceLayer(sourceLayer)
+        } else {
+            CircleLayer(id, sourceId)
+        }
+
+        // Filter out source-layer from layout properties before parsing
+        val filteredLayout = layout.filterKeys { it != "source-layer" }
+
+        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
         if (belowLayerId == null) {
             mapLibreMap.style?.addLayer(layer)
         } else {
@@ -361,13 +371,30 @@ class MapLibreMapController(
         belowLayerId: String?,
         callback: (Result<Unit>) -> Unit,
     ) {
-        val layer = SymbolLayer(id, sourceId)
-        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
+        println("Android: addSymbolLayer called with id: $id")
+        println("Android: Layout properties: $layout")
+        println("Android: Paint properties: $paint")
+
+        // Handle source-layer separately if it exists in layout
+        val sourceLayer = layout["source-layer"] as? String
+        val layer = if (sourceLayer != null) {
+            SymbolLayer(id, sourceId).withSourceLayer(sourceLayer)
+        } else {
+            SymbolLayer(id, sourceId)
+        }
+
+        // Filter out source-layer from layout properties before parsing
+        val filteredLayout = layout.filterKeys { it != "source-layer" }
+
+        // Use parseLayoutProperties and parsePaintProperties to handle complex expressions
+        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
+
         if (belowLayerId == null) {
             mapLibreMap.style?.addLayer(layer)
         } else {
             mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
         }
+        println("Android: Symbol layer $id added successfully")
         callback(Result.success(Unit))
     }
 
@@ -388,9 +415,25 @@ class MapLibreMapController(
         bytes: ByteArray,
         callback: (Result<Unit>) -> Unit,
     ) {
+        println("Android: addImage called with id: $id, bytes length: ${bytes.size} - BUILD_TIMESTAMP_2025_01_17_v2")
         val bitmap = BitmapFactory.decodeStream(bytes.inputStream())
-        mapLibreMap.style?.addImage(id, bitmap)
-        callback(Result.success(Unit))
+        if (bitmap != null) {
+            println("Android: Bitmap decoded successfully - width: ${bitmap.width}, height: ${bitmap.height}")
+            mapLibreMap.style?.addImage(id, bitmap)
+
+            // Verify the image was added
+            val verifyImage = mapLibreMap.style?.getImage(id)
+            if (verifyImage != null) {
+                println("Android: ✅ Image '$id' added to style successfully - verified")
+            } else {
+                println("Android: ⚠️ WARNING - Image '$id' was set but cannot be retrieved from style")
+            }
+
+            callback(Result.success(Unit))
+        } else {
+            println("Android: ERROR - Failed to decode bitmap from bytes")
+            callback(Result.failure(Exception("Failed to decode image bitmap")))
+        }
     }
 
     override fun addClusteredGeoJsonSource(
@@ -477,6 +520,45 @@ class MapLibreMapController(
             callback(Result.success(Unit))
         } catch (e: Exception) {
             println("Android: Error adding clustered source: ${e.message}")
+            callback(Result.failure(e))
+        }
+    }
+
+    override fun addVectorSource(
+        id: String,
+        tiles: List<String>,
+        minZoom: Double,
+        maxZoom: Double,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        try {
+            println("Android: addVectorSource called with id: $id, tiles: $tiles")
+            val style = mapLibreMap.style
+            if (style == null) {
+                println("Android: Error - Style not available")
+                callback(Result.failure(Exception("Style not available")))
+                return
+            }
+
+            // Create VectorSource with TileSet
+            // MapLibre Android VectorSource requires a TileSet with tile URLs
+            println("Android: Creating TileSet with tiles: ${tiles.joinToString()}")
+            val tileSet = org.maplibre.android.style.sources.TileSet("2.2.0", *tiles.toTypedArray())
+            println("Android: Setting min/max zoom: $minZoom - $maxZoom")
+            tileSet.minZoom = minZoom.toFloat()
+            tileSet.maxZoom = maxZoom.toFloat()
+
+            println("Android: Creating VectorSource")
+            val source = org.maplibre.android.style.sources.VectorSource(id, tileSet)
+
+            println("Android: Adding source to style")
+            style.addSource(source)
+            println("Android: Successfully added vector source with ID: $id, tiles: $tiles")
+
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error adding vector source: ${e.message}")
+            e.printStackTrace()
             callback(Result.failure(e))
         }
     }
@@ -648,10 +730,67 @@ class MapLibreMapController(
     override fun queryLayers(
         x: Double,
         y: Double,
-        callback: (Result<List<Map<String, String?>>>) -> Unit
+        callback: (Result<List<Map<String, String>>>) -> Unit
     ) {
-        // Android implementation - you can use your existing JNI code
-        callback(Result.success(emptyList()))
+        try {
+            val screenPoint = android.graphics.PointF(x.toFloat(), y.toFloat())
+            val results = mutableListOf<Map<String, String>>()
+
+            // Get all layers from the style
+            val style = mapLibreMap.style
+            if (style != null) {
+                val layers = style.layers
+
+                // Query each layer individually to get layer metadata
+                for (layer in layers) {
+                    // Query features for this specific layer
+                    val layerFeatures = mapLibreMap.queryRenderedFeatures(screenPoint, layer.id)
+
+                    for (feature in layerFeatures) {
+                        val properties = mutableMapOf<String, String>()
+
+                        // Add layer metadata (matching iOS implementation)
+                        properties["layerId"] = layer.id
+
+                        // Get source ID from the layer
+                        // Note: In MapLibre Android, layers don't directly expose source ID
+                        // We'll extract it from the JSON if possible
+                        properties["sourceId"] = ""
+
+                        // Try to get source layer from feature properties or layer
+                        properties["sourceLayer"] = feature.toJson()?.let { json ->
+                            org.json.JSONObject(json).optString("source-layer", "")
+                        } ?: ""
+
+                        // Extract all feature properties (using empty string instead of null)
+                        val featureProperties = feature.properties()
+                        if (featureProperties != null) {
+                            for (key in featureProperties.keySet()) {
+                                val value = featureProperties.get(key)
+                                properties[key] = value?.toString() ?: ""
+                            }
+                        }
+
+                        // DEBUG: Print the properties for the first feature
+                        if (results.isEmpty()) {
+                            println("Android: First feature layerId='${properties["layerId"]}'")
+                            println("Android: First feature sourceId='${properties["sourceId"]}'")
+                            println("Android: First feature sourceLayer='${properties["sourceLayer"]}'")
+                            println("Android: First feature all properties: $properties")
+                        }
+
+                        results.add(properties)
+                    }
+                }
+            }
+
+            println("Android: queryLayers found ${results.size} features at ($x, $y)")
+            callback(Result.success(results))
+        } catch (e: Exception) {
+            println("Android: Error querying layers: ${e.message}")
+            e.printStackTrace()
+            callback(Result.failure(e))
+        }
     }
 
     override fun trackLocation(

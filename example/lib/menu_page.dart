@@ -26,6 +26,7 @@ import 'package:maplibre_example/two_maps_page.dart';
 import 'package:maplibre_example/user_location_page.dart';
 import 'package:maplibre_example/widget_layer_interactive_page.dart';
 import 'package:maplibre_example/widget_layer_page.dart';
+import 'package:maplibre_example/poi_demo_page.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 
 class MenuPage extends StatelessWidget {
@@ -191,6 +192,11 @@ class MenuPage extends StatelessWidget {
                   label: 'Symbol',
                   iconData: Icons.emoji_emotions,
                   location: StyleLayersSymbolPage.location,
+                ),
+                ItemCard(
+                  label: 'POI Demo',
+                  iconData: Icons.place,
+                  location: PoiDemoPage.route,
                 ),
               ],
             ),

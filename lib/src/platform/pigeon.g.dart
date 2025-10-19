@@ -811,6 +811,30 @@ class MapLibreHostApi {
     }
   }
 
+  /// Add a vector source to the map style.
+  Future<void> addVectorSource({required String id, required List<String> tiles, required double minZoom, required double maxZoom, }) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addVectorSource$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id, tiles, minZoom, maxZoom]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
   /// Minimal test method to debug Pigeon generation.
   Future<void> testMethod(String value) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod$pigeonVar_messageChannelSuffix';
@@ -1164,7 +1188,7 @@ class MapLibreHostApi {
   }
 
   /// Query rendered layers at the specified screen location.
-  Future<List<Map<String, String?>>> queryLayers(double x, double y) async {
+  Future<List<Map<String, String>>> queryLayers(double x, double y) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayers$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -1188,7 +1212,11 @@ class MapLibreHostApi {
         message: 'Host platform returned null value for non-null return value.',
       );
     } else {
-      return (pigeonVar_replyList[0] as List<Object?>?)!.cast<Map<String, String?>>();
+      // Deep convert List<Object?> to List<Map<String, String>>
+      return (pigeonVar_replyList[0] as List<Object?>).map((e) {
+        final map = e as Map<Object?, Object?>;
+        return map.map((key, value) => MapEntry(key.toString(), value.toString()));
+      }).toList();
     }
   }
 

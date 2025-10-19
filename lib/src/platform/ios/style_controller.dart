@@ -196,11 +196,21 @@ class StyleControllerIos implements StyleController {
         );
         throw UnimplementedError('RasterSource not yet implemented via Pigeon');
       case VectorSource():
-        // TODO: Implement Pigeon method for VectorSource
         print(
-          'iOS StyleController: VectorSource not yet implemented via Pigeon',
+          'iOS StyleController: Adding VectorSource via Pigeon with ID: ${source.id}',
         );
-        throw UnimplementedError('VectorSource not yet implemented via Pigeon');
+        try {
+          await _hostApi.addVectorSource(
+            id: source.id,
+            tiles: source.tiles ?? [],
+            minZoom: source.minZoom ?? 0.0,
+            maxZoom: source.maxZoom ?? 22.0,
+          );
+          print('iOS: Successfully added vector source via Pigeon: ${source.id}');
+        } catch (e) {
+          print('iOS: Error adding vector source via Pigeon: $e');
+          rethrow;
+        }
       case ImageSource():
         // TODO: Implement Pigeon method for ImageSource
         print(

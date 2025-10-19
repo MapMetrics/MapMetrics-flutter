@@ -1,6 +1,9 @@
 import Flutter
 import MapLibre
 
+// Typealias to help Swift parser with complex nested generics
+typealias LayerPropertiesArray = [[String: String]]
+
 class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     MapLibreHostApi, UIGestureRecognizerDelegate
 {
@@ -108,8 +111,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     }
 
     @objc func onLongPress(sender: UILongPressGestureRecognizer) {
+        // Only trigger on the began state to avoid multiple calls
+        guard sender.state == .began else {
+            return
+        }
         var screenPosition = sender.location(in: _mapView)
         var point = _mapView.convert(screenPosition, toCoordinateFrom: _mapView)  // Remove asterisks
+        print("iOS: Long press detected at lng: \(point.longitude), lat: \(point.latitude)")
         _flutterApi.onLongClick(
             point: LngLat(lng: point.longitude, lat: point.latitude)
         ) { _ in }
@@ -250,6 +258,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
 
         print("iOS: Adding circle layer for non-clustered source: \(sourceId)")
         let layer = MLNCircleStyleLayer(identifier: id, source: source)
+
+        // Handle source-layer property for vector tile sources
+        if let sourceLayer = layout["source-layer"] as? String {
+            layer.sourceLayerIdentifier = sourceLayer
+            print("iOS: Set source-layer to: \(sourceLayer)")
+        }
+
         applyCircleProperties(to: layer, paint: paint, layout: layout)
 
         if let belowLayerId = belowLayerId {
@@ -654,27 +669,43 @@ func addSymbolLayer(
     belowLayerId: String?,
     completion: @escaping (Result<Void, Error>) -> Void
 ) {
+    print("iOS: addSymbolLayer called - id: \(id), sourceId: \(sourceId)")
+    print("iOS: Layout properties: \(layout)")
+    print("iOS: Paint properties: \(paint)")
+
     guard let style = _mapView.style else {
+        print("iOS: Error - Style not available")
         completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
         return
     }
 
     guard let source = style.source(withIdentifier: sourceId) else {
+        print("iOS: Error - Source not found: \(sourceId)")
         completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
         return
     }
 
     let layer = MLNSymbolStyleLayer(identifier: id, source: source)
+
+    // Handle source-layer property for vector tile sources
+    if let sourceLayer = layout["source-layer"] as? String {
+        layer.sourceLayerIdentifier = sourceLayer
+        print("iOS: Set source-layer to: \(sourceLayer)")
+    }
+
     applySymbolProperties(to: layer, paint: paint, layout: layout)
 
     if let belowLayerId = belowLayerId {
         if let belowLayer = style.layer(withIdentifier: belowLayerId) {
             style.insertLayer(layer, below: belowLayer)
+            print("iOS: SymbolLayer '\(id)' added below '\(belowLayerId)'")
         } else {
             style.addLayer(layer)
+            print("iOS: belowLayer '\(belowLayerId)' not found, added '\(id)' to top")
         }
     } else {
         style.addLayer(layer)
+        print("iOS: SymbolLayer '\(id)' added to top of layers")
     }
 
     completion(.success(()))
@@ -692,6 +723,10 @@ func addSymbolLayer(
                 layer.iconOpacity = createExpression(from: value)
             case "icon-color":
                 layer.iconColor = createExpression(from: value)
+            case "icon-halo-color":
+                layer.iconHaloColor = createExpression(from: value)
+            case "icon-halo-width":
+                layer.iconHaloWidth = createExpression(from: value)
             case "text-opacity":
                 layer.textOpacity = createExpression(from: value)
             case "text-color":
@@ -707,6 +742,11 @@ func addSymbolLayer(
 
         // Apply layout properties with proper mapping
         layout.forEach { key, value in
+            // Skip source-layer as it's handled separately
+            if key == "source-layer" {
+                return
+            }
+
             print("iOS: Setting symbol layout property \(key) = \(value)")
 
             switch key {
@@ -714,14 +754,36 @@ func addSymbolLayer(
                 layer.isVisible = (value as? String == "visible")
             case "icon-image":
                 layer.iconImageName = createExpression(from: value)
+                print("iOS: Set icon-image to \(value)")
             case "icon-size":
                 layer.iconScale = createExpression(from: value)
+                print("iOS: Set icon-size/scale")
+            case "icon-allow-overlap":
+                if let boolValue = value as? Bool {
+                    layer.iconAllowsOverlap = NSExpression(forConstantValue: boolValue)
+                    print("iOS: Set icon-allow-overlap to \(boolValue)")
+                }
+            case "icon-ignore-placement":
+                if let boolValue = value as? Bool {
+                    layer.iconIgnoresPlacement = NSExpression(forConstantValue: boolValue)
+                    print("iOS: Set icon-ignore-placement to \(boolValue)")
+                }
+            case "icon-anchor":
+                layer.iconAnchor = createExpression(from: value)
+            case "icon-offset":
+                layer.iconOffset = createExpression(from: value)
+            case "icon-rotation":
+                layer.iconRotation = createExpression(from: value)
             case "text-field":
                 layer.text = createExpression(from: value)
             case "text-size":
                 layer.textFontSize = createExpression(from: value)
             case "text-font":
                 layer.textFontNames = createExpression(from: value)
+            case "text-anchor":
+                layer.textAnchor = createExpression(from: value)
+            case "text-offset":
+                layer.textOffset = createExpression(from: value)
             default:
                 print("iOS: Unknown symbol layout property: \(key)")
             }
@@ -740,13 +802,34 @@ func addSymbolLayer(
         id: String, bytes: FlutterStandardTypedData,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        print("addImage before")
-        var style = _mapView.style!
-        var imageData = bytes.data
-        var image = UIImage(data: imageData, scale: UIScreen.main.scale)!
+        print("iOS: addImage called with id: \(id), data length: \(bytes.data.count)")
+
+        guard let style = _mapView.style else {
+            print("iOS: ERROR - Style not available")
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        let imageData = bytes.data
+
+        // IMPORTANT: Use scale 1.0 for MapLibre icons, not UIScreen.main.scale
+        // MapLibre expects images at 1x resolution and will handle scaling internally
+        guard let image = UIImage(data: imageData, scale: 1.0) else {
+            print("iOS: ERROR - Failed to decode UIImage from data")
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])))
+            return
+        }
+
+        print("iOS: Image decoded successfully - size: \(image.size.width) x \(image.size.height), scale: \(image.scale)")
         style.setImage(image, forName: id)
-        print("addImage afters")
-        print("added image: \(style.image(forName: id))")
+
+        // Verify the image was added
+        if let verifyImage = style.image(forName: id) {
+            print("iOS: ✅ Image '\(id)' added to style successfully - verified size: \(verifyImage.size.width) x \(verifyImage.size.height)")
+        } else {
+            print("iOS: ⚠️ WARNING - Image '\(id)' was set but cannot be retrieved from style")
+        }
+
         completion(.success(()))
     }
 
@@ -842,6 +925,42 @@ func addSymbolLayer(
             completion(.success(()))
         } catch {
             print("iOS: Error adding clustered source: \(error.localizedDescription)")
+            completion(.failure(error))
+        }
+    }
+
+    func addVectorSource(
+        id: String,
+        tiles: [String],
+        minZoom: Double,
+        maxZoom: Double,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        do {
+            print("✅ iOS: Set VectorSource called with id: \(id), tiles: \(tiles), minZoom: \(minZoom), maxZoom: \(maxZoom)")
+
+            guard let style = _mapView.style else {
+                print("iOS: Error - Style not available")
+                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                return
+            }
+
+            // Configure tile source options with min/max zoom
+            var options: [MLNTileSourceOption: Any] = [:]
+            options[.minimumZoomLevel] = NSNumber(value: minZoom)
+            options[.maximumZoomLevel] = NSNumber(value: maxZoom)
+
+            print("iOS: Configuring vector source with options: minZoom=\(minZoom), maxZoom=\(maxZoom)")
+
+            // Create MLNVectorTileSource with tiles array and options
+            let source = MLNVectorTileSource(identifier: id, tileURLTemplates: tiles, options: options)
+
+            style.addSource(source)
+            print("✅ iOS: Successfully added vector source with ID: \(id) and zoom range \(minZoom)-\(maxZoom)")
+
+            completion(.success(()))
+        } catch {
+            print("iOS: Error adding vector source: \(error.localizedDescription)")
             completion(.failure(error))
         }
     }
@@ -1117,25 +1236,82 @@ func addSymbolLayer(
     func queryLayers(
         x: Double,
         y: Double,
-        completion: @escaping (Result<[[String: String?]], Error>) -> Void
+        completion: @escaping (Result<[[String: String]], Error>) -> Void
     ) {
         let screenPoint = CGPoint(x: x, y: y)
 
-        // Query visible features at the point
-        let features = _mapView.visibleFeatures(at: screenPoint)
+        guard let style = _mapView.style else {
+            print("iOS: ERROR - Style not available for queryLayers")
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
 
-        var result: [[String: String?]] = []
-        for feature in features {
-            if let layer = feature.attribute(forKey: "layer") as? String,
-                let source = feature.attribute(forKey: "source") as? String
-            {
-                let layerInfo: [String: String?] = [
-                    "layerId": layer,
-                    "sourceId": source,
-                    "sourceLayer": feature.attribute(forKey: "sourceLayer") as? String,
-                ]
-                result.append(layerInfo)
+        var result: [[String: String]] = []
+
+        // Get all layers from the style
+        let styleLayers = style.layers
+
+        // Query each layer individually to get layer metadata
+        for layer in styleLayers {
+            // Only query vector and symbol layers that might have feature data
+            guard layer is MLNVectorStyleLayer || layer is MLNSymbolStyleLayer else {
+                continue
             }
+
+            // Query features for this specific layer
+            let layerFeatures = _mapView.visibleFeatures(
+                at: screenPoint,
+                styleLayerIdentifiers: [layer.identifier]
+            )
+
+            for feature in layerFeatures {
+                var properties: [String: String] = [:]
+
+                // Add layer metadata (matching Android implementation)
+                properties["layerId"] = layer.identifier
+
+                // Get source-layer identifier from vector/symbol layers
+                if let vectorLayer = layer as? MLNVectorStyleLayer {
+                    properties["sourceLayer"] = vectorLayer.sourceLayerIdentifier ?? ""
+                } else if let symbolLayer = layer as? MLNSymbolStyleLayer {
+                    properties["sourceLayer"] = symbolLayer.sourceLayerIdentifier ?? ""
+                } else {
+                    properties["sourceLayer"] = ""
+                }
+
+                // Note: iOS MapLibre doesn't expose source ID directly from layers
+                // Set to empty string to match Android structure
+                properties["sourceId"] = ""
+
+                // Extract feature properties from the attributes dictionary
+                var attributes: [String: Any]? = nil
+
+                if let pointFeature = feature as? MLNPointFeature {
+                    attributes = pointFeature.attributes
+                } else if let polylineFeature = feature as? MLNPolylineFeature {
+                    attributes = polylineFeature.attributes
+                } else if let polygonFeature = feature as? MLNPolygonFeature {
+                    attributes = polygonFeature.attributes
+                } else if let shapeCollectionFeature = feature as? MLNShapeCollectionFeature {
+                    attributes = shapeCollectionFeature.attributes
+                }
+
+                // Add all feature properties
+                if let attributes = attributes {
+                    for (key, value) in attributes {
+                        properties[key] = String(describing: value)
+                    }
+                }
+
+                result.append(properties)
+            }
+        }
+
+        print("iOS: queryLayers found \(result.count) features at (\(x), \(y))")
+
+        // Print first feature properties for debugging
+        if let firstFeature = result.first {
+            print("iOS: First feature properties: \(firstFeature)")
         }
 
         completion(.success(result))

@@ -526,6 +526,8 @@ interface MapLibreHostApi {
   fun addImage(id: String, bytes: ByteArray, callback: (Result<Unit>) -> Unit)
   /** Add a GeoJSON source with clustering to the map style. */
   fun addClusteredGeoJsonSource(id: String, data: String, clustered: Boolean, clusterRadius: Double, clusterMaxZoom: Double, callback: (Result<Unit>) -> Unit)
+  /** Add a vector source to the map style. */
+  fun addVectorSource(id: String, tiles: List<String>, minZoom: Double, maxZoom: Double, callback: (Result<Unit>) -> Unit)
   /** Minimal test method to debug Pigeon generation. */
   fun testMethod(value: String, callback: (Result<Unit>) -> Unit)
   /**
@@ -568,7 +570,7 @@ interface MapLibreHostApi {
    */
   fun toScreenLocation(lng: Double, lat: Double, callback: (Result<List<Double>>) -> Unit)
   /** Query rendered layers at the specified screen location. */
-  fun queryLayers(x: Double, y: Double, callback: (Result<List<Map<String, String?>>>) -> Unit)
+  fun queryLayers(x: Double, y: Double, callback: (Result<List<Map<String, String>>>) -> Unit)
   /** Enable/disable location tracking with bearing mode. */
   fun trackLocation(track: Boolean, bearingMode: Long, callback: (Result<Unit>) -> Unit)
   fun removeLayer(id: String, callback: (Result<Unit>) -> Unit)
@@ -870,6 +872,28 @@ interface MapLibreHostApi {
         }
       }
       run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addVectorSource$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as String
+            val tilesArg = args[1] as List<String>
+            val minZoomArg = args[2] as Double
+            val maxZoomArg = args[3] as Double
+            api.addVectorSource(idArg, tilesArg, minZoomArg, maxZoomArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
         val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
@@ -1150,7 +1174,7 @@ interface MapLibreHostApi {
             val args = message as List<Any?>
             val xArg = args[0] as Double
             val yArg = args[1] as Double
-            api.queryLayers(xArg, yArg) { result: Result<List<Map<String, String?>>> ->
+            api.queryLayers(xArg, yArg) { result: Result<List<Map<String, String>>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))
