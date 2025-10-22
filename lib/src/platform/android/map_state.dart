@@ -499,17 +499,21 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
     // Use an extremely fast timer for continuous smooth updates
     // This runs at 250 FPS for maximum smoothness
-    Timer.periodic(const Duration(milliseconds: 33), (timer) { // 30 FPS - balanced for smooth updates without freezing
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
+    // Timer.periodic(const Duration(milliseconds: 33), (timer) { // 30 FPS - balanced for smooth updates without freezing
+    //   if (!mounted) {
+    //     timer.cancel();
+    //     return;
+    //   }
 
-      if (_currentNavigationRoute != null && _locationComponent != null) {
+    //   if (_currentNavigationRoute != null && _locationComponent != null) {
+    //     _applyRoadSnapping();
+    //   }
+    // });
+
+
+     if (_currentNavigationRoute != null && _locationComponent != null) {
         _applyRoadSnapping();
       }
-    });
-
     debugPrint('✅ Location snapping setup complete');
   }
 
@@ -568,15 +572,15 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
     // Periodically ensure navigation icon stays above route during navigation
     // This is important for rerouting scenarios where new route polylines might be drawn
-    if (_isNavigationActive) {
-      // Check every few updates to avoid performance impact
-      final now = DateTime.now();
-      if (_lastLayerReorderTime == null ||
-          now.difference(_lastLayerReorderTime!).inSeconds >= 2) {
-        _ensureNavigationIconAboveRoute();
-        _lastLayerReorderTime = now;
-      }
-    }
+    // if (_isNavigationActive) {
+    //   // Check every few updates to avoid performance impact
+    //   final now = DateTime.now();
+    //   if (_lastLayerReorderTime == null ||
+    //       now.difference(_lastLayerReorderTime!).inSeconds >= 2) {
+    //     _ensureNavigationIconAboveRoute();
+    //     _lastLayerReorderTime = now;
+    //   }
+    // }
 
     // Get the current GPS location
     final lastLocation = _locationComponent.getLastKnownLocation();
@@ -617,7 +621,7 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
       // Force update with snapped location
       try {
-        _locationComponent.forceLocationUpdate(location);
+        // _locationComponent.forceLocationUpdate(location);
 
         // Don't manually update camera when native tracking is enabled
         // The native LocationComponent will handle camera tracking automatically
