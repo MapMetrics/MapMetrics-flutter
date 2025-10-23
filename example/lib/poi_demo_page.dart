@@ -22,106 +22,38 @@ class PoiDemoPage extends StatefulWidget {
 class _PoiDemoPageState extends State<PoiDemoPage> {
   late final MapController _mapController;
   late final StyleController _styleController;
-  bool _poiLayerVisible = true;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('POI Demo')),
-      body: Stack(
-        children: [
-          // Map
-          MapLibreMap(
-            options: MapOptions(
-              initCenter: Position(4.89, 52.37), // Amsterdam
-              initZoom: 14,
-              initStyle:
-                  'https://gateway.mapmetrics-atlas.net/styles/?fileName=7c3625ac-1f52-479e-8e6f-12299aae7e87/moon.json&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3YzM2MjVhYy0xZjUyLTQ3OWUtOGU2Zi0xMjI5OWFhZTdlODciLCJzY29wZSI6WyJtYXBzIl0sImlhdCI6MTc2MDM0MTcwOX0.SKiNhdhqkq0FwzM4tn2Txmajw2YAJth6MQfYkAYPp_E',
-            ),
-            onMapCreated: (controller) {
-              _mapController = controller;
-            },
-            onStyleLoaded: (styleController) async {
-              _styleController = styleController;
-              print('Style loaded');
-              await _setupPoiLayer();
-            },
-            onEvent: (event) {
-              if (event is MapEventLongClick) {
-                _handleLongPress(event.point);
-              }
-            },
-          ),
-
-          // Controls Panel
-          Positioned(
-            top: 16,
-            right: 16,
-            child: Card(
-              child: Container(
-                width: 200,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'POI Demo',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const Divider(),
-
-                    // Toggle POI Layer
-                    SwitchListTile(
-                      title: const Text('Show POIs'),
-                      value: _poiLayerVisible,
-                      onChanged: (value) {
-                        setState(() {
-                          _poiLayerVisible = value;
-                        });
-                        _togglePoiLayer(value);
-                      },
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Info
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Vector Tile POIs',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Using MVT tiles',
-                            style: TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+      body: MapLibreMap(
+        options: MapOptions(
+          initCenter: Position(4.89, 52.37), // Amsterdam
+          initZoom: 14,
+          initStyle: 'https://gateway.mapmetrics-atlas.net/styles/?fileName=dd508822-9502-4ab5-bfe2-5e6ed5809c2d/portal.json&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkZDUwODgyMi05NTAyLTRhYjUtYmZlMi01ZTZlZDU4MDljMmQiLCJzY29wZSI6WyJtYXBzIiwiYXV0b2NvbXBsZXRlIiwiZ2VvY29kZSIsImRpcmVjdGlvbnMiLCJtYXBfbWF0Y2hpbmciLCJvcHRpbWl6ZSIsIm1hdHJpeCIsImlzb2Nocm9uZSJdLCJpYXQiOjE3NjExNDQ1OTl9.MbfXeBtRpzzaLgcdTE0xzMa-OEemCWNWprEbs1RO2rI',
+              //'https://gateway.mapmetrics-atlas.net/styles/?fileName=7c3625ac-1f52-479e-8e6f-12299aae7e87/moon.json&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3YzM2MjVhYy0xZjUyLTQ3OWUtOGU2Zi0xMjI5OWFhZTdlODciLCJzY29wZSI6WyJtYXBzIl0sImlhdCI6MTc2MDM0MTcwOX0.SKiNhdhqkq0FwzM4tn2Txmajw2YAJth6MQfYkAYPp_E',
+        ),
+        onMapCreated: (controller) {
+          _mapController = controller;
+        },
+        onStyleLoaded: (styleController) async {
+          _styleController = styleController;
+          print('Style loaded');
+          await _setupPoiLayer();
+        },
+        onEvent: (event) {
+          if (event is MapEventLongClick) {
+            _handleLongPress(event.point);
+          }
+        },
       ),
     );
   }
 
   /// Build icon-image expression from poi-mapping.json
   /// Generates a comprehensive expression that handles all ~400 POI mappings
-  Future<dynamic> _buildIconImageExpression() async {
+  Future<Object> _buildIconImageExpression() async {
     try {
       // FIXED: Using nested case statements instead of coalesce to avoid evaluation issues
       final mappingJson = await rootBundle.loadString(
@@ -133,7 +65,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
 
       // Build nested case expressions - check each category in sequence
       // This avoids the coalesce evaluation issues with MapLibre
-      dynamic expression = fallback; // Start with the final fallback
+      Object expression = fallback; // Start with the final fallback
 
       // Process categories in reverse order so we can build nested structure
       final categories = mappings.keys.toList().reversed;
@@ -207,7 +139,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       print('   Processing ${mappings.keys.length} categories without coalesce');
 
       // Debug: Print the expression structure for verification
-      void printExpressionStructure(dynamic expr, int depth) {
+      void printExpressionStructure(Object expr, int depth) {
         final indent = '  ' * depth;
         if (expr is List) {
           if (expr.isNotEmpty && expr[0] == 'case') {
@@ -242,7 +174,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       printExpressionStructure(expression, 2);
 
       // Verify leisure is included
-      void verifyLeisureInExpression(dynamic expr) {
+      void verifyLeisureInExpression(Object expr) {
         if (expr is List) {
           for (var i = 0; i < expr.length; i++) {
             final item = expr[i];
@@ -252,7 +184,9 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
                 return;
               }
             }
-            verifyLeisureInExpression(item);
+            if (item is Object) {
+              verifyLeisureInExpression(item);
+            }
           }
         }
       }
@@ -325,7 +259,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
           tiles: [
             'https://poi-tile-server-development.jim9710.workers.dev/tiles/{z}/{x}/{y}.mvt',
           ],
-          minZoom: 10,
+          minZoom: 16,
           maxZoom: 16, // Tiles available up to zoom 16, will overzoom beyond
         ),
       );
@@ -334,45 +268,62 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       // Wait a bit to ensure all base map layers are loaded
       await Future.delayed(const Duration(milliseconds: 500));
 
-      // Add red circle layer
-      print('About to add POI circles layer');
+      // Add dot symbol layer with spacing (using dot-m icon)
+      print('About to add POI dots layer');
       await _styleController.addLayer(
-        const CircleStyleLayer(
+        SymbolStyleLayer(
           id: 'poi-circles',
           sourceId: 'poi-source',
           minZoom: 8,
           maxZoom: 24,
-          layout: {'source-layer': 'pois'},
-          paint: {
-            'circle-radius': [
+          filter: [
+            '!=',
+            ['get', 'man_made'],
+            'surveillance',
+          ],
+          layout: {
+            'source-layer': 'pois',
+            'icon-image': 'dot-m',
+            'icon-size': [
               'interpolate',
               ['linear'],
               ['zoom'],
               8,
-              2,  // Reduced from 3
+              1.2,  // Half of previous size
               10,
-              2.5,  // Reduced from 4
+              1.6,
               12,
-              3,  // Reduced from 5
+              2.0,
               14,
-              3.5,  // Reduced from 6
+              2.4,
               16,
-              4,  // Reduced from 7
+              2.8,
               18,
-              4.5,  // Reduced from 8
+              3.2,
               20,
-              5,  // Reduced from 9
+              3.6,
               24,
-              6,  // Reduced from 12
+              4.0,
             ],
-            'circle-color': '#FF0000',
-            'circle-opacity': 0.3,  // Reduced opacity to see icons better
-            'circle-stroke-width': 1,  // Thinner stroke
-            'circle-stroke-color': '#FFFFFF',
+            'icon-allow-overlap': false,  // Allow collision detection for spacing
+            'icon-ignore-placement': false,
+            'icon-padding': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              8, 10,   // More padding at low zoom for spacing
+              12, 8,
+              16, 5,
+              20, 2,
+            ],
+          },
+          paint: {
+            'icon-color': '#FF0000',  // Recolor to red
+            'icon-opacity': 0.6,
           },
         ),
       );
-      print('POI circles layer added successfully');
+      print('POI dots layer added successfully');
 
       // Then add symbol layer on top with dynamic icon based on POI properties
       print('About to add POI symbol layer with dynamic icons');
@@ -380,28 +331,286 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       // Build icon expression from poi-mapping.json (handles all ~268 mappings)
       final iconImageExpression = await _buildIconImageExpression();
       // Icon size adjusted for visibility with circles
-      final iconSize = Platform.isAndroid ? 2.0 : 1.0;  // Reasonable size with circles
+      final iconSize = Platform.isAndroid ? 2.0 : 0.5;  // Reasonable size with circles
       print(
         'Setting icon size to $iconSize for ${Platform.isAndroid ? "Android" : "iOS"}',
       );
-
+      // Layer 1: Airports (zoom 10+)
       await _styleController.addLayer(
         SymbolStyleLayer(
-          id: 'poi-symbols',
+          id: 'poi-airports',
           sourceId: 'poi-source',
-          minZoom: 8,
+          minZoom: 10,
           maxZoom: 24,
+          filter: [
+            '!=',
+            ['get', 'man_made'],
+            'surveillance',
+          ],
           layout: {
             'source-layer': 'pois',
-            // Icon expression built dynamically from poi-mapping.json
             'icon-image': iconImageExpression,
             'icon-size': iconSize,
-            'icon-allow-overlap': true,
-            'icon-ignore-placement': true,
+            'icon-allow-overlap': false,
+            'icon-ignore-placement': false,
+            'icon-padding': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10, 40,  // Increased padding for more spacing
+              16, 25,
+              18, 20,
+              20, 20
+            ],
+            'text-field': [
+              'case',
+              ['==', ['get', 'amenity'], 'bench'], '',
+              ['==', ['get', 'leisure'], 'park'], '',
+              ['==', ['get', 'amenity'], 'recycling'], '',
+              ['==', ['get', 'amenity'], 'waste_basket'], '',
+              ['==', ['get', 'amenity'], 'vending_machine'], '',
+              ['==', ['get', 'amenity'], 'waste_disposal'], '',
+              ['==', ['get', 'tourism'], 'artwork'], '',
+              ['==', ['get', 'amenity'], 'parking_entrance'], '',
+              ['==', ['get', 'amenity'], 'bicycle_parking'], '',
+              ['==', ['get', 'amenity'], 'taxi'], '',
+              ['==', ['get', 'amenity'], 'drinking_water'], '',
+              [
+                'coalesce',
+                ['get', 'name'],
+                ['get', 'aeroway'],
+                '',
+              ],
+            ],
+            'text-font': ['Montserrat Bold'],
+            'text-size': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              10, 8,
+              16, 9,
+              18, 11,
+              20, 13,
+              22, 14
+            ],
+            'text-anchor': 'left',
+            'text-offset': [1.5, 0],
+            'text-allow-overlap': true,
+            'text-optional': true,
+          },
+          paint: {
+            'icon-opacity': [
+              'step',
+              ['zoom'],
+              0,    // invisible below zoom 10
+              10, 1,  // visible at zoom 10+
+            ],
+            'text-opacity': [
+              'step',
+              ['zoom'],
+              0,
+              10, 1,
+            ],
+            'text-color': [
+              'case',
+              ['has', 'amenity'], '#FFD700',  // Gold/yellow for amenity
+              ['has', 'leisure'], '#00B050',   // Green for leisure
+              ['has', 'tourism'], '#FF6B6B',   // Red for tourism
+              ['has', 'shop'], '#4A90E2',      // Blue for shop
+              ['has', 'aeroway'], '#9B59B6',   // Purple for aeroway
+              '#000000',  // Default black
+            ],
+            'text-halo-color': '#FFFFFF',
+            'text-halo-width': 2,
           },
         ),
       );
-      print('POI symbol layer added successfully');
+
+      // Layer 2: Priority POIs (zoom 12+)
+      await _styleController.addLayer(
+        SymbolStyleLayer(
+          id: 'poi-priority',
+          sourceId: 'poi-source',
+          minZoom: 12,
+          maxZoom: 24,
+          filter: [
+            '!=',
+            ['get', 'man_made'],
+            'surveillance',
+          ],
+          layout: {
+            'source-layer': 'pois',
+            'icon-image': iconImageExpression,
+            'icon-size': iconSize,
+            'icon-allow-overlap': false,
+            'icon-ignore-placement': false,
+            'icon-padding': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              12, 35,  // Increased padding for more spacing
+              16, 25,
+              18, 15,
+              20, 10
+            ],
+            'text-field': [
+              'case',
+              ['==', ['get', 'amenity'], 'bench'], '',
+              ['==', ['get', 'leisure'], 'park'], '',
+              ['==', ['get', 'amenity'], 'recycling'], '',
+              ['==', ['get', 'amenity'], 'waste_basket'], '',
+              ['==', ['get', 'amenity'], 'vending_machine'], '',
+              ['==', ['get', 'amenity'], 'waste_disposal'], '',
+              ['==', ['get', 'tourism'], 'artwork'], '',
+              ['==', ['get', 'amenity'], 'parking_entrance'], '',
+              ['==', ['get', 'amenity'], 'bicycle_parking'], '',
+              ['==', ['get', 'amenity'], 'taxi'], '',
+              ['==', ['get', 'amenity'], 'drinking_water'], '',
+              [
+                'coalesce',
+                ['get', 'name'],
+                ['get', 'amenity'],
+                ['get', 'leisure'],
+                ['get', 'tourism'],
+                '',
+              ],
+            ],
+            'text-font': ['Montserrat Bold'],
+            'text-size': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              12, 8,
+              16, 9,
+              18, 11,
+              20, 13,
+              22, 14
+            ],
+            'text-anchor': 'left',
+            'text-offset': [1.5, 0],
+            'text-allow-overlap': true,
+            'text-optional': true,
+          },
+          paint: {
+            'icon-opacity': [
+              'step',
+              ['zoom'],
+              0,    // invisible below zoom 12
+              12, 1,  // visible at zoom 12+
+            ],
+            'text-opacity': [
+              'step',
+              ['zoom'],
+              0,
+              12, 1,
+            ],
+            'text-color': [
+              'case',
+              ['has', 'amenity'], '#FFD700',  // Gold/yellow for amenity
+              ['has', 'leisure'], '#00B050',   // Green for leisure
+              ['has', 'tourism'], '#FF6B6B',   // Red for tourism
+              ['has', 'shop'], '#4A90E2',      // Blue for shop
+              ['has', 'aeroway'], '#9B59B6',   // Purple for aeroway
+              '#000000',  // Default black
+            ],
+            'text-halo-color': '#FFFFFF',
+            'text-halo-width': 2,
+          },
+        ),
+      );
+
+      // Layer 3: All other POIs (zoom 16+)
+      await _styleController.addLayer(
+        SymbolStyleLayer(
+          id: 'poi-all',
+          sourceId: 'poi-source',
+          minZoom: 16,
+          maxZoom: 24,
+          filter: [
+            '!=',
+            ['get', 'man_made'],
+            'surveillance',
+          ],
+          layout: {
+            'source-layer': 'pois',
+            'icon-image': iconImageExpression,
+            'icon-size': iconSize,
+            'icon-allow-overlap': false,
+            'icon-ignore-placement': false,
+            'icon-padding': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              16, 25,  // Increased padding for more spacing
+              18, 15,
+              20, 10
+            ],
+            'text-field': [
+              'case',
+              ['==', ['get', 'amenity'], 'bench'], '',
+              ['==', ['get', 'leisure'], 'park'], '',
+              ['==', ['get', 'amenity'], 'recycling'], '',
+              ['==', ['get', 'amenity'], 'waste_basket'], '',
+              ['==', ['get', 'amenity'], 'vending_machine'], '',
+              ['==', ['get', 'amenity'], 'waste_disposal'], '',
+              ['==', ['get', 'tourism'], 'artwork'], '',
+              ['==', ['get', 'amenity'], 'parking_entrance'], '',
+              ['==', ['get', 'amenity'], 'bicycle_parking'], '',
+              ['==', ['get', 'amenity'], 'taxi'], '',
+              ['==', ['get', 'amenity'], 'drinking_water'], '',
+              [
+                'coalesce',
+                ['get', 'name'],
+                ['get', 'amenity'],
+                ['get', 'shop'],
+                ['get', 'tourism'],
+                ['get', 'leisure'],
+                '',
+              ],
+            ],
+            'text-font': ['Montserrat Bold'],
+            'text-size': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              16, 9,
+              18, 11,
+              20, 13,
+              22, 14
+            ],
+            'text-anchor': 'left',
+            'text-offset': [1.5, 0],
+            'text-allow-overlap': true,
+            'text-optional': true,
+          },
+          paint: {
+            'icon-opacity': [
+              'step',
+              ['zoom'],
+              0,    // invisible below zoom 16
+              16, 1,  // visible at zoom 16+
+            ],
+            'text-opacity': [
+              'step',
+              ['zoom'],
+              0,
+              16, 1,
+            ],
+            'text-color': [
+              'case',
+              ['has', 'amenity'], '#E89914',  // Gold/yellow for amenity
+              ['has', 'leisure'], '#3B863E',   // Green for leisure
+              ['has', 'tourism'], '#195350',   // Red for tourism
+              ['has', 'shop'], '#7C2889',      // Blue for shop
+              ['has', 'aeroway'], '#1F4A77',   // Purple for aeroway
+              '#323232',  // Default black
+            ],
+            'text-halo-color': '#FFFFFF',
+            'text-halo-width': 2,
+          },
+        ),
+      );
+      print('POI layers added: Airports@10+, Priority@12+, All@16+');
     } catch (e, stack) {
       print('Error setting up POI layer: $e');
       print('Stack trace: $stack');
@@ -596,42 +805,42 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       if (visible) {
         // Re-add both layers, source already exists
         // First add circles
-        await _styleController.addLayer(
-          const CircleStyleLayer(
-            id: 'poi-circles',
-            sourceId: 'poi-source',
-            minZoom: 8,
-            maxZoom: 24,
-            layout: {'source-layer': 'pois'},
-            paint: {
-              'circle-radius': [
-                'interpolate',
-                ['linear'],
-                ['zoom'],
-                8,
-                3,
-                10,
-                4,
-                12,
-                5,
-                14,
-                6,
-                16,
-                7,
-                18,
-                8,
-                20,
-                9,
-                24,
-                12,
-              ],
-              'circle-color': '#FF0000',
-              'circle-opacity': 0.7,
-              'circle-stroke-width': 2,
-              'circle-stroke-color': '#FFFFFF',
-            },
-          ),
-        );
+        // await _styleController.addLayer(
+        //   const CircleStyleLayer(
+        //     id: 'poi-circles',
+        //     sourceId: 'poi-source',
+        //     minZoom: 8,
+        //     maxZoom: 24,
+        //     layout: {'source-layer': 'pois'},
+        //     paint: {
+        //       'circle-radius': [
+        //         'interpolate',
+        //         ['linear'],
+        //         ['zoom'],
+        //         8,
+        //         3,
+        //         10,
+        //         4,
+        //         12,
+        //         5,
+        //         14,
+        //         6,
+        //         16,
+        //         7,
+        //         18,
+        //         8,
+        //         20,
+        //         9,
+        //         24,
+        //         12,
+        //       ],
+        //       'circle-color': '#FF0000',
+        //       'circle-opacity': 0.3,
+        //       'circle-stroke-width': 2,
+        //       'circle-stroke-color': '#FFFFFF',
+        //     },
+        //   ),
+        // );
 
         // Then add symbols on top with comprehensive icon mappings
         // Build icon expression from poi-mapping.json (handles all ~400 mappings)
@@ -644,8 +853,16 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
           SymbolStyleLayer(
             id: 'poi-symbols',
             sourceId: 'poi-source',
-            minZoom: 8,
+            minZoom: 16,
             maxZoom: 24,
+            filter: [
+              'any',
+              ['<', ['zoom'], 16],  // Show all POIs below zoom 16
+              // Above zoom 16, only show important POIs
+              ['in', ['get', 'amenity'], ['literal', ['hospital', 'police', 'fire_station', 'pharmacy', 'post_office', 'townhall', 'courthouse']]],
+              ['in', ['get', 'tourism'], ['literal', ['hotel', 'museum', 'attraction']]],
+              ['in', ['get', 'shop'], ['literal', ['supermarket', 'department_store']]],
+            ],
             layout: {
               'source-layer': 'pois',
               // Icon expression built dynamically from poi-mapping.json
@@ -653,13 +870,23 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
               'icon-size': iconSize,
               'icon-allow-overlap': false,
               'icon-ignore-placement': false,
+              // Increase padding at higher zoom levels to reduce clutter
+              // 'icon-padding': [
+              //   'interpolate',
+              //   ['linear'],
+              //   ['zoom'],
+              //   8, 0,     // 900px padding at zoom 8
+              //   16, 0,    // 900px padding at zoom 16 (constant, filter kicks in)
+              //   18, 0,     // 25px padding at zoom 18 (filter shows only important POIs)
+              //   20, 0      // 25px padding at zoom 20 (minimal, filter active)
+              // ],
             },
           ),
         );
-        print('POI layers re-added with comprehensive icon mappings');
+        print('POI layers re-added with comprehensive icon mappings and zoom-based filtering');
       } else {
         // Remove both layers, keep the source
-        await _styleController.removeLayer('poi-circles');
+        // await _styleController.removeLayer('poi-circles');
         await _styleController.removeLayer('poi-symbols');
         print('POI layers removed');
       }
@@ -680,15 +907,18 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       final layers = await _mapController.queryLayers(screenLocation);
       print('Found ${layers.length} layers at location');
 
-      // Filter for POI layers
+      // Filter for both POI circles and icon layers
       final poiFeatures =
           layers.where((feature) {
             final layerId = feature['layerId'];
-            return layerId == 'poi-symbols' || layerId == 'poi-circles';
+            return layerId == 'poi-circles' ||
+                   layerId == 'poi-airports' ||
+                   layerId == 'poi-priority' ||
+                   layerId == 'poi-all';
           }).toList();
 
       if (poiFeatures.isNotEmpty) {
-        // Get the first POI feature (should be the top-most one)
+        // Get the POI data from the circles layer
         final poiData = poiFeatures.first;
 
         print('POI detected!');
