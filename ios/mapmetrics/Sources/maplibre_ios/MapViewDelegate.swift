@@ -331,8 +331,12 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             if !arrayValue.isEmpty && arrayValue.first is String {
                 print("iOS: Found expression array, converting...")
                 do {
+                    // Convert unsupported expressions BEFORE passing to mglJSONObject
+                    let convertedExpression = convertUnsupportedExpressions(arrayValue)
+                    print("iOS: Converted expression: \(convertedExpression)")
+
                     // Try MapLibre's expression converter
-                    return try NSExpression(mglJSONObject: arrayValue)
+                    return try NSExpression(mglJSONObject: convertedExpression)
                 } catch {
                     print("iOS: mglJSONObject failed: \(error), using constant value")
                     return NSExpression(forConstantValue: arrayValue)
@@ -355,6 +359,128 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             // Numbers, etc.
             return NSExpression(forConstantValue: value)
         }
+    }
+
+    // Convert unsupported MapLibre expressions to iOS-compatible ones
+    private func convertUnsupportedExpressions(_ expression: [Any]) -> [Any] {
+        guard !expression.isEmpty, let op = expression.first as? String else {
+            return expression
+        }
+
+        print("iOS: Checking expression operator: \(op)")
+
+        switch op {
+        case "has":
+            // ['has', 'key'] -> Check if property exists
+            // iOS doesn't have a direct 'has' equivalent
+            // Workaround: Use ['!=', ['to-string', ['get', 'key']], '']
+            // This checks if the property converts to a non-empty string
+            if expression.count >= 2, let key = expression[1] as? String {
+                print("iOS: Converting 'has' expression for key: \(key)")
+                // Transform to: check if stringified property is not empty
+                // This works for most cases where properties have values
+                return ["!=", ["to-string", ["get", key]], ""]
+            }
+
+        case "match":
+            // ['match', input, label1, output1, label2, output2, ..., fallback]
+            // Transform to nested conditional expressions
+            if expression.count >= 4 {
+                print("iOS: Converting 'match' expression with \(expression.count) items")
+
+                let input = expression[1]
+                var convertedInput = input
+                if let inputArray = input as? [Any] {
+                    convertedInput = convertUnsupportedExpressions(inputArray)
+                }
+
+                // Build nested case expressions
+                var caseExpressions: [Any] = ["case"]
+
+                var i = 2
+                while i < expression.count - 1 {
+                    let matchValue = expression[i]
+                    let resultValue = expression[i + 1]
+
+                    // Add condition: input == matchValue
+                    let condition = ["==", convertedInput, matchValue]
+                    caseExpressions.append(condition)
+
+                    // Convert result if it's an expression
+                    var convertedResult = resultValue
+                    if let resultArray = resultValue as? [Any] {
+                        convertedResult = convertUnsupportedExpressions(resultArray)
+                    }
+                    caseExpressions.append(convertedResult)
+
+                    i += 2
+                }
+
+                // Add fallback at the end
+                if expression.count % 2 == 0 {
+                    // Even count means we have a fallback
+                    let fallback = expression.last!
+                    var convertedFallback = fallback
+                    if let fallbackArray = fallback as? [Any] {
+                        convertedFallback = convertUnsupportedExpressions(fallbackArray)
+                    }
+                    caseExpressions.append(convertedFallback)
+                } else {
+                    // No fallback, use empty string
+                    caseExpressions.append("")
+                }
+
+                print("iOS: Converted match to case expression: \(caseExpressions)")
+                return caseExpressions
+            }
+
+        case "case":
+            // ['case', condition1, output1, condition2, output2, ..., fallback]
+            // Recursively convert nested expressions but keep case structure
+            print("iOS: Processing 'case' expression with \(expression.count) items")
+
+            var convertedCase: [Any] = ["case"]
+
+            for i in 1..<expression.count {
+                let item = expression[i]
+                if let itemArray = item as? [Any] {
+                    convertedCase.append(convertUnsupportedExpressions(itemArray))
+                } else {
+                    convertedCase.append(item)
+                }
+            }
+
+            print("iOS: Converted case expression: \(convertedCase)")
+            return convertedCase
+
+        case "get", "coalesce", "step", "interpolate", "concat", "to-string":
+            // These are supported, but recursively convert nested expressions
+            var convertedExpr: [Any] = [op]
+            for i in 1..<expression.count {
+                let item = expression[i]
+                if let itemArray = item as? [Any] {
+                    convertedExpr.append(convertUnsupportedExpressions(itemArray))
+                } else {
+                    convertedExpr.append(item)
+                }
+            }
+            return convertedExpr
+
+        default:
+            // Recursively convert nested expressions
+            var convertedExpr: [Any] = [op]
+            for i in 1..<expression.count {
+                let item = expression[i]
+                if let itemArray = item as? [Any] {
+                    convertedExpr.append(convertUnsupportedExpressions(itemArray))
+                } else {
+                    convertedExpr.append(item)
+                }
+            }
+            return convertedExpr
+        }
+
+        return expression
     }
 
     private func isColorString(_ string: String) -> Bool {
