@@ -503,62 +503,14 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     // });
 
 
-     if (_currentNavigationRoute != null && _locationComponent != null) {
+     if (_currentNavigationRoute != null) {
         _applyRoadSnapping();
       }
     debugPrint('✅ Location snapping setup complete');
   }
 
-  void _applyRoadSnappingWithLocation(jni.Location location) {
-    if (_currentNavigationRoute == null || _locationComponent == null) {
-      return;
-    }
-
-    final gpsPosition = Position(
-      location.getLongitude(),
-      location.getLatitude(),
-    );
-
-    // Apply road snapping
-    final snapped = _roadSnappingService.snapToRoad(
-      gpsPosition,
-      gpsBearing: location.hasBearing() ? location.getBearing() : null,
-    );
-
-    // Always update if we have any snap for instant response
-    if (snapped.isSnapped) {
-      // Create a new location with the snapped position
-      final provider = JString.fromString('snapped');
-      final snappedLocation = jni.Location(provider);
-      snappedLocation.setLongitude(snapped.position.lng.toDouble());
-      snappedLocation.setLatitude(snapped.position.lat.toDouble());
-      snappedLocation.setBearing(snapped.bearing);
-      snappedLocation.setTime(location.getTime());
-
-      if (location.hasSpeed()) {
-        snappedLocation.setSpeed(location.getSpeed());
-      }
-      if (location.hasAccuracy()) {
-        snappedLocation.setAccuracy(location.getAccuracy());
-      }
-
-      // Force update the location immediately
-      _locationComponent.forceLocationUpdate(snappedLocation);
-
-      // During navigation, we rely on the custom navigation marker from road snapping service
-      if (_isNavigationActive && _currentNavigationRoute != null && _currentNavigationRoute!.isNotEmpty) {
-        debugPrint('🧭 Location updated during navigation: ${snapped.position.lat}, ${snapped.position.lng}');
-        // The custom navigation marker is handled by the road snapping service
-        // which automatically provides the correct snapped position
-      }
-
-      provider.release();
-      snappedLocation.release();
-    }
-  }
-
   void _applyRoadSnapping() {
-    if (_currentNavigationRoute == null || _locationComponent == null) {
+    if (_currentNavigationRoute == null) {
       return;
     }
 

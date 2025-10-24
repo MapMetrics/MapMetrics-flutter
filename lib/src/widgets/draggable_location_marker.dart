@@ -106,7 +106,7 @@ class _DraggableLocationMarkerState extends State<DraggableLocationMarker> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -118,7 +118,7 @@ class _DraggableLocationMarkerState extends State<DraggableLocationMarker> {
           height: widget.markerSize * 0.4,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
           ),
         ),
       ),
@@ -134,10 +134,10 @@ class _DraggableLocationMarkerState extends State<DraggableLocationMarker> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: (widget.accuracyCircleColor ?? widget.markerColor)
-            .withOpacity(0.15),
+            .withValues(alpha: 0.15),
         border: Border.all(
           color: (widget.accuracyCircleColor ?? widget.markerColor)
-              .withOpacity(0.3),
+              .withValues(alpha: 0.3),
         ),
       ),
     );
