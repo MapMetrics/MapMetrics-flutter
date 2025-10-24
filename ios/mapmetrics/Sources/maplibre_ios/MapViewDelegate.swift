@@ -327,19 +327,28 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         // Handle different value types
         switch value {
         case let arrayValue as [Any]:
-            // This is likely a MapLibre expression array
+            // This is likely a MapMetrics expression array
             if !arrayValue.isEmpty && arrayValue.first is String {
-                print("iOS: Found expression array, converting...")
-                do {
-                    // Convert unsupported expressions BEFORE passing to mglJSONObject
-                    let convertedExpression = convertUnsupportedExpressions(arrayValue)
-                    print("iOS: Converted expression: \(convertedExpression)")
+                print("iOS: Found expression array, building native NSExpression...")
 
-                    // Try MapLibre's expression converter
-                    return try NSExpression(mglJSONObject: convertedExpression)
-                } catch {
-                    print("iOS: mglJSONObject failed: \(error), using constant value")
-                    return NSExpression(forConstantValue: arrayValue)
+                // FIRST: Try to build native NSExpression directly
+                // This handles complex case/match/has expressions that mglJSONObject can't handle
+                if let nativeExpr = buildNativeExpression(arrayValue) {
+                    print("iOS: ✅ Successfully built native NSExpression")
+                    return nativeExpr
+                }
+
+                // SECOND: Try MapMetrics's mglJSONObject converter for simpler expressions
+                print("iOS: Native builder didn't handle this, trying mglJSONObject...")
+                do {
+                    return try NSExpression(mglJSONObject: arrayValue)
+                } catch let error {
+                    print("iOS: ⚠️ mglJSONObject also failed: \(error)")
+                    print("iOS: Expression that failed: \(arrayValue)")
+
+                    // This should not happen if buildNativeExpression is comprehensive
+                    // But if it does, we need to know about it
+                    fatalError("iOS: CRITICAL - Expression not supported by either native builder or mglJSONObject: \(arrayValue)")
                 }
             } else {
                 // Regular array
@@ -361,113 +370,249 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         }
     }
 
+    // Build NSPredicate from expression array (for use in conditionals)
+    private func buildPredicate(from expression: [Any]) -> NSPredicate? {
+        guard !expression.isEmpty, let op = expression.first as? String else {
+            return nil
+        }
+
+        switch op {
+        case "has":
+            // ['has', 'key'] -> keyPath != nil
+            if expression.count >= 2, let key = expression[1] as? String {
+                let keyPathExpr = NSExpression(forKeyPath: key)
+                let nilExpr = NSExpression(forConstantValue: nil)
+                return NSComparisonPredicate(
+                    leftExpression: keyPathExpr,
+                    rightExpression: nilExpr,
+                    modifier: .direct,
+                    type: .notEqualTo
+                )
+            }
+
+        case "==", "!=", "<", ">", "<=", ">=":
+            if expression.count >= 3 {
+                let leftExpr: NSExpression
+                if let leftArray = expression[1] as? [Any], let built = buildNativeExpression(leftArray) {
+                    leftExpr = built
+                } else {
+                    leftExpr = NSExpression(forConstantValue: expression[1])
+                }
+
+                let rightExpr: NSExpression
+                if let rightArray = expression[2] as? [Any], let built = buildNativeExpression(rightArray) {
+                    rightExpr = built
+                } else {
+                    rightExpr = NSExpression(forConstantValue: expression[2])
+                }
+
+                let predicateType: NSComparisonPredicate.Operator
+                switch op {
+                case "==": predicateType = .equalTo
+                case "!=": predicateType = .notEqualTo
+                case "<": predicateType = .lessThan
+                case ">": predicateType = .greaterThan
+                case "<=": predicateType = .lessThanOrEqualTo
+                case ">=": predicateType = .greaterThanOrEqualTo
+                default: return nil
+                }
+
+                return NSComparisonPredicate(
+                    leftExpression: leftExpr,
+                    rightExpression: rightExpr,
+                    modifier: .direct,
+                    type: predicateType
+                )
+            }
+
+        default:
+            break
+        }
+
+        return nil
+    }
+
+    // Build native NSExpression directly from MapLibre expression array
+    // This bypasses the mglJSONObject converter which has limitations
+    private func buildNativeExpression(_ expression: [Any]) -> NSExpression? {
+        guard !expression.isEmpty, let op = expression.first as? String else {
+            return nil
+        }
+
+        print("iOS: Building native NSExpression for operator: \(op)")
+
+        switch op {
+        case "get":
+            // ['get', 'property_name'] -> NSExpression for key path
+            if expression.count >= 2, let key = expression[1] as? String {
+                return NSExpression(forKeyPath: key)
+            }
+
+        case "has", "==", "!=", "<", ">", "<=", ">=":
+            // Comparison operators should not be used as value expressions
+            // They should only appear as conditions in case expressions
+            // If we encounter them here, return nil to signal they should be handled differently
+            print("iOS: Comparison operator '\(op)' found in value context - should be in predicate context")
+            return nil
+
+        case "case":
+            // ['case', condition1, output1, condition2, output2, ..., fallback]
+            // Build NSExpression conditional: TERNARY(condition, trueValue, falseValue)
+            if expression.count >= 4 {
+                // Start from the end with the fallback value
+                var resultExpr: NSExpression
+                if let fallbackArray = expression.last as? [Any], let built = buildNativeExpression(fallbackArray) {
+                    resultExpr = built
+                } else {
+                    resultExpr = NSExpression(forConstantValue: expression.last!)
+                }
+
+                // Work backwards through condition/value pairs
+                var i = expression.count - 2  // Start before fallback
+                while i >= 2 {  // Pairs are at indices 1-2, 3-4, etc.
+                    let outputValue = expression[i]
+                    let conditionValue = expression[i - 1]
+
+                    // Build output expression
+                    let outputExpr: NSExpression
+                    if let outputArray = outputValue as? [Any], let built = buildNativeExpression(outputArray) {
+                        outputExpr = built
+                    } else {
+                        outputExpr = NSExpression(forConstantValue: outputValue)
+                    }
+
+                    // Build condition predicate
+                    // conditionValue should be an array like ["==", ["get", "key"], "value"]
+                    let conditionPredicate: NSPredicate
+                    if let condArray = conditionValue as? [Any], let op = condArray.first as? String {
+                        // Build predicate from comparison expression
+                        conditionPredicate = buildPredicate(from: condArray) ?? NSPredicate(value: false)
+                    } else if let boolValue = conditionValue as? Bool {
+                        conditionPredicate = NSPredicate(value: boolValue)
+                    } else {
+                        conditionPredicate = NSPredicate(value: false)
+                    }
+
+                    // Build TERNARY: TERNARY(predicate, trueValue, falseValue)
+                    resultExpr = NSExpression(
+                        forConditional: conditionPredicate,
+                        trueExpression: outputExpr,
+                        falseExpression: resultExpr
+                    )
+
+                    i -= 2
+                }
+
+                return resultExpr
+            }
+
+        case "match":
+            // ['match', input, label1, output1, label2, output2, ..., fallback]
+            // Convert to case expression
+            if expression.count >= 4 {
+                let input = expression[1]
+                var caseExpr: [Any] = ["case"]
+
+                var i = 2
+                while i < expression.count - 1 {
+                    let matchValue = expression[i]
+                    let outputValue = expression[i + 1]
+
+                    // Create condition: input == matchValue
+                    caseExpr.append(["==", input, matchValue])
+                    caseExpr.append(outputValue)
+
+                    i += 2
+                }
+
+                // Add fallback
+                caseExpr.append(expression.last!)
+
+                // Recursively build the case expression
+                return buildNativeExpression(caseExpr)
+            }
+
+        case "concat":
+            // ['concat', str1, str2, ...] -> String concatenation
+            if expression.count >= 2 {
+                var arguments: [NSExpression] = []
+                for i in 1..<expression.count {
+                    if let argArray = expression[i] as? [Any], let built = buildNativeExpression(argArray) {
+                        arguments.append(built)
+                    } else {
+                        arguments.append(NSExpression(forConstantValue: expression[i]))
+                    }
+                }
+
+                return NSExpression(forFunction: "stringByAppendingString:", arguments: arguments)
+            }
+
+        case "coalesce":
+            // ['coalesce', val1, val2, ...] -> Return first non-null value
+            // In iOS, we can simulate this with nested conditionals
+            if expression.count >= 2 {
+                var resultExpr: NSExpression
+                if let lastArray = expression.last as? [Any], let built = buildNativeExpression(lastArray) {
+                    resultExpr = built
+                } else {
+                    resultExpr = NSExpression(forConstantValue: expression.last!)
+                }
+
+                for i in stride(from: expression.count - 2, through: 1, by: -1) {
+                    let value = expression[i]
+                    let valueExpr: NSExpression
+                    if let valueArray = value as? [Any], let built = buildNativeExpression(valueArray) {
+                        valueExpr = built
+                    } else {
+                        valueExpr = NSExpression(forConstantValue: value)
+                    }
+
+                    // Check if value is not nil
+                    let notNilCheck = NSComparisonPredicate(
+                        leftExpression: valueExpr,
+                        rightExpression: NSExpression(forConstantValue: nil),
+                        modifier: .direct,
+                        type: .notEqualTo
+                    )
+
+                    resultExpr = NSExpression(
+                        forConditional: notNilCheck,
+                        trueExpression: valueExpr,
+                        falseExpression: resultExpr
+                    )
+                }
+
+                return resultExpr
+            }
+
+        default:
+            print("iOS: Unsupported native expression operator: \(op)")
+            return nil
+        }
+
+        return nil
+    }
+
     // Convert unsupported MapLibre expressions to iOS-compatible ones
     private func convertUnsupportedExpressions(_ expression: [Any]) -> [Any] {
+        // This function is kept for backward compatibility but simplified
+        // Most work is now done in buildNativeExpression
         guard !expression.isEmpty, let op = expression.first as? String else {
             return expression
         }
 
         print("iOS: Checking expression operator: \(op)")
 
+        // Recursively process nested arrays
         switch op {
-        case "has":
-            // ['has', 'key'] -> Check if property exists
-            // iOS doesn't have a direct 'has' equivalent
-            // Workaround: Use ['!=', ['to-string', ['get', 'key']], '']
-            // This checks if the property converts to a non-empty string
-            if expression.count >= 2, let key = expression[1] as? String {
-                print("iOS: Converting 'has' expression for key: \(key)")
-                // Transform to: check if stringified property is not empty
-                // This works for most cases where properties have values
-                return ["!=", ["to-string", ["get", key]], ""]
-            }
-
-        case "match":
-            // ['match', input, label1, output1, label2, output2, ..., fallback]
-            // Transform to nested conditional expressions
-            if expression.count >= 4 {
-                print("iOS: Converting 'match' expression with \(expression.count) items")
-
-                let input = expression[1]
-                var convertedInput = input
-                if let inputArray = input as? [Any] {
-                    convertedInput = convertUnsupportedExpressions(inputArray)
-                }
-
-                // Build nested case expressions
-                var caseExpressions: [Any] = ["case"]
-
-                var i = 2
-                while i < expression.count - 1 {
-                    let matchValue = expression[i]
-                    let resultValue = expression[i + 1]
-
-                    // Add condition: input == matchValue
-                    let condition = ["==", convertedInput, matchValue]
-                    caseExpressions.append(condition)
-
-                    // Convert result if it's an expression
-                    var convertedResult = resultValue
-                    if let resultArray = resultValue as? [Any] {
-                        convertedResult = convertUnsupportedExpressions(resultArray)
-                    }
-                    caseExpressions.append(convertedResult)
-
-                    i += 2
-                }
-
-                // Add fallback at the end
-                if expression.count % 2 == 0 {
-                    // Even count means we have a fallback
-                    let fallback = expression.last!
-                    var convertedFallback = fallback
-                    if let fallbackArray = fallback as? [Any] {
-                        convertedFallback = convertUnsupportedExpressions(fallbackArray)
-                    }
-                    caseExpressions.append(convertedFallback)
-                } else {
-                    // No fallback, use empty string
-                    caseExpressions.append("")
-                }
-
-                print("iOS: Converted match to case expression: \(caseExpressions)")
-                return caseExpressions
-            }
-
-        case "case":
-            // ['case', condition1, output1, condition2, output2, ..., fallback]
-            // Recursively convert nested expressions but keep case structure
-            print("iOS: Processing 'case' expression with \(expression.count) items")
-
-            var convertedCase: [Any] = ["case"]
-
-            for i in 1..<expression.count {
-                let item = expression[i]
-                if let itemArray = item as? [Any] {
-                    convertedCase.append(convertUnsupportedExpressions(itemArray))
-                } else {
-                    convertedCase.append(item)
-                }
-            }
-
-            print("iOS: Converted case expression: \(convertedCase)")
-            return convertedCase
-
-        case "get", "coalesce", "step", "interpolate", "concat", "to-string":
-            // These are supported, but recursively convert nested expressions
-            var convertedExpr: [Any] = [op]
-            for i in 1..<expression.count {
-                let item = expression[i]
-                if let itemArray = item as? [Any] {
-                    convertedExpr.append(convertUnsupportedExpressions(itemArray))
-                } else {
-                    convertedExpr.append(item)
-                }
-            }
-            return convertedExpr
+        case "get", "has", "==", "!=", "<", ">", "<=", ">=",
+             "case", "match", "coalesce", "concat", "to-string",
+             "step", "interpolate":
+            // These are now handled by buildNativeExpression
+            return expression
 
         default:
-            // Recursively convert nested expressions
+            // For unknown operators, recursively convert nested expressions
             var convertedExpr: [Any] = [op]
             for i in 1..<expression.count {
                 let item = expression[i]
@@ -479,8 +624,6 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             }
             return convertedExpr
         }
-
-        return expression
     }
 
     private func isColorString(_ string: String) -> Bool {
@@ -1365,6 +1508,7 @@ func addSymbolLayer(
         completion: @escaping (Result<[[String: String]], Error>) -> Void
     ) {
         let screenPoint = CGPoint(x: x, y: y)
+        print("iOS: queryLayers called at screen point: (\(x), \(y))")
 
         guard let style = _mapView.style else {
             print("iOS: ERROR - Style not available for queryLayers")
@@ -1376,11 +1520,17 @@ func addSymbolLayer(
 
         // Get all layers from the style
         let styleLayers = style.layers
+        print("iOS: Total layers in style: \(styleLayers.count)")
 
         // Query each layer individually to get layer metadata
         for layer in styleLayers {
-            // Only query vector and symbol layers that might have feature data
-            guard layer is MLNVectorStyleLayer || layer is MLNSymbolStyleLayer else {
+            // Only query layers that might have feature data
+            // Include circle, symbol, fill, and line layers
+            guard layer is MLNVectorStyleLayer ||
+                  layer is MLNSymbolStyleLayer ||
+                  layer is MLNCircleStyleLayer ||
+                  layer is MLNFillStyleLayer ||
+                  layer is MLNLineStyleLayer else {
                 continue
             }
 
@@ -1390,17 +1540,27 @@ func addSymbolLayer(
                 styleLayerIdentifiers: [layer.identifier]
             )
 
+            if !layerFeatures.isEmpty {
+                print("iOS: Layer '\(layer.identifier)' has \(layerFeatures.count) features at tap point")
+            }
+
             for feature in layerFeatures {
                 var properties: [String: String] = [:]
 
                 // Add layer metadata (matching Android implementation)
                 properties["layerId"] = layer.identifier
 
-                // Get source-layer identifier from vector/symbol layers
+                // Get source-layer identifier from different layer types
                 if let vectorLayer = layer as? MLNVectorStyleLayer {
                     properties["sourceLayer"] = vectorLayer.sourceLayerIdentifier ?? ""
                 } else if let symbolLayer = layer as? MLNSymbolStyleLayer {
                     properties["sourceLayer"] = symbolLayer.sourceLayerIdentifier ?? ""
+                } else if let circleLayer = layer as? MLNCircleStyleLayer {
+                    properties["sourceLayer"] = circleLayer.sourceLayerIdentifier ?? ""
+                } else if let fillLayer = layer as? MLNFillStyleLayer {
+                    properties["sourceLayer"] = fillLayer.sourceLayerIdentifier ?? ""
+                } else if let lineLayer = layer as? MLNLineStyleLayer {
+                    properties["sourceLayer"] = lineLayer.sourceLayerIdentifier ?? ""
                 } else {
                     properties["sourceLayer"] = ""
                 }
@@ -1414,30 +1574,37 @@ func addSymbolLayer(
 
                 if let pointFeature = feature as? MLNPointFeature {
                     attributes = pointFeature.attributes
+                    print("iOS: Found MLNPointFeature with \(pointFeature.attributes.count) attributes")
                 } else if let polylineFeature = feature as? MLNPolylineFeature {
                     attributes = polylineFeature.attributes
+                    print("iOS: Found MLNPolylineFeature")
                 } else if let polygonFeature = feature as? MLNPolygonFeature {
                     attributes = polygonFeature.attributes
+                    print("iOS: Found MLNPolygonFeature")
                 } else if let shapeCollectionFeature = feature as? MLNShapeCollectionFeature {
                     attributes = shapeCollectionFeature.attributes
+                    print("iOS: Found MLNShapeCollectionFeature")
                 }
 
                 // Add all feature properties
                 if let attributes = attributes {
+                    print("iOS: Feature attributes: \(attributes)")
                     for (key, value) in attributes {
                         properties[key] = String(describing: value)
                     }
+                } else {
+                    print("iOS: WARNING - No attributes found for feature")
                 }
 
                 result.append(properties)
             }
         }
 
-        print("iOS: queryLayers found \(result.count) features at (\(x), \(y))")
+        print("iOS: queryLayers found \(result.count) total features at (\(x), \(y))")
 
-        // Print first feature properties for debugging
-        if let firstFeature = result.first {
-            print("iOS: First feature properties: \(firstFeature)")
+        // Print all feature properties for debugging
+        for (index, feature) in result.enumerated() {
+            print("iOS: Feature #\(index): layerId=\(feature["layerId"] ?? "unknown"), sourceLayer=\(feature["sourceLayer"] ?? "unknown"), properties=\(feature)")
         }
 
         completion(.success(result))
