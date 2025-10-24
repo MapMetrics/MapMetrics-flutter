@@ -1,5 +1,15 @@
-0.1.0 release
-MM waterMark Logo Added
+## 1.0.0
+* Fix iOS compilation errors (NSNumber extensions, CGPoint struct)
+* Add type safety improvements for FFI stubs
+* Implement missing MapController methods for web platform
+* Update Flutter constraint to remove upper bound (>=3.29.0)
+* Add navigation route support (setNavigationRoute, clearNavigationRoute)
+* Add location dragging support (setLocationDraggable)
+* Fix type casting issues across all platforms
+* Improve offline manager type safety
+
+## 0.1.0
+* MM waterMark Logo Added
 
 
 0.0.9 release
