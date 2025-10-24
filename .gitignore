@@ -1,0 +1,127 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# iOS/XCode related
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
+**/ios/**/.sconsign.dblite
+**/ios/**/.tags*
+**/ios/**/.vagrant/
+**/ios/**/DerivedData/
+**/ios/**/Icon?
+**/ios/**/Pods/
+**/ios/**/.symlinks/
+**/ios/**/profile
+**/ios/**/xcuserdata
+**/ios/.generated/
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/.index-build/
+**/ios/mapmetrics/.build/
+
+# Android related
+**/android/**/gradle-wrapper.jar
+**/android/.gradle
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/key.properties
+*.jks
+*.keystore
+
+# macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Coverage
+coverage/
+
+# Exceptions to above rules - keep these specific files
+!**/ios/**/AppDelegate.h
+!**/ios/**/AppDelegate.m
+!**/ios/**/AppDelegate.swift
+!**/ios/**/Runner-Bridging-Header.h
+!**/ios/**/Info.plist
+
+# Example app build artifacts (not needed in repo)
+/example/build/
+/example/.dart_tool/
+/example/.flutter-plugins
+/example/.flutter-plugins-dependencies
+/example/.packages
+/example/pubspec.lock
+/example/ios/Flutter/
+/example/ios/Pods/
+/example/ios/.symlinks/
+/example/ios/Runner.xcworkspace/
+/example/ios/Runner.xcodeproj/project.xcworkspace/
+/example/ios/Runner.xcodeproj/xcuserdata/
+/example/android/.gradle/
+/example/android/app/build/
+/example/android/build/
+/example/android/local.properties
+
+# Keep android gradle wrapper properties
+!gradle-wrapper.properties
+
+# Version files
+/example/.dart_tool/version
+
+# Kotlin files
+/example/android/.kotlin/
