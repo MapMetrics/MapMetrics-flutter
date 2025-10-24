@@ -7,11 +7,11 @@ import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/platform/maplibre_ffi.dart';
 
 extension BoolExt on bool {
-  objc.NSNumber toNSNumber() => objc.NSNumber.numberWithBool_(this ? 1 : 0);
+  objc.NSNumber toNSNumber() => objc.NSNumber.alloc().initWithBool_(this);
 }
 
 extension IntExt on int {
-  objc.NSNumber toNSNumber() => objc.NSNumber.numberWithInt_(this);
+  objc.NSNumber toNSNumber() => objc.NSNumber.alloc().initWithInt_(this);
 }
 
 extension StringExt on String {
@@ -26,8 +26,8 @@ extension StringExt on String {
 extension PositionExtensions on Position {
   CLLocationCoordinate2D toCLLocationCoordinate2D() {
     final coord = ffi.Struct.create<CLLocationCoordinate2D>();
-    coord.latitude = lat;
-    coord.longitude = lng;
+    coord.latitude = lat.toDouble();
+    coord.longitude = lng.toDouble();
     return coord;
   }
 }

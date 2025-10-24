@@ -75,7 +75,7 @@ class OfflineManagerIos extends OfflineManagerNative {
     final packs = _storage.packs;
     for (var i = 0; i < packs!.count; i++) {
       final ffiPack = MLNOfflinePack.castFrom(packs.objectAtIndex_(i));
-      final jsonBytes = ffiPack.context.toList();
+      final jsonBytes = ffiPack.context;
       final json = jsonDecode(utf8.decode(jsonBytes)) as Map<String, Object?>;
       // print(json);
       if (json['id'] != regionId) {
@@ -114,7 +114,7 @@ class OfflineManagerIos extends OfflineManagerNative {
     return List<OfflineRegion>.generate(packs!.count, (i) {
       final ffiPack = MLNOfflinePack.castFrom(packs.objectAtIndex_(i));
       final ffiRegion = MLNTilePyramidOfflineRegion.castFrom(ffiPack.region);
-      final jsonBytes = ffiPack.context.toList();
+      final jsonBytes = ffiPack.context;
       final json = jsonDecode(utf8.decode(jsonBytes)) as Map<String, Object?>;
       return OfflineRegion(
         id: (json['id'] ?? -1) as int,

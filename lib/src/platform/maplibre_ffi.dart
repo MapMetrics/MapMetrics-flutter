@@ -581,7 +581,7 @@ class MLNOfflineStorage {
     return MLNOfflineStorage(ffi.nullptr);
   }
 
-  dynamic get packs {
+  NSArray? get packs {
     // TODO: Implement proper FFI call
     return null;
   }
@@ -600,9 +600,9 @@ class MLNTilePyramidOfflineRegion {
     return MLNTilePyramidOfflineRegion(pointer);
   }
 
-  dynamic get bounds {
+  MLNCoordinateBounds get bounds {
     // TODO: Implement proper FFI call
-    return null;
+    return ffi.Struct.create<MLNCoordinateBounds>();
   }
 
   double get minimumZoomLevel {
@@ -625,14 +625,14 @@ class MLNOfflinePack {
     return MLNOfflinePack(pointer);
   }
 
-  dynamic get context {
+  List<int> get context {
     // TODO: Implement proper FFI call
-    return null;
+    return [];
   }
 
-  dynamic get region {
+  ffi.Pointer<ffi.Void> get region {
     // TODO: Implement proper FFI call
-    return null;
+    return ffi.nullptr;
   }
 }
 
@@ -674,6 +674,13 @@ final class CLLocationCoordinate2D extends ffi.Struct {
   external double latitude;
   @ffi.Double()
   external double longitude;
+}
+
+final class CGPoint extends ffi.Struct {
+  @ffi.Double()
+  external double x;
+  @ffi.Double()
+  external double y;
 }
 
 final class MLNCoordinateBounds extends ffi.Struct {
@@ -843,9 +850,9 @@ class NSArray {
     return 0;
   }
 
-  dynamic objectAtIndex_(int index) {
+  ffi.Pointer<ffi.Void> objectAtIndex_(int index) {
     // TODO: Implement proper FFI call
-    return null;
+    return ffi.nullptr;
   }
 
   dynamic get allObjects {

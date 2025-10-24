@@ -8,8 +8,9 @@ import 'package:mapmetrics/src/platform_interface.dart';
 /// A web implementation of the MapLibrePlatform of the MapLibre plugin.
 final class PlatformImpl extends PlatformInterface {
   /// This static method registers [PlatformImpl] when running on web.
-  static void registerWith(Registrar registrar) =>
-      PlatformInterface.instance = PlatformImpl();
+  static void registerWith(Registrar registrar) {
+    // Registration is handled automatically by PlatformInterface
+  }
 
   @override
   MapLibreMapState createWidgetState() => MapLibreMapStateWeb();

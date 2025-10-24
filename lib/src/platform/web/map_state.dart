@@ -453,4 +453,19 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
         )
         .toList(growable: false);
   }
+
+  @override
+  Future<void> setLocationDraggable({bool draggable = true}) async {
+    debugPrint("Location dragging is not supported on web.");
+  }
+
+  @override
+  Future<void> setNavigationRoute(List<Position> routePoints) async {
+    debugPrint("Navigation route is not supported on web.");
+  }
+
+  @override
+  Future<void> clearNavigationRoute() async {
+    debugPrint("Navigation route is not supported on web.");
+  }
 }
