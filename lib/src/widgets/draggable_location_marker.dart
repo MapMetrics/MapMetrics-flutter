@@ -138,7 +138,6 @@ class _DraggableLocationMarkerState extends State<DraggableLocationMarker> {
         border: Border.all(
           color: (widget.accuracyCircleColor ?? widget.markerColor)
               .withOpacity(0.3),
-          width: 1,
         ),
       ),
     );

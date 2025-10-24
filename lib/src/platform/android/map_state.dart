@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -29,7 +28,6 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
   // Draggable location marker state
   bool _isLocationDraggable = false;
-  bool _isDraggingLocation = false;
   Position? _manualLocationOverride;
 
   // Road snapping service
@@ -41,14 +39,8 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
   // Navigation state management
   bool _isNavigationActive = false;
-  StreamSubscription? _locationSubscription;
+  StreamSubscription<dynamic>? _locationSubscription;
   List<Position>? _currentNavigationRoute;
-
-  // Track current camera mode
-  BearingTrackMode? _currentTrackingMode;
-  bool _isTrackingLocation = false;
-  DateTime? _lastCameraUpdate;
-  DateTime? _lastLayerReorderTime;
 
   @override
   StyleControllerAndroid? style;
@@ -483,9 +475,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     };
     _locationComponent.setCameraMode(mode);
 
-    // Store the current tracking mode for use in road snapping
-    _currentTrackingMode = trackBearing;
-    _isTrackingLocation = trackLocation;
+    // TODO: Store the current tracking mode for use in road snapping if needed
+    // _currentTrackingMode = trackBearing;
+    // _isTrackingLocation = trackLocation;
 
     // If we're in navigation mode (have an active route), hide the location icon
     if (_currentNavigationRoute != null && _currentNavigationRoute!.isNotEmpty) {
