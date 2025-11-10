@@ -161,7 +161,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
             }
             if (expr.length > 3) {
               print('$indent  If false → continue to next:');
-              printExpressionStructure(expr[3], depth + 1);
+              printExpressionStructure(expr[3] as Object, depth + 1);
             }
           }
         } else if (expr is String) {
