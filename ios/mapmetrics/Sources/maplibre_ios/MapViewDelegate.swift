@@ -1571,10 +1571,12 @@ func addSymbolLayer(
 
                 // Extract feature properties from the attributes dictionary
                 var attributes: [String: Any]? = nil
+                var coordinate: CLLocationCoordinate2D? = nil
 
                 if let pointFeature = feature as? MLNPointFeature {
                     attributes = pointFeature.attributes
-                    print("iOS: Found MLNPointFeature with \(pointFeature.attributes.count) attributes")
+                    coordinate = pointFeature.coordinate
+                    print("iOS: Found MLNPointFeature with \(pointFeature.attributes.count) attributes at (\(pointFeature.coordinate.latitude), \(pointFeature.coordinate.longitude))")
                 } else if let polylineFeature = feature as? MLNPolylineFeature {
                     attributes = polylineFeature.attributes
                     print("iOS: Found MLNPolylineFeature")
@@ -1584,6 +1586,12 @@ func addSymbolLayer(
                 } else if let shapeCollectionFeature = feature as? MLNShapeCollectionFeature {
                     attributes = shapeCollectionFeature.attributes
                     print("iOS: Found MLNShapeCollectionFeature")
+                }
+
+                // Add latitude and longitude if available
+                if let coordinate = coordinate {
+                    properties["latitude"] = String(coordinate.latitude)
+                    properties["longitude"] = String(coordinate.longitude)
                 }
 
                 // Add all feature properties

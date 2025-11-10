@@ -762,6 +762,24 @@ class MapLibreMapController(
                             org.json.JSONObject(json).optString("source-layer", "")
                         } ?: ""
 
+                        // Extract geometry coordinates from feature JSON
+                        try {
+                            val featureJson = feature.toJson()
+                            if (featureJson != null) {
+                                val jsonObject = org.json.JSONObject(featureJson)
+                                val geometry = jsonObject.optJSONObject("geometry")
+                                if (geometry != null && geometry.optString("type") == "Point") {
+                                    val coordinates = geometry.optJSONArray("coordinates")
+                                    if (coordinates != null && coordinates.length() >= 2) {
+                                        properties["longitude"] = coordinates.getDouble(0).toString()
+                                        properties["latitude"] = coordinates.getDouble(1).toString()
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            println("Android: Error extracting coordinates: ${e.message}")
+                        }
+
                         // Extract all feature properties (using empty string instead of null)
                         val featureProperties = feature.properties()
                         if (featureProperties != null) {
@@ -776,6 +794,7 @@ class MapLibreMapController(
                             println("Android: First feature layerId='${properties["layerId"]}'")
                             println("Android: First feature sourceId='${properties["sourceId"]}'")
                             println("Android: First feature sourceLayer='${properties["sourceLayer"]}'")
+                            println("Android: First feature coordinates: lat=${properties["latitude"]}, lon=${properties["longitude"]}")
                             println("Android: First feature all properties: $properties")
                         }
 

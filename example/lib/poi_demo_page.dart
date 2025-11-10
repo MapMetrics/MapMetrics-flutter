@@ -253,6 +253,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       // Add vector tile source for POIs
       // maxZoom: 16 because tiles are only available up to zoom 16
       // The layer can still render at higher zooms (overzooming)
+
       await _styleController.addSource(
         const VectorSource(
           id: 'poi-source',
@@ -263,6 +264,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
           maxZoom: 16, // Tiles available up to zoom 16, will overzoom beyond
         ),
       );
+
       print('POI vector source added successfully');
 
       // Wait a bit to ensure all base map layers are loaded
@@ -1761,7 +1763,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
     Map<String, String> poiData,
   ) async {
     // Separate metadata properties from POI properties
-    final metadataKeys = {'layerId', 'sourceId', 'sourceLayer'};
+    final metadataKeys = {'layerId', 'sourceId', 'sourceLayer', 'latitude', 'longitude'};
     final specialKeys = {
       'name',
       'amenity',
@@ -1773,6 +1775,14 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       'addr:housenumber',
       'addr:city',
     };
+
+    // Extract coordinates from POI data if available, otherwise use click point
+    final double lat = poiData['latitude'] != null
+        ? (double.tryParse(poiData['latitude']!) ?? point.lat.toDouble())
+        : point.lat.toDouble();
+    final double lng = poiData['longitude'] != null
+        ? (double.tryParse(poiData['longitude']!) ?? point.lng.toDouble())
+        : point.lng.toDouble();
 
     // Get all POI properties (excluding metadata)
     final allProperties = <String, String>{};
@@ -1812,13 +1822,13 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
                       const SizedBox(height: 12),
                     ],
 
-                    // Coordinates
+                    // Coordinates (from POI feature geometry)
                     const Text(
                       '📍 Coordinates:',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text('Lat: ${point.lat.toStringAsFixed(6)}°'),
-                    Text('Lng: ${point.lng.toStringAsFixed(6)}°'),
+                    Text('Lat: ${lat.toStringAsFixed(6)}°'),
+                    Text('Lng: ${lng.toStringAsFixed(6)}°'),
 
                     // Type/Category
                     if (specialProperties['amenity'] != null) ...[
