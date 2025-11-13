@@ -22,6 +22,7 @@ dependencies:
   ffi: ^2.1.3
   flutter:
     sdk: flutter
+  flutter_svg: ^2.0.10+1
   flutter_web_plugins:
     sdk: flutter
   geotypes: ^0.0.2

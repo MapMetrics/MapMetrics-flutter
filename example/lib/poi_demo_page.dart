@@ -29,11 +29,26 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       appBar: AppBar(title: const Text('POI Demo')),
       body: MapLibreMap(
         options: MapOptions(
-          initCenter: Position(4.89, 52.37), // Amsterdam
+       //   initCenter: Position(4.89, 52.37), // Amsterdam
           initZoom: 14,
           initStyle: 'https://gateway.mapmetrics-atlas.net/styles/?fileName=dd508822-9502-4ab5-bfe2-5e6ed5809c2d/portal.json&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkZDUwODgyMi05NTAyLTRhYjUtYmZlMi01ZTZlZDU4MDljMmQiLCJzY29wZSI6WyJtYXBzIiwiYXV0b2NvbXBsZXRlIiwiZ2VvY29kZSIsImRpcmVjdGlvbnMiLCJtYXBfbWF0Y2hpbmciLCJvcHRpbWl6ZSIsIm1hdHJpeCIsImlzb2Nocm9uZSJdLCJpYXQiOjE3NjExNDQ1OTl9.MbfXeBtRpzzaLgcdTE0xzMa-OEemCWNWprEbs1RO2rI',
               //'https://gateway.mapmetrics-atlas.net/styles/?fileName=7c3625ac-1f52-479e-8e6f-12299aae7e87/moon.json&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3YzM2MjVhYy0xZjUyLTQ3OWUtOGU2Zi0xMjI5OWFhZTdlODciLCJzY29wZSI6WyJtYXBzIl0sImlhdCI6MTc2MDM0MTcwOX0.SKiNhdhqkq0FwzM4tn2Txmajw2YAJth6MQfYkAYPp_E',
         ),
+        children: [
+          const MapScalebar(
+            padding: EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 50),
+          ),
+          const SourceAttribution(),
+          MapControlButtons(
+            showZoomInOutButton: true,
+            showTrackLocation: true,
+            autoInitializeLocation: true, // This enables automatic location on start
+            onCurrentLocation: (location) {
+              print("location: ${location.lat}, ${location.lng}");
+            },
+          ),
+          // const MapCompass(),
+        ],
         onMapCreated: (controller) {
           _mapController = controller;
         },
@@ -161,7 +176,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
             }
             if (expr.length > 3) {
               print('$indent  If false → continue to next:');
-              printExpressionStructure(expr[3], depth + 1);
+             // printExpressionStructure(expr[3], depth + 1);
             }
           }
         } else if (expr is String) {

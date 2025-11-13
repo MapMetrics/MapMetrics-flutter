@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// Display a zoom-in and zoom-out button to the [MapLibreMap] by using it in
 /// [MapLibreMap.children].
@@ -26,6 +27,9 @@ class MapControlButtons extends StatefulWidget {
     this.onCurrentLocation, // Made this optional
     this.requestPermissionsExplanation =
         'We need your location to show it on the map.',
+    this.autoInitializeLocation = false,
+    this.gpsFixedSvgIcon,
+    this.gpsNotFixedSvgIcon,
   });
 
   /// The padding.
@@ -45,6 +49,18 @@ class MapControlButtons extends StatefulWidget {
 
   final bool showZoomInOutButton;
 
+  /// Whether to automatically initialize location when the map loads.
+  /// When true, location services will be enabled and tracking started automatically.
+  final bool autoInitializeLocation;
+
+  /// Optional custom SVG icon path for GPS fixed state.
+  /// If provided, this SVG will be used instead of Icons.gps_fixed.
+  final String? gpsFixedSvgIcon;
+
+  /// Optional custom SVG icon path for GPS not fixed state.
+  /// If provided, this SVG will be used instead of Icons.gps_not_fixed.
+  final String? gpsNotFixedSvgIcon;
+
   @override
   State<MapControlButtons> createState() => _MapControlButtonsState();
 }
@@ -53,6 +69,7 @@ class _MapControlButtonsState extends State<MapControlButtons> {
   late final PermissionManager? _permissionManager;
   _TrackLocationState _trackState = _TrackLocationState.gpsNotFixed;
   late bool _trackLocationButtonInitialized = false;
+  bool _autoLocationInitialized = false;
 
   // Track current zoom level manually since getCamera().zoom returns 0.0
   double _currentZoom = 10.0; // Default zoom level
@@ -65,13 +82,55 @@ class _MapControlButtonsState extends State<MapControlButtons> {
     }
   }
 
+  /// Auto-initialize location services when the widget is built
+  void _handleAutoLocationInitialization(MapController controller) {
+    if (widget.autoInitializeLocation && !_autoLocationInitialized) {
+      _autoLocationInitialized = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        try {
+          await _initializeLocation(controller, trackLocation: true);
+          
+          // Set appropriate zoom level for location viewing
+          await controller.animateCamera(
+            zoom: 15,
+            nativeDuration: const Duration(milliseconds: 1500),
+          );
+          
+          print('MapControlButtons: Auto location initialization completed');
+        } catch (e) {
+          print('MapControlButtons: Error in auto location initialization: $e');
+        }
+      });
+    }
+  }
+
+  /// Build the GPS icon widget based on current state and available custom icons
+  Widget _buildGpsIcon() {
+    final isFixed = _trackState == _TrackLocationState.gpsFixed;
+    final svgIcon = isFixed ? widget.gpsFixedSvgIcon : widget.gpsNotFixedSvgIcon;
+    
+    if (svgIcon != null) {
+      return SvgPicture.asset(
+        svgIcon,
+      );
+    }
+    
+    // Fallback to default Material icons
+    return Icon(
+      isFixed ? Icons.gps_fixed : Icons.gps_not_fixed,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = MapController.maybeOf(context);
     if (controller == null) return const SizedBox.shrink();
 
+    // Handle auto location initialization first
+    _handleAutoLocationInitialization(controller);
+
     if (!kIsWeb && widget.showTrackLocation) {
-      if (!_trackLocationButtonInitialized) {
+      if (!_trackLocationButtonInitialized && !widget.autoInitializeLocation) {
         _trackLocationButtonInitialized = true;
         if (Platform.isIOS) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -139,37 +198,67 @@ class _MapControlButtonsState extends State<MapControlButtons> {
                   heroTag: 'MapLibreTrackLocationButton',
                   onPressed: () async {
                     print('MapControlButtons: Location button pressed');
-                    await _initializeLocation(controller);
+                    
+                    if (widget.autoInitializeLocation) {
+                      // If auto-initialization is enabled, just center on current location
+                      try {
+                        print('MapControlButtons: Centering on user location');
+                        
+                        // First ensure location is enabled (should already be from auto-init)
+                        await controller.enableLocation();
+                        
+                        // Enable location tracking to center on user
+                        await controller.trackLocation(trackLocation: true);
+                        
+                        // Give a small delay to let location get fixed, then animate
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        
+                        await controller.animateCamera(
+                          zoom: 15,
+                          nativeDuration: const Duration(milliseconds: 1000),
+                        );
+                        
+                        // Update state to show GPS is fixed
+                        if (mounted) {
+                          setState(() => _trackState = _TrackLocationState.gpsFixed);
+                        }
+                        
+                        // Call the callback if provided
+                        if (widget.onCurrentLocation != null && controller.camera != null) {
+                          widget.onCurrentLocation!(controller.camera!.center);
+                        }
+                      } catch (e) {
+                        print('MapControlButtons: Error centering on location: $e');
+                        if (mounted) {
+                          setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+                        }
+                      }
+                    } else {
+                      // Original initialization logic for manual mode
+                      await _initializeLocation(controller);
 
-                    // After enabling location, animate to user's location
-                    // For now, we'll use a simple approach - just enable tracking
-                    // which will automatically center on the user's location
-                    try {
-                      print('MapControlButtons: Starting location tracking');
-                      await controller.trackLocation(trackLocation: true);
+                      try {
+                        print('MapControlButtons: Starting location tracking');
+                        await controller.trackLocation();
 
-                      // Set a reasonable zoom level for user location
-                      await controller.animateCamera(
-                        zoom: 15.0,
-                        nativeDuration: const Duration(milliseconds: 1000),
-                      );
-                    } catch (e) {
-                      print(
-                        'MapControlButtons: Error with location tracking: $e',
-                      );
+                        // Set a reasonable zoom level for user location
+                        await controller.animateCamera(
+                          zoom: 15,
+                          nativeDuration: const Duration(milliseconds: 1000),
+                        );
+                      } catch (e) {
+                        print(
+                          'MapControlButtons: Error with location tracking: $e',
+                        );
+                      }
                     }
                   },
-                  child:
-                      _trackState == _TrackLocationState.loading
-                          ? const SizedBox.square(
-                            dimension: kDefaultFontSize,
-                            child: CircularProgressIndicator(),
-                          )
-                          : Icon(
-                            _trackState == _TrackLocationState.gpsFixed
-                                ? Icons.gps_fixed
-                                : Icons.gps_not_fixed,
-                          ),
+                  child: _trackState == _TrackLocationState.loading
+                      ? const SizedBox.square(
+                          dimension: kDefaultFontSize,
+                          child: CircularProgressIndicator(),
+                        )
+                      : _buildGpsIcon(),
                 ),
               ],
             ],

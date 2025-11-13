@@ -13,34 +13,39 @@ class StyledMapPage extends StatefulWidget {
 }
 
 class _StyledMapPageState extends State<StyledMapPage> {
+
+  MapController? _mapController;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Styled Map')),
       body: MapMetricsView(
-        options: MapOptions(
-          initCenter: Position(9.17, 47.68),
+        options: const MapOptions(
           initZoom: 2,
           initStyle: MapStyles.maptilerStreets,
         ),
+        onMapCreated: (controller) {
+          _mapController = controller;
+        },
+        onStyleLoaded: (style) {
+          style.setProjection(MapProjection.globe);
+        },
         mapChildren: [
           const MapScalebar(
-            alignment: Alignment.bottomLeft,
             padding: EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 50),
           ),
           const SourceAttribution(),
           MapControlButtons(
             showZoomInOutButton: true,
             showTrackLocation: true,
+            autoInitializeLocation: true, // This enables automatic location on start
             onCurrentLocation: (location) {
-              print("location" + location.lat.toString());
+              print("location: ${location.lat}, ${location.lng}");
             },
           ),
           // const MapCompass(),
         ],
-        onStyleLoaded: (style) {
-          style.setProjection(MapProjection.globe);
-        },
       ),
     );
   }

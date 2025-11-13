@@ -31,6 +31,8 @@ apply plugin: "kotlin-android"
 apply plugin: "org.jlleitschuh.gradle.ktlint"
 
 android {
+    ndkVersion = "27.0.12077973" // Updated to highest version for plugin compatibility
+    
     // Keeping the classes from being removed by proguard.
     defaultConfig {
         consumerProguardFiles 'consumer-rules.pro'
