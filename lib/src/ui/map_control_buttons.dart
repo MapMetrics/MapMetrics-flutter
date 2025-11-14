@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -73,6 +74,42 @@ class _MapControlButtonsState extends State<MapControlButtons> {
 
   // Track current zoom level manually since getCamera().zoom returns 0.0
   double _currentZoom = 10.0; // Default zoom level
+  Timer? _gpsStateTimer;
+
+  // Add a method to check and update GPS state
+  void _startGpsStateMonitoring(MapController controller) {
+    _gpsStateTimer?.cancel();
+    _gpsStateTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      
+      // If we're in loading state, don't interfere
+      if (_trackState == _TrackLocationState.loading) return;
+      
+      // Check if location tracking is active and working
+      try {
+        final camera = controller.camera;
+        if (camera != null) {
+          // Location is working, mark as fixed
+          if (_trackState != _TrackLocationState.gpsFixed) {
+            setState(() => _trackState = _TrackLocationState.gpsFixed);
+          }
+        } else {
+          // Location not available, mark as not fixed
+          if (_trackState != _TrackLocationState.gpsNotFixed) {
+            setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+          }
+        }
+      } catch (e) {
+        // Error accessing location, mark as not fixed
+        if (_trackState != _TrackLocationState.gpsNotFixed) {
+          setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+        }
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -82,12 +119,23 @@ class _MapControlButtonsState extends State<MapControlButtons> {
     }
   }
 
+  @override
+  void dispose() {
+    _gpsStateTimer?.cancel();
+    super.dispose();
+  }
+
   /// Auto-initialize location services when the widget is built
   void _handleAutoLocationInitialization(MapController controller) {
     if (widget.autoInitializeLocation && !_autoLocationInitialized) {
       _autoLocationInitialized = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         try {
+          // Set loading state for auto-initialization
+          if (mounted) {
+            setState(() => _trackState = _TrackLocationState.loading);
+          }
+          
           await _initializeLocation(controller, trackLocation: true);
           
           // Set appropriate zoom level for location viewing
@@ -99,6 +147,9 @@ class _MapControlButtonsState extends State<MapControlButtons> {
           print('MapControlButtons: Auto location initialization completed');
         } catch (e) {
           print('MapControlButtons: Error in auto location initialization: $e');
+          if (mounted) {
+            setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+          }
         }
       });
     }
@@ -125,6 +176,13 @@ class _MapControlButtonsState extends State<MapControlButtons> {
   Widget build(BuildContext context) {
     final controller = MapController.maybeOf(context);
     if (controller == null) return const SizedBox.shrink();
+
+    // Start GPS state monitoring if not already started
+    if (_gpsStateTimer == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startGpsStateMonitoring(controller);
+      });
+    }
 
     // Handle auto location initialization first
     _handleAutoLocationInitialization(controller);
@@ -202,6 +260,11 @@ class _MapControlButtonsState extends State<MapControlButtons> {
                     if (widget.autoInitializeLocation) {
                       // If auto-initialization is enabled, just center on current location
                       try {
+                        // Show loading state while centering
+                        if (mounted) {
+                          setState(() => _trackState = _TrackLocationState.loading);
+                        }
+                        
                         print('MapControlButtons: Centering on user location');
                         
                         // First ensure location is enabled (should already be from auto-init)
@@ -299,20 +362,34 @@ class _MapControlButtonsState extends State<MapControlButtons> {
       try {
         print('MapControlButtons: Enabling location services on iOS');
         await controller.enableLocation();
-        setState(() => _trackState = _TrackLocationState.gpsFixed);
 
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (widget.onCurrentLocation != null && controller.camera != null) {
-          widget.onCurrentLocation!(controller.camera!.center);
-        }
+        // Give time for GPS to get a fix before marking as fixed
+        await Future.delayed(const Duration(milliseconds: 1000));
 
         if (trackLocation) {
           print('MapControlButtons: Starting location tracking on iOS');
           await controller.trackLocation();
+          // Only mark as fixed after tracking starts successfully
+          if (mounted) {
+            setState(() => _trackState = _TrackLocationState.gpsFixed);
+          }
+        } else {
+          // If not tracking, still mark as fixed after enabling
+          if (mounted) {
+            setState(() => _trackState = _TrackLocationState.gpsFixed);
+          }
+        }
+
+        // Additional delay to ensure location is stable
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (widget.onCurrentLocation != null && controller.camera != null) {
+          widget.onCurrentLocation!(controller.camera!.center);
         }
       } on Exception catch (e) {
         print('MapControlButtons: Error enabling location on iOS: $e');
-        setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+        if (mounted) {
+          setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+        }
       }
       return;
     }
@@ -325,16 +402,32 @@ class _MapControlButtonsState extends State<MapControlButtons> {
     try {
       await controller.enableLocation();
 
-      setState(() => _trackState = _TrackLocationState.gpsFixed);
+      // Give more time for GPS to get a fix before marking as fixed
+      await Future.delayed(const Duration(milliseconds: 1000));
+      
+      if (trackLocation) {
+        await controller.trackLocation();
+        // Only mark as fixed after tracking starts successfully
+        if (mounted) {
+          setState(() => _trackState = _TrackLocationState.gpsFixed);
+        }
+      } else {
+        // If not tracking, still mark as fixed after enabling
+        if (mounted) {
+          setState(() => _trackState = _TrackLocationState.gpsFixed);
+        }
+      }
+      
+      // Additional delay to ensure location is stable
       await Future.delayed(const Duration(milliseconds: 500));
       if (widget.onCurrentLocation != null && controller.camera != null) {
         widget.onCurrentLocation!(controller.camera!.center);
       }
-
-      if (trackLocation) await controller.trackLocation();
     } on Exception catch (e) {
       print('MapControlButtons: Error enabling location on Android: $e');
-      setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+      if (mounted) {
+        setState(() => _trackState = _TrackLocationState.gpsNotFixed);
+      }
     }
   }
 }

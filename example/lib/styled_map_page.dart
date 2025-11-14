@@ -13,8 +13,8 @@ class StyledMapPage extends StatefulWidget {
 }
 
 class _StyledMapPageState extends State<StyledMapPage> {
-
   MapController? _mapController;
+  bool _autoLocationInitialized = false;
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +27,12 @@ class _StyledMapPageState extends State<StyledMapPage> {
         ),
         onMapCreated: (controller) {
           _mapController = controller;
+          print('Map created: ${controller.toString()}');
         },
         onStyleLoaded: (style) {
           style.setProjection(MapProjection.globe);
+          print('Style loaded, triggering auto location...');
+          _triggerAutoLocation();
         },
         mapChildren: [
           const MapScalebar(
@@ -39,7 +42,7 @@ class _StyledMapPageState extends State<StyledMapPage> {
           MapControlButtons(
             showZoomInOutButton: true,
             showTrackLocation: true,
-            autoInitializeLocation: true, // This enables automatic location on start
+            autoInitializeLocation: false, // We handle this manually in onStyleLoaded
             onCurrentLocation: (location) {
               print("location: ${location.lat}, ${location.lng}");
             },
@@ -48,5 +51,37 @@ class _StyledMapPageState extends State<StyledMapPage> {
         ],
       ),
     );
+  }
+
+  void _triggerAutoLocation() async {
+    if (_mapController == null || _autoLocationInitialized) return;
+    
+    _autoLocationInitialized = true;
+    
+    try {
+      print('Starting auto location initialization...');
+      
+      // Enable location services
+      await _mapController!.enableLocation();
+      print('Location enabled');
+      
+      // Give time for GPS to get a fix
+      await Future.delayed(const Duration(milliseconds: 1000));
+      
+      // Start tracking user location (this will center the map)
+      await _mapController!.trackLocation(trackLocation: true);
+      print('Location tracking started');
+      
+      // Set appropriate zoom level for user location
+      await _mapController!.animateCamera(
+        zoom: 15.0,
+        nativeDuration: const Duration(milliseconds: 1500),
+      );
+      
+      print('Auto location initialization completed successfully');
+      
+    } catch (e) {
+      print('Error in auto location initialization: $e');
+    }
   }
 }
