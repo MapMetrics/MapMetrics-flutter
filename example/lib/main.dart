@@ -14,6 +14,7 @@ import 'package:maplibre_example/menu_page.dart';
 import 'package:maplibre_example/offline_page.dart';
 import 'package:maplibre_example/parameters_page.dart';
 import 'package:maplibre_example/permissions_page.dart';
+import 'package:maplibre_example/poi_demo_page_new.dart';
 import 'package:maplibre_example/style_layers_circle_page.dart';
 import 'package:maplibre_example/style_layers_fill_extrusion_page.dart';
 import 'package:maplibre_example/style_layers_fill_page.dart';
@@ -41,7 +42,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MapMetrics Demo',
-      initialRoute: PoiDemoPage.route,
+      initialRoute: NewPoiDemoPage.route,
       theme: ThemeData(colorSchemeSeed: Colors.blue),
       darkTheme: ThemeData(
         brightness: Brightness.dark,
@@ -85,6 +86,7 @@ class MyApp extends StatelessWidget {
         TwoMapsPage.location: (context) => const TwoMapsPage(),
         ClusteringPage.location: (context) => const ClusteringPage(),
         PoiDemoPage.route: (context) => const PoiDemoPage(),
+        NewPoiDemoPage.route: (context) => const NewPoiDemoPage(),
       },
     );
   }
