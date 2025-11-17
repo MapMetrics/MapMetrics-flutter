@@ -14,6 +14,7 @@ import 'package:maplibre_example/menu_page.dart';
 import 'package:maplibre_example/offline_page.dart';
 import 'package:maplibre_example/parameters_page.dart';
 import 'package:maplibre_example/permissions_page.dart';
+import 'package:maplibre_example/reverse_geocoding_list_page.dart';
 import 'package:maplibre_example/style_layers_circle_page.dart';
 import 'package:maplibre_example/style_layers_fill_extrusion_page.dart';
 import 'package:maplibre_example/style_layers_fill_page.dart';
@@ -28,6 +29,7 @@ import 'package:maplibre_example/user_location_page.dart';
 import 'package:maplibre_example/widget_layer_interactive_page.dart';
 import 'package:maplibre_example/widget_layer_page.dart';
 import 'package:maplibre_example/poi_demo_page.dart';
+import 'package:maplibre_example/new_poi_demo_page.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 
 void main() {
@@ -41,12 +43,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MapMetrics Demo',
-      initialRoute: PoiDemoPage.route,
+      initialRoute: NewPoiDemoPage.route,
       theme: ThemeData(colorSchemeSeed: Colors.blue),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        colorSchemeSeed: Colors.blue,
-      ),
+      darkTheme: ThemeData(brightness: Brightness.dark, colorSchemeSeed: Colors.blue),
       routes: {
         MenuPage.location: (context) => const MenuPage(),
         KioskPage.location: (context) => const KioskPage(),
@@ -56,23 +55,16 @@ class MyApp extends StatelessWidget {
         StyledMapPage.location: (context) => const StyledMapPage(),
         UserLocationPage.location: (context) => const UserLocationPage(),
         WidgetLayerPage.location: (context) => const WidgetLayerPage(),
-        WidgetLayerInteractivePage.location:
-            (context) => const WidgetLayerInteractivePage(),
+        WidgetLayerInteractivePage.location: (context) => const WidgetLayerInteractivePage(),
         OfflinePage.location: (context) => const OfflinePage(),
         PermissionsPage.location: (context) => const PermissionsPage(),
-        StyleLayersSymbolPage.location:
-            (context) => const StyleLayersSymbolPage(),
-        StyleLayersCirclePage.location:
-            (context) => const StyleLayersCirclePage(),
-        StyleLayersHeatmapPage.location:
-            (context) => const StyleLayersHeatmapPage(),
-        StyleLayersHillshadePage.location:
-            (context) => const StyleLayersHillshadePage(),
+        StyleLayersSymbolPage.location: (context) => const StyleLayersSymbolPage(),
+        StyleLayersCirclePage.location: (context) => const StyleLayersCirclePage(),
+        StyleLayersHeatmapPage.location: (context) => const StyleLayersHeatmapPage(),
+        StyleLayersHillshadePage.location: (context) => const StyleLayersHillshadePage(),
         StyleLayersFillPage.location: (context) => const StyleLayersFillPage(),
-        StyleLayersFillExtrusionPage.location:
-            (context) => const StyleLayersFillExtrusionPage(),
-        StyleLayersRasterPage.location:
-            (context) => const StyleLayersRasterPage(),
+        StyleLayersFillExtrusionPage.location: (context) => const StyleLayersFillExtrusionPage(),
+        StyleLayersRasterPage.location: (context) => const StyleLayersRasterPage(),
         StyleLayersLinePage.location: (context) => const StyleLayersLinePage(),
         LayersMixedPage.location: (context) => const LayersMixedPage(),
         LayersCirclePage.location: (context) => const LayersCirclePage(),
@@ -85,6 +77,8 @@ class MyApp extends StatelessWidget {
         TwoMapsPage.location: (context) => const TwoMapsPage(),
         ClusteringPage.location: (context) => const ClusteringPage(),
         PoiDemoPage.route: (context) => const PoiDemoPage(),
+        NewPoiDemoPage.route: (context) => const NewPoiDemoPage(),
+        ReverseGeocoadingListPage.route: (context) => const ReverseGeocoadingListPage(latitude: 52.371404879904524, longitude: 4.897265577437211),
       },
     );
   }
