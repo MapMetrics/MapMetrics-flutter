@@ -267,9 +267,6 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
 
       print('POI vector source added successfully');
 
-      // Wait a bit to ensure all base map layers are loaded
-      await Future.delayed(const Duration(milliseconds: 500));
-
       // Add dot symbol layer with spacing (using dot-m icon)
       print('About to add POI dots layer');
       await _styleController.addLayer(
@@ -1977,67 +1974,23 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
   /// 3. MapLibre will load sprites automatically (10-20x faster)
   Future<void> _loadIconsFromSprite() async {
     try {
-      // Load the MapLibre sprite.json (generated from symbols.sdf)
+      final stopwatch = Stopwatch()..start();
+
+      // Load sprite JSON and PNG
       final spriteJsonData = await rootBundle.loadString(
         'assets/poi/poi-sprite.json',
       );
-      final spriteJson = jsonDecode(spriteJsonData) as Map<String, dynamic>;
-
-      // Load the PNG sprite sheet
       final pngData = await rootBundle.load('assets/poi/poi-sprite.png');
       final pngBytes = pngData.buffer.asUint8List();
-      final codec = await ui.instantiateImageCodec(pngBytes);
-      final frame = await codec.getNextFrame();
-      final spriteImage = frame.image;
 
-      // Extract and load icons using sprite.json coordinates
-      int loadedCount = 0;
-      for (final entry in spriteJson.entries) {
-        final name = entry.key;
-        final iconData = entry.value as Map<String, dynamic>;
+      print('📦 Sprite assets loaded in ${stopwatch.elapsedMilliseconds}ms');
 
-        final x = iconData['x'] as int;
-        final y = iconData['y'] as int;
-        final width = iconData['width'] as int;
-        final height = iconData['height'] as int;
+      // Use native sprite loading - all extraction happens in Kotlin (much faster!)
+      final nativeStopwatch = Stopwatch()..start();
+      await _styleController.addSprite(spriteJsonData, pngBytes);
 
-        if (width <= 0 || height <= 0) continue;
-
-        // Extract icon from sprite sheet
-        final recorder = ui.PictureRecorder();
-        final canvas = Canvas(recorder);
-        final srcRect = Rect.fromLTWH(
-          x.toDouble(),
-          y.toDouble(),
-          width.toDouble(),
-          height.toDouble(),
-        );
-        final dstRect = Rect.fromLTWH(
-          0,
-          0,
-          width.toDouble(),
-          height.toDouble(),
-        );
-        canvas.drawImageRect(spriteImage, srcRect, dstRect, Paint());
-
-        final picture = recorder.endRecording();
-        final iconImage = await picture.toImage(width, height);
-        final byteData = await iconImage.toByteData(
-          format: ui.ImageByteFormat.png,
-        );
-
-        if (byteData != null) {
-          final iconBytes = byteData.buffer.asUint8List();
-          await _styleController.addImage(name, iconBytes);
-          loadedCount++;
-        }
-      }
-
-      print('✅ Successfully loaded $loadedCount POI icons from sprite.json');
-      print('ℹ️  Using manual loading for remote style compatibility');
-      print(
-        '💡 For native sprite loading: add "sprite": "asset://assets/poi/poi-sprite" to style JSON',
-      );
+      print('✅ Native sprite loading complete in ${nativeStopwatch.elapsedMilliseconds}ms');
+      print('⏱️  Total icon loading time: ${stopwatch.elapsedMilliseconds}ms');
     } catch (e, stack) {
       print('Error loading icons from sprite: $e');
       print('Stack trace: $stack');

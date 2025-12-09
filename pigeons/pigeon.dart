@@ -136,6 +136,18 @@ abstract class MapLibreHostApi {
   @async
   void addImage(String id, Uint8List bytes);
 
+  /// Add multiple images to the map in a single batch operation.
+  /// This is significantly faster than calling addImage multiple times.
+  @async
+  void addImages(List<String> ids, List<Uint8List> images);
+
+  /// Load a sprite sheet and add all icons to the map in a single native operation.
+  /// This is the fastest way to load many icons - all extraction happens natively.
+  /// spriteJson: The sprite.json content as a string
+  /// spriteImage: The sprite.png as bytes
+  @async
+  void addSprite(String spriteJson, Uint8List spriteImage);
+
   /// Add a GeoJSON source with clustering to the map style.
   @async
   void addClusteredGeoJsonSource({

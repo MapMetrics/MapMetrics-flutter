@@ -728,6 +728,8 @@ typedef struct {
   void (*add_symbol_layer)(const gchar* id, const gchar* source_id, FlValue* layout, FlValue* paint, const gchar* below_layer_id, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*load_image)(const gchar* url, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_image)(const gchar* id, const uint8_t* bytes, size_t bytes_length, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*add_images)(FlValue* ids, FlValue* images, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*add_sprite)(const gchar* sprite_json, const uint8_t* sprite_image, size_t sprite_image_length, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_clustered_geo_json_source)(const gchar* id, const gchar* data, gboolean clustered, double cluster_radius, double cluster_max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_vector_source)(const gchar* id, FlValue* tiles, double min_zoom, double max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*test_method)(const gchar* value, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
@@ -983,6 +985,44 @@ void mapmetrics_map_libre_host_api_respond_add_image(MapmetricsMapLibreHostApiRe
  * Responds with an error to MapLibreHostApi.addImage. 
  */
 void mapmetrics_map_libre_host_api_respond_error_add_image(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_add_images:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.addImages. 
+ */
+void mapmetrics_map_libre_host_api_respond_add_images(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_add_images:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.addImages. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_add_images(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_add_sprite:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.addSprite. 
+ */
+void mapmetrics_map_libre_host_api_respond_add_sprite(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_add_sprite:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.addSprite. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_add_sprite(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 /**
  * mapmetrics_map_libre_host_api_respond_add_clustered_geo_json_source:

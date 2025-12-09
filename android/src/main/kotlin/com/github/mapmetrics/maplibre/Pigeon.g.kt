@@ -524,6 +524,18 @@ interface MapLibreHostApi {
   fun loadImage(url: String, callback: (Result<ByteArray>) -> Unit)
   /** Add an image to the map. */
   fun addImage(id: String, bytes: ByteArray, callback: (Result<Unit>) -> Unit)
+  /**
+   * Add multiple images to the map in a single batch operation.
+   * This is significantly faster than calling addImage multiple times.
+   */
+  fun addImages(ids: List<String>, images: List<ByteArray>, callback: (Result<Unit>) -> Unit)
+  /**
+   * Load a sprite sheet and add all icons to the map in a single native operation.
+   * This is the fastest way to load many icons - all extraction happens natively.
+   * spriteJson: The sprite.json content as a string
+   * spriteImage: The sprite.png as bytes
+   */
+  fun addSprite(spriteJson: String, spriteImage: ByteArray, callback: (Result<Unit>) -> Unit)
   /** Add a GeoJSON source with clustering to the map style. */
   fun addClusteredGeoJsonSource(id: String, data: String, clustered: Boolean, clusterRadius: Double, clusterMaxZoom: Double, callback: (Result<Unit>) -> Unit)
   /** Add a vector source to the map style. */
@@ -836,6 +848,46 @@ interface MapLibreHostApi {
             val idArg = args[0] as String
             val bytesArg = args[1] as ByteArray
             api.addImage(idArg, bytesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImages$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idsArg = args[0] as List<String>
+            val imagesArg = args[1] as List<ByteArray>
+            api.addImages(idsArg, imagesArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addSprite$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val spriteJsonArg = args[0] as String
+            val spriteImageArg = args[1] as ByteArray
+            api.addSprite(spriteJsonArg, spriteImageArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

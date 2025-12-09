@@ -37,6 +37,14 @@ abstract interface class StyleController {
   /// Add an image to the map.
   Future<void> addImage(String id, Uint8List bytes);
 
+  /// Add multiple images to the map in a single batch operation.
+  /// This is significantly faster than calling addImage multiple times.
+  Future<void> addImages(Map<String, Uint8List> images);
+
+  /// Load a sprite sheet and add all icons natively.
+  /// This is the fastest method - all extraction happens in native code.
+  Future<void> addSprite(String spriteJson, Uint8List spriteImage);
+
   /// Removes an image from the map
   Future<void> removeImage(String id);
 
