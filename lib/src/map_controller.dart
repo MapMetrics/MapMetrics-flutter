@@ -142,6 +142,10 @@ abstract interface class MapController {
     BearingTrackMode trackBearing = BearingTrackMode.gps,
   });
 
+  /// Show or hide the user location puck (blue dot).
+  /// When [show] is false, the location indicator will be hidden.
+  Future<void> showUserLocationPuck({bool show = true});
+
   /// Enable or disable manual dragging of the location marker
   /// When enabled, clicking on the location marker will enable drag mode
   /// and you can then click or long-press anywhere on the map to move it

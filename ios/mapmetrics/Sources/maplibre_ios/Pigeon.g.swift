@@ -586,6 +586,8 @@ protocol MapLibreHostApi {
   func queryLayers(x: Double, y: Double, completion: @escaping (Result<[[String: String]], Error>) -> Void)
   /// Enable/disable location tracking with bearing mode.
   func trackLocation(track: Bool, bearingMode: Int64, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Show/hide the user location puck (blue dot).
+  func showUserLocationPuck(show: Bool, completion: @escaping (Result<Void, Error>) -> Void)
   func removeLayer(id: String, completion: @escaping (Result<Void, Error>) -> Void)
   func removeSource(id: String, completion: @escaping (Result<Void, Error>) -> Void)
   func updateGeoJsonSource(id: String, data: String, completion: @escaping (Result<Void, Error>) -> Void)
@@ -1229,6 +1231,24 @@ class MapLibreHostApiSetup {
       }
     } else {
       trackLocationChannel.setMessageHandler(nil)
+    }
+    /// Show/hide the user location puck (blue dot).
+    let showUserLocationPuckChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.showUserLocationPuck\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      showUserLocationPuckChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let showArg = args[0] as! Bool
+        api.showUserLocationPuck(show: showArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      showUserLocationPuckChannel.setMessageHandler(nil)
     }
     let removeLayerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeLayer\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {

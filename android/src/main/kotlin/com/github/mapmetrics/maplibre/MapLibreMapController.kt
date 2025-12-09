@@ -942,6 +942,27 @@ class MapLibreMapController(
         callback(Result.success(Unit))
     }
 
+    override fun showUserLocationPuck(
+        show: Boolean,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        try {
+            // Android uses location component to control user location display
+            mapLibreMap?.locationComponent?.let { locationComponent ->
+                if (show) {
+                    locationComponent.isLocationComponentEnabled = true
+                } else {
+                    locationComponent.isLocationComponentEnabled = false
+                }
+                println("Android: showUserLocationPuck set to $show")
+            }
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error in showUserLocationPuck: ${e.message}")
+            callback(Result.success(Unit)) // Don't fail, just log
+        }
+    }
+
     override fun removeLayer(
         id: String,
         callback: (Result<Unit>) -> Unit

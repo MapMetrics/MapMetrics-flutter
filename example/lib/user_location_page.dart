@@ -83,6 +83,42 @@ class _UserLocationPageState extends State<UserLocationPage> {
                     textAlign: TextAlign.center,
                   ),
                 ),
+                OutlinedButton(
+                  onPressed: () async {
+                    try {
+                      await _controller.showUserLocationPuck(show: false);
+                      if (context.mounted) {
+                        context.showSnackBox('Location puck hidden.');
+                      }
+                    } catch (error) {
+                      if (context.mounted) {
+                        context.showSnackBox(error.toString());
+                      }
+                    }
+                  },
+                  child: const Text(
+                    'Hide puck',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                OutlinedButton(
+                  onPressed: () async {
+                    try {
+                      await _controller.showUserLocationPuck(show: true);
+                      if (context.mounted) {
+                        context.showSnackBox('Location puck shown.');
+                      }
+                    } catch (error) {
+                      if (context.mounted) {
+                        context.showSnackBox(error.toString());
+                      }
+                    }
+                  },
+                  child: const Text(
+                    'Show puck',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ],
             ),
           ),

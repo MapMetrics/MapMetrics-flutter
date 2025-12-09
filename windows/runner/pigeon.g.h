@@ -735,6 +735,10 @@ class MapLibreHostApi {
     bool track,
     int64_t bearing_mode,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Show/hide the user location puck (blue dot).
+  virtual void ShowUserLocationPuck(
+    bool show,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
   virtual void RemoveLayer(
     const std::string& id,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;

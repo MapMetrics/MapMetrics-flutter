@@ -268,6 +268,10 @@ abstract class MapLibreHostApi {
   @async
   void trackLocation(bool track, int bearingMode);
 
+  /// Show/hide the user location puck (blue dot).
+  @async
+  void showUserLocationPuck(bool show);
+
   @async
   void removeLayer(String id);
 

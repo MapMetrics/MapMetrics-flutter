@@ -2183,6 +2183,45 @@ static MapmetricsMapLibreHostApiTrackLocationResponse* mapmetrics_map_libre_host
   return self;
 }
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiShowUserLocationPuckResponse, mapmetrics_map_libre_host_api_show_user_location_puck_response, MAPMETRICS, MAP_LIBRE_HOST_API_SHOW_USER_LOCATION_PUCK_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiShowUserLocationPuckResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiShowUserLocationPuckResponse, mapmetrics_map_libre_host_api_show_user_location_puck_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_show_user_location_puck_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiShowUserLocationPuckResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SHOW_USER_LOCATION_PUCK_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_show_user_location_puck_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_show_user_location_puck_response_init(MapmetricsMapLibreHostApiShowUserLocationPuckResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_show_user_location_puck_response_class_init(MapmetricsMapLibreHostApiShowUserLocationPuckResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_show_user_location_puck_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiShowUserLocationPuckResponse* mapmetrics_map_libre_host_api_show_user_location_puck_response_new() {
+  MapmetricsMapLibreHostApiShowUserLocationPuckResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SHOW_USER_LOCATION_PUCK_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_show_user_location_puck_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiShowUserLocationPuckResponse* mapmetrics_map_libre_host_api_show_user_location_puck_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiShowUserLocationPuckResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SHOW_USER_LOCATION_PUCK_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_show_user_location_puck_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiRemoveLayerResponse, mapmetrics_map_libre_host_api_remove_layer_response, MAPMETRICS, MAP_LIBRE_HOST_API_REMOVE_LAYER_RESPONSE, GObject)
 
 struct _MapmetricsMapLibreHostApiRemoveLayerResponse {
@@ -2929,6 +2968,19 @@ static void mapmetrics_map_libre_host_api_track_location_cb(FlBasicMessageChanne
   self->vtable->track_location(track, bearing_mode, handle, self->user_data);
 }
 
+static void mapmetrics_map_libre_host_api_show_user_location_puck_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->show_user_location_puck == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  gboolean show = fl_value_get_bool(value0);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->show_user_location_puck(show, handle, self->user_data);
+}
+
 static void mapmetrics_map_libre_host_api_remove_layer_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
   MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
 
@@ -3068,6 +3120,9 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(track_location_channel, mapmetrics_map_libre_host_api_track_location_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* show_user_location_puck_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.showUserLocationPuck%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) show_user_location_puck_channel = fl_basic_message_channel_new(messenger, show_user_location_puck_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(show_user_location_puck_channel, mapmetrics_map_libre_host_api_show_user_location_puck_cb, g_object_ref(api_data), g_object_unref);
   g_autofree gchar* remove_layer_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeLayer%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) remove_layer_channel = fl_basic_message_channel_new(messenger, remove_layer_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(remove_layer_channel, mapmetrics_map_libre_host_api_remove_layer_cb, g_object_ref(api_data), g_object_unref);
@@ -3176,6 +3231,9 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(track_location_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* show_user_location_puck_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.showUserLocationPuck%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) show_user_location_puck_channel = fl_basic_message_channel_new(messenger, show_user_location_puck_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(show_user_location_puck_channel, nullptr, nullptr, nullptr);
   g_autofree gchar* remove_layer_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.removeLayer%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) remove_layer_channel = fl_basic_message_channel_new(messenger, remove_layer_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(remove_layer_channel, nullptr, nullptr, nullptr);
@@ -3616,6 +3674,22 @@ void mapmetrics_map_libre_host_api_respond_error_track_location(MapmetricsMapLib
   g_autoptr(GError) error = nullptr;
   if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
     g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "trackLocation", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_show_user_location_puck(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiShowUserLocationPuckResponse) response = mapmetrics_map_libre_host_api_show_user_location_puck_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "showUserLocationPuck", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_show_user_location_puck(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiShowUserLocationPuckResponse) response = mapmetrics_map_libre_host_api_show_user_location_puck_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "showUserLocationPuck", error->message);
   }
 }
 

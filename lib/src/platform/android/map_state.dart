@@ -486,6 +486,11 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     }
   }
 
+  @override
+  Future<void> showUserLocationPuck({bool show = true}) async {
+    await _hostApi.showUserLocationPuck(show);
+  }
+
   void _setupLocationSnapping() {
     debugPrint('🔧 Setting up location snapping...');
 

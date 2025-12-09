@@ -747,6 +747,7 @@ typedef struct {
   void (*to_screen_location)(double lng, double lat, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*query_layers)(double x, double y, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*track_location)(gboolean track, int64_t bearing_mode, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*show_user_location_puck)(gboolean show, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*remove_layer)(const gchar* id, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*remove_source)(const gchar* id, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*update_geo_json_source)(const gchar* id, const gchar* data, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
@@ -1294,6 +1295,25 @@ void mapmetrics_map_libre_host_api_respond_track_location(MapmetricsMapLibreHost
  * Responds with an error to MapLibreHostApi.trackLocation. 
  */
 void mapmetrics_map_libre_host_api_respond_error_track_location(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_show_user_location_puck:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.showUserLocationPuck. 
+ */
+void mapmetrics_map_libre_host_api_respond_show_user_location_puck(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_show_user_location_puck:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.showUserLocationPuck. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_show_user_location_puck(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 /**
  * mapmetrics_map_libre_host_api_respond_remove_layer:

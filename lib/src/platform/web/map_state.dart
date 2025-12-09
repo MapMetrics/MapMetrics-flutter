@@ -426,6 +426,11 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
   }
 
   @override
+  Future<void> showUserLocationPuck({bool show = true}) async {
+    debugPrint("Can't show/hide user location puck on web.");
+  }
+
+  @override
   Future<List<Map<String, String>>> queryLayers(Offset screenLocation) async {
     final features = _map.queryRenderedFeatures(
       screenLocation.toJsPoint(),

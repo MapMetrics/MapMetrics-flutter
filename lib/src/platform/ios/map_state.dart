@@ -379,6 +379,11 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }
 
   @override
+  Future<void> showUserLocationPuck({bool show = true}) async {
+    await _hostApi.showUserLocationPuck(show);
+  }
+
+  @override
   Future<void> setLocationDraggable({bool draggable = true}) async {
     // Enable or disable dragging of the location marker
     // This feature allows users to manually adjust their location on the map

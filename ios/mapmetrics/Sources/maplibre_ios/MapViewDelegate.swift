@@ -1744,6 +1744,18 @@ func addSymbolLayer(
         }
     }
 
+    // Show/hide the user location puck (blue dot)
+    func showUserLocationPuck(
+        show: Bool,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            self._mapView.showsUserLocation = show
+            print("iOS: showUserLocationPuck set to \(show)")
+            completion(.success(()))
+        }
+    }
+
     // Add these methods to your MapLibreView class that implements MapLibreHostApi
 
     func removeLayer(

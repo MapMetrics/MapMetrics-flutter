@@ -585,6 +585,8 @@ interface MapLibreHostApi {
   fun queryLayers(x: Double, y: Double, callback: (Result<List<Map<String, String>>>) -> Unit)
   /** Enable/disable location tracking with bearing mode. */
   fun trackLocation(track: Boolean, bearingMode: Long, callback: (Result<Unit>) -> Unit)
+  /** Show/hide the user location puck (blue dot). */
+  fun showUserLocationPuck(show: Boolean, callback: (Result<Unit>) -> Unit)
   fun removeLayer(id: String, callback: (Result<Unit>) -> Unit)
   fun removeSource(id: String, callback: (Result<Unit>) -> Unit)
   fun updateGeoJsonSource(id: String, data: String, callback: (Result<Unit>) -> Unit)
@@ -1248,6 +1250,25 @@ interface MapLibreHostApi {
             val trackArg = args[0] as Boolean
             val bearingModeArg = args[1] as Long
             api.trackLocation(trackArg, bearingModeArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.showUserLocationPuck$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val showArg = args[0] as Boolean
+            api.showUserLocationPuck(showArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))
