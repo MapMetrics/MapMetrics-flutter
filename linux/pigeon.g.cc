@@ -1448,6 +1448,84 @@ static MapmetricsMapLibreHostApiAddImageResponse* mapmetrics_map_libre_host_api_
   return self;
 }
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiAddImagesResponse, mapmetrics_map_libre_host_api_add_images_response, MAPMETRICS, MAP_LIBRE_HOST_API_ADD_IMAGES_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiAddImagesResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiAddImagesResponse, mapmetrics_map_libre_host_api_add_images_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_add_images_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiAddImagesResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ADD_IMAGES_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_add_images_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_add_images_response_init(MapmetricsMapLibreHostApiAddImagesResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_add_images_response_class_init(MapmetricsMapLibreHostApiAddImagesResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_add_images_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiAddImagesResponse* mapmetrics_map_libre_host_api_add_images_response_new() {
+  MapmetricsMapLibreHostApiAddImagesResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ADD_IMAGES_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_add_images_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiAddImagesResponse* mapmetrics_map_libre_host_api_add_images_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiAddImagesResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ADD_IMAGES_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_add_images_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiAddSpriteResponse, mapmetrics_map_libre_host_api_add_sprite_response, MAPMETRICS, MAP_LIBRE_HOST_API_ADD_SPRITE_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiAddSpriteResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiAddSpriteResponse, mapmetrics_map_libre_host_api_add_sprite_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_add_sprite_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiAddSpriteResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ADD_SPRITE_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_add_sprite_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_add_sprite_response_init(MapmetricsMapLibreHostApiAddSpriteResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_add_sprite_response_class_init(MapmetricsMapLibreHostApiAddSpriteResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_add_sprite_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiAddSpriteResponse* mapmetrics_map_libre_host_api_add_sprite_response_new() {
+  MapmetricsMapLibreHostApiAddSpriteResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ADD_SPRITE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_add_sprite_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiAddSpriteResponse* mapmetrics_map_libre_host_api_add_sprite_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiAddSpriteResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_ADD_SPRITE_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_add_sprite_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiAddClusteredGeoJsonSourceResponse, mapmetrics_map_libre_host_api_add_clustered_geo_json_source_response, MAPMETRICS, MAP_LIBRE_HOST_API_ADD_CLUSTERED_GEO_JSON_SOURCE_RESPONSE, GObject)
 
 struct _MapmetricsMapLibreHostApiAddClusteredGeoJsonSourceResponse {
@@ -2491,6 +2569,37 @@ static void mapmetrics_map_libre_host_api_add_image_cb(FlBasicMessageChannel* ch
   self->vtable->add_image(id, bytes, bytes_length, handle, self->user_data);
 }
 
+static void mapmetrics_map_libre_host_api_add_images_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->add_images == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  FlValue* ids = value0;
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  FlValue* images = value1;
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->add_images(ids, images, handle, self->user_data);
+}
+
+static void mapmetrics_map_libre_host_api_add_sprite_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->add_sprite == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  const gchar* sprite_json = fl_value_get_string(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  const uint8_t* sprite_image = fl_value_get_uint8_list(value1);
+  size_t sprite_image_length = fl_value_get_length(value1);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->add_sprite(sprite_json, sprite_image, sprite_image_length, handle, self->user_data);
+}
+
 static void mapmetrics_map_libre_host_api_add_clustered_geo_json_source_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
   MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
 
@@ -2902,6 +3011,12 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* add_image_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImage%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) add_image_channel = fl_basic_message_channel_new(messenger, add_image_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(add_image_channel, mapmetrics_map_libre_host_api_add_image_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* add_images_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImages%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) add_images_channel = fl_basic_message_channel_new(messenger, add_images_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(add_images_channel, mapmetrics_map_libre_host_api_add_images_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* add_sprite_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addSprite%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) add_sprite_channel = fl_basic_message_channel_new(messenger, add_sprite_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(add_sprite_channel, mapmetrics_map_libre_host_api_add_sprite_cb, g_object_ref(api_data), g_object_unref);
   g_autofree gchar* add_clustered_geo_json_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addClusteredGeoJsonSource%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) add_clustered_geo_json_source_channel = fl_basic_message_channel_new(messenger, add_clustered_geo_json_source_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(add_clustered_geo_json_source_channel, mapmetrics_map_libre_host_api_add_clustered_geo_json_source_cb, g_object_ref(api_data), g_object_unref);
@@ -3004,6 +3119,12 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* add_image_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImage%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) add_image_channel = fl_basic_message_channel_new(messenger, add_image_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(add_image_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* add_images_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImages%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) add_images_channel = fl_basic_message_channel_new(messenger, add_images_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(add_images_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* add_sprite_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addSprite%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) add_sprite_channel = fl_basic_message_channel_new(messenger, add_sprite_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(add_sprite_channel, nullptr, nullptr, nullptr);
   g_autofree gchar* add_clustered_geo_json_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addClusteredGeoJsonSource%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) add_clustered_geo_json_source_channel = fl_basic_message_channel_new(messenger, add_clustered_geo_json_source_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(add_clustered_geo_json_source_channel, nullptr, nullptr, nullptr);
@@ -3239,6 +3360,38 @@ void mapmetrics_map_libre_host_api_respond_error_add_image(MapmetricsMapLibreHos
   g_autoptr(GError) error = nullptr;
   if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
     g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "addImage", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_add_images(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiAddImagesResponse) response = mapmetrics_map_libre_host_api_add_images_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "addImages", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_add_images(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiAddImagesResponse) response = mapmetrics_map_libre_host_api_add_images_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "addImages", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_add_sprite(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiAddSpriteResponse) response = mapmetrics_map_libre_host_api_add_sprite_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "addSprite", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_add_sprite(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiAddSpriteResponse) response = mapmetrics_map_libre_host_api_add_sprite_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "addSprite", error->message);
   }
 }
 

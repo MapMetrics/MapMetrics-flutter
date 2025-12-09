@@ -787,6 +787,58 @@ class MapLibreHostApi {
     }
   }
 
+  /// Add multiple images to the map in a single batch operation.
+  /// This is significantly faster than calling addImage multiple times.
+  Future<void> addImages(List<String> ids, List<Uint8List> images) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImages$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[ids, images]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  /// Load a sprite sheet and add all icons to the map in a single native operation.
+  /// This is the fastest way to load many icons - all extraction happens natively.
+  /// spriteJson: The sprite.json content as a string
+  /// spriteImage: The sprite.png as bytes
+  Future<void> addSprite(String spriteJson, Uint8List spriteImage) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addSprite$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[spriteJson, spriteImage]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
   /// Add a GeoJSON source with clustering to the map style.
   Future<void> addClusteredGeoJsonSource({required String id, required String data, required bool clustered, required double clusterRadius, required double clusterMaxZoom, }) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addClusteredGeoJsonSource$pigeonVar_messageChannelSuffix';
@@ -1212,11 +1264,7 @@ class MapLibreHostApi {
         message: 'Host platform returned null value for non-null return value.',
       );
     } else {
-      // Deep convert List<Object?> to List<Map<String, String>>
-      return (pigeonVar_replyList[0] as List<Object?>).map((e) {
-        final map = e as Map<Object?, Object?>;
-        return map.map((key, value) => MapEntry(key.toString(), value.toString()));
-      }).toList();
+      return (pigeonVar_replyList[0] as List<Object?>?)!.cast<Map<String, String>>();
     }
   }
 

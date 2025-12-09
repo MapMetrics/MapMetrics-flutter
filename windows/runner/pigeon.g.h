@@ -610,6 +610,20 @@ class MapLibreHostApi {
     const std::string& id,
     const std::vector<uint8_t>& bytes,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Add multiple images to the map in a single batch operation.
+  // This is significantly faster than calling addImage multiple times.
+  virtual void AddImages(
+    const flutter::EncodableList& ids,
+    const flutter::EncodableList& images,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Load a sprite sheet and add all icons to the map in a single native operation.
+  // This is the fastest way to load many icons - all extraction happens natively.
+  // spriteJson: The sprite.json content as a string
+  // spriteImage: The sprite.png as bytes
+  virtual void AddSprite(
+    const std::string& sprite_json,
+    const std::vector<uint8_t>& sprite_image,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
   // Add a GeoJSON source with clustering to the map style.
   virtual void AddClusteredGeoJsonSource(
     const std::string& id,

@@ -539,6 +539,14 @@ protocol MapLibreHostApi {
   func loadImage(url: String, completion: @escaping (Result<FlutterStandardTypedData, Error>) -> Void)
   /// Add an image to the map.
   func addImage(id: String, bytes: FlutterStandardTypedData, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Add multiple images to the map in a single batch operation.
+  /// This is significantly faster than calling addImage multiple times.
+  func addImages(ids: [String], images: [FlutterStandardTypedData], completion: @escaping (Result<Void, Error>) -> Void)
+  /// Load a sprite sheet and add all icons to the map in a single native operation.
+  /// This is the fastest way to load many icons - all extraction happens natively.
+  /// spriteJson: The sprite.json content as a string
+  /// spriteImage: The sprite.png as bytes
+  func addSprite(spriteJson: String, spriteImage: FlutterStandardTypedData, completion: @escaping (Result<Void, Error>) -> Void)
   /// Add a GeoJSON source with clustering to the map style.
   func addClusteredGeoJsonSource(id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
   /// Add a vector source to the map style.
@@ -836,6 +844,48 @@ class MapLibreHostApiSetup {
       }
     } else {
       addImageChannel.setMessageHandler(nil)
+    }
+    /// Add multiple images to the map in a single batch operation.
+    /// This is significantly faster than calling addImage multiple times.
+    let addImagesChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImages\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addImagesChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idsArg = args[0] as! [String]
+        let imagesArg = args[1] as! [FlutterStandardTypedData]
+        api.addImages(ids: idsArg, images: imagesArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      addImagesChannel.setMessageHandler(nil)
+    }
+    /// Load a sprite sheet and add all icons to the map in a single native operation.
+    /// This is the fastest way to load many icons - all extraction happens natively.
+    /// spriteJson: The sprite.json content as a string
+    /// spriteImage: The sprite.png as bytes
+    let addSpriteChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addSprite\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addSpriteChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let spriteJsonArg = args[0] as! String
+        let spriteImageArg = args[1] as! FlutterStandardTypedData
+        api.addSprite(spriteJson: spriteJsonArg, spriteImage: spriteImageArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      addSpriteChannel.setMessageHandler(nil)
     }
     /// Add a GeoJSON source with clustering to the map style.
     let addClusteredGeoJsonSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addClusteredGeoJsonSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
