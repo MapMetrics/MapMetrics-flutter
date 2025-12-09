@@ -1102,6 +1102,105 @@ func addSymbolLayer(
         completion(.success(()))
     }
 
+    func addImages(
+        ids: [String], images: [FlutterStandardTypedData],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        print("iOS: addImages called with \(ids.count) images")
+
+        guard let style = _mapView.style else {
+            print("iOS: ERROR - Style not available")
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        guard ids.count == images.count else {
+            print("iOS: ERROR - ids and images count mismatch")
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "ids and images count mismatch"])))
+            return
+        }
+
+        var successCount = 0
+        var failCount = 0
+
+        for (index, id) in ids.enumerated() {
+            let imageData = images[index].data
+            if let image = UIImage(data: imageData, scale: 1.0) {
+                style.setImage(image, forName: id)
+                successCount += 1
+            } else {
+                print("iOS: Failed to decode image for id: \(id)")
+                failCount += 1
+            }
+        }
+
+        print("iOS: addImages complete - success: \(successCount), failed: \(failCount)")
+        completion(.success(()))
+    }
+
+    func addSprite(
+        spriteJson: String, spriteImage: FlutterStandardTypedData,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        print("iOS: addSprite called - native sprite extraction")
+
+        guard let style = _mapView.style else {
+            print("iOS: ERROR - Style not available")
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        // Decode the sprite sheet image
+        guard let spriteBitmap = UIImage(data: spriteImage.data) else {
+            print("iOS: ERROR - Failed to decode sprite sheet image")
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode sprite sheet image"])))
+            return
+        }
+
+        // Parse the sprite JSON
+        guard let jsonData = spriteJson.data(using: .utf8),
+              let jsonObject = try? JSONSerialization.jsonObject(with: jsonData) as? [String: [String: Any]] else {
+            print("iOS: ERROR - Failed to parse sprite JSON")
+            completion(.failure(NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to parse sprite JSON"])))
+            return
+        }
+
+        let startTime = Date()
+        var iconCount = 0
+
+        // Get the CGImage from UIImage for cropping
+        guard let cgImage = spriteBitmap.cgImage else {
+            print("iOS: ERROR - Failed to get CGImage from sprite sheet")
+            completion(.failure(NSError(domain: "MapLibre", code: 4, userInfo: [NSLocalizedDescriptionKey: "Failed to get CGImage"])))
+            return
+        }
+
+        // Extract each icon from the sprite sheet
+        for (name, iconData) in jsonObject {
+            guard let x = iconData["x"] as? Int,
+                  let y = iconData["y"] as? Int,
+                  let width = iconData["width"] as? Int,
+                  let height = iconData["height"] as? Int else {
+                print("iOS: Skipping icon '\(name)' - missing coordinates")
+                continue
+            }
+
+            // Create a crop rect
+            let cropRect = CGRect(x: x, y: y, width: width, height: height)
+
+            // Crop the icon from the sprite sheet
+            if let croppedCGImage = cgImage.cropping(to: cropRect) {
+                let iconImage = UIImage(cgImage: croppedCGImage, scale: 1.0, orientation: .up)
+                style.setImage(iconImage, forName: name)
+                iconCount += 1
+            }
+        }
+
+        let elapsed = Date().timeIntervalSince(startTime) * 1000
+        print("iOS: ✅ Native sprite loading complete - \(iconCount) icons in \(Int(elapsed))ms")
+        completion(.success(()))
+    }
+
     func addClusteredGeoJsonSource(
         id: String,
         data: String,

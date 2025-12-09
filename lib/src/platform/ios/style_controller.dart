@@ -33,9 +33,8 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> addSprite(String spriteJson, Uint8List spriteImage) async {
-    // TODO: Implement native sprite loading for iOS
-    print('iOS: addSprite not yet implemented natively, falling back to Dart extraction');
-    throw UnimplementedError('addSprite not yet implemented for iOS');
+    print('iOS: addSprite called - native sprite extraction via Pigeon');
+    await _hostApi.addSprite(spriteJson, spriteImage);
   }
 
   @override

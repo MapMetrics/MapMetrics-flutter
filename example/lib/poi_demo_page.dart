@@ -20,8 +20,9 @@ class PoiDemoPage extends StatefulWidget {
 }
 
 class _PoiDemoPageState extends State<PoiDemoPage> {
-  late final MapController _mapController;
-  late final StyleController _styleController;
+  MapController? _mapController;
+  StyleController? _styleController;
+  bool _isStyleLoaded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +39,12 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
           _mapController = controller;
         },
         onStyleLoaded: (styleController) async {
+          // Guard against multiple calls on iOS
+          if (_isStyleLoaded) {
+            print('Style already loaded, skipping duplicate callback');
+            return;
+          }
+          _isStyleLoaded = true;
           _styleController = styleController;
           print('Style loaded');
           await _setupPoiLayer();
@@ -254,7 +261,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       // maxZoom: 16 because tiles are only available up to zoom 16
       // The layer can still render at higher zooms (overzooming)
 
-      await _styleController.addSource(
+      await _styleController!.addSource(
         const VectorSource(
           id: 'poi-source',
           tiles: [
@@ -269,7 +276,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
 
       // Add dot symbol layer with spacing (using dot-m icon)
       print('About to add POI dots layer');
-      await _styleController.addLayer(
+      await _styleController!.addLayer(
         SymbolStyleLayer(
           id: 'poi-circles',
           sourceId: 'poi-source',
@@ -335,7 +342,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
         'Setting icon size to $iconSize for ${Platform.isAndroid ? "Android" : "iOS"}',
       );
       // Layer 1: Airports (zoom 10+)
-      await _styleController.addLayer(
+      await _styleController!.addLayer(
         SymbolStyleLayer(
           id: 'poi-airports',
           sourceId: 'poi-source',
@@ -698,7 +705,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       );
 
       // Layer 2: Priority POIs (zoom 12+)
-      await _styleController.addLayer(
+      await _styleController!.addLayer(
         SymbolStyleLayer(
           id: 'poi-priority',
           sourceId: 'poi-source',
@@ -1063,7 +1070,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       );
 
       // Layer 3: All other POIs (zoom 16+)
-      await _styleController.addLayer(
+      await _styleController!.addLayer(
         SymbolStyleLayer(
           id: 'poi-all',
           sourceId: 'poi-source',
@@ -1620,7 +1627,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       if (visible) {
         // Re-add both layers, source already exists
         // First add circles
-        // await _styleController.addLayer(
+        // await _styleController!.addLayer(
         //   const CircleStyleLayer(
         //     id: 'poi-circles',
         //     sourceId: 'poi-source',
@@ -1664,7 +1671,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
         // Platform-specific icon size: Android needs 2x the size of iOS
         final iconSize = Platform.isAndroid ? 1.2 : 0.6;
 
-        await _styleController.addLayer(
+        await _styleController!.addLayer(
           SymbolStyleLayer(
             id: 'poi-symbols',
             sourceId: 'poi-source',
@@ -1701,8 +1708,8 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
         print('POI layers re-added with comprehensive icon mappings and zoom-based filtering');
       } else {
         // Remove both layers, keep the source
-        // await _styleController.removeLayer('poi-circles');
-        await _styleController.removeLayer('poi-symbols');
+        // await _styleController!.removeLayer('poi-circles');
+        await _styleController!.removeLayer('poi-symbols');
         print('POI layers removed');
       }
     } catch (e) {
@@ -1715,11 +1722,11 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       print('Long press detected at: ${point.lng}, ${point.lat}');
 
       // Convert the geographic position to screen coordinates
-      final screenLocation = await _mapController.toScreenLocation(point);
+      final screenLocation = await _mapController!.toScreenLocation(point);
       print('Screen location: ${screenLocation.dx}, ${screenLocation.dy}');
 
       // Query layers at that location - now returns maps with all properties
-      final layers = await _mapController.queryLayers(screenLocation);
+      final layers = await _mapController!.queryLayers(screenLocation);
       print('Found ${layers.length} layers at location');
 
       // Filter for both POI circles and icon layers
@@ -1987,7 +1994,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
 
       // Use native sprite loading - all extraction happens in Kotlin (much faster!)
       final nativeStopwatch = Stopwatch()..start();
-      await _styleController.addSprite(spriteJsonData, pngBytes);
+      await _styleController!.addSprite(spriteJsonData, pngBytes);
 
       print('✅ Native sprite loading complete in ${nativeStopwatch.elapsedMilliseconds}ms');
       print('⏱️  Total icon loading time: ${stopwatch.elapsedMilliseconds}ms');
