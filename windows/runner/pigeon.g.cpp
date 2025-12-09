@@ -1393,6 +1393,76 @@ void MapLibreHostApi::SetUp(
     }
   }
   {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addImages" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_ids_arg = args.at(0);
+          if (encodable_ids_arg.IsNull()) {
+            reply(WrapError("ids_arg unexpectedly null."));
+            return;
+          }
+          const auto& ids_arg = std::get<EncodableList>(encodable_ids_arg);
+          const auto& encodable_images_arg = args.at(1);
+          if (encodable_images_arg.IsNull()) {
+            reply(WrapError("images_arg unexpectedly null."));
+            return;
+          }
+          const auto& images_arg = std::get<EncodableList>(encodable_images_arg);
+          api->AddImages(ids_arg, images_arg, [reply](std::optional<FlutterError>&& output) {
+            if (output.has_value()) {
+              reply(WrapError(output.value()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue());
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addSprite" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_sprite_json_arg = args.at(0);
+          if (encodable_sprite_json_arg.IsNull()) {
+            reply(WrapError("sprite_json_arg unexpectedly null."));
+            return;
+          }
+          const auto& sprite_json_arg = std::get<std::string>(encodable_sprite_json_arg);
+          const auto& encodable_sprite_image_arg = args.at(1);
+          if (encodable_sprite_image_arg.IsNull()) {
+            reply(WrapError("sprite_image_arg unexpectedly null."));
+            return;
+          }
+          const auto& sprite_image_arg = std::get<std::vector<uint8_t>>(encodable_sprite_image_arg);
+          api->AddSprite(sprite_json_arg, sprite_image_arg, [reply](std::optional<FlutterError>&& output) {
+            if (output.has_value()) {
+              reply(WrapError(output.value()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue());
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
     BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addClusteredGeoJsonSource" + prepended_suffix, &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {

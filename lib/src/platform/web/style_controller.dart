@@ -22,6 +22,20 @@ class StyleControllerWeb implements StyleController {
   }
 
   @override
+  Future<void> addImages(Map<String, Uint8List> images) async {
+    // Fallback: call addImage for each image (can be optimized later)
+    for (final entry in images.entries) {
+      await addImage(entry.key, entry.value);
+    }
+  }
+
+  @override
+  Future<void> addSprite(String spriteJson, Uint8List spriteImage) async {
+    // TODO: Implement native sprite loading for web
+    throw UnimplementedError('addSprite not yet implemented for web');
+  }
+
+  @override
   Future<void> removeImage(String id) async => _map.removeImage(id);
 
   @override

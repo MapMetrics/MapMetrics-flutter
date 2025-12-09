@@ -24,6 +24,21 @@ class StyleControllerIos implements StyleController {
   }
 
   @override
+  Future<void> addImages(Map<String, Uint8List> images) async {
+    // Fallback: call addImage for each image (can be optimized with native bulk loading later)
+    for (final entry in images.entries) {
+      await _hostApi.addImage(entry.key, entry.value);
+    }
+  }
+
+  @override
+  Future<void> addSprite(String spriteJson, Uint8List spriteImage) async {
+    // TODO: Implement native sprite loading for iOS
+    print('iOS: addSprite not yet implemented natively, falling back to Dart extraction');
+    throw UnimplementedError('addSprite not yet implemented for iOS');
+  }
+
+  @override
   Future<void> addLayer(StyleLayer layer, {String? belowLayerId}) async {
     print(
       'iOS StyleController: Creating layer for source: ${layer.runtimeType}',

@@ -244,8 +244,16 @@ class MapLibreMapController(
             CircleLayer(id, sourceId)
         }
 
-        // Filter out source-layer from layout properties before parsing
-        val filteredLayout = layout.filterKeys { it != "source-layer" }
+        // Handle filter if it exists in layout
+        val filterArray = layout["__filter__"] as? ArrayList<*>
+        if (filterArray != null) {
+            val json = gson.toJsonTree(filterArray)
+            val expression = Expression.Converter.convert(json)
+            layer.setFilter(expression)
+        }
+
+        // Filter out source-layer and __filter__ from layout properties before parsing
+        val filteredLayout = layout.filterKeys { it != "source-layer" && it != "__filter__" }
 
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
         if (belowLayerId == null) {
@@ -383,8 +391,17 @@ class MapLibreMapController(
             SymbolLayer(id, sourceId)
         }
 
-        // Filter out source-layer from layout properties before parsing
-        val filteredLayout = layout.filterKeys { it != "source-layer" }
+        // Handle filter if it exists in layout
+        val filterArray = layout["__filter__"] as? ArrayList<*>
+        if (filterArray != null) {
+            val json = gson.toJsonTree(filterArray)
+            val expression = Expression.Converter.convert(json)
+            layer.setFilter(expression)
+            println("Android: Filter applied to symbol layer: $filterArray")
+        }
+
+        // Filter out source-layer and __filter__ from layout properties before parsing
+        val filteredLayout = layout.filterKeys { it != "source-layer" && it != "__filter__" }
 
         // Use parseLayoutProperties and parsePaintProperties to handle complex expressions
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
@@ -433,6 +450,110 @@ class MapLibreMapController(
         } else {
             println("Android: ERROR - Failed to decode bitmap from bytes")
             callback(Result.failure(Exception("Failed to decode image bitmap")))
+        }
+    }
+
+    override fun addImages(
+        ids: List<String>,
+        images: List<ByteArray>,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        println("Android: addImages called with ${ids.size} images - bulk loading")
+        val startTime = System.currentTimeMillis()
+
+        try {
+            val style = mapLibreMap.style
+            if (style == null) {
+                println("Android: Error - Style not available for bulk addImages")
+                callback(Result.failure(Exception("Style not available")))
+                return
+            }
+
+            var successCount = 0
+            var failCount = 0
+
+            for (i in ids.indices) {
+                val id = ids[i]
+                val bytes = images[i]
+                val bitmap = BitmapFactory.decodeStream(bytes.inputStream())
+                if (bitmap != null) {
+                    style.addImage(id, bitmap)
+                    successCount++
+                } else {
+                    failCount++
+                    println("Android: Failed to decode image: $id")
+                }
+            }
+
+            val elapsed = System.currentTimeMillis() - startTime
+            println("Android: ✅ Bulk addImages complete - $successCount success, $failCount failed in ${elapsed}ms")
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error in bulk addImages: ${e.message}")
+            callback(Result.failure(e))
+        }
+    }
+
+    override fun addSprite(
+        spriteJson: String,
+        spriteImage: ByteArray,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        println("Android: addSprite called - native sprite extraction")
+        val startTime = System.currentTimeMillis()
+
+        try {
+            val style = mapLibreMap.style
+            if (style == null) {
+                println("Android: Error - Style not available for addSprite")
+                callback(Result.failure(Exception("Style not available")))
+                return
+            }
+
+            // Decode the full sprite sheet
+            val spriteBitmap = BitmapFactory.decodeByteArray(spriteImage, 0, spriteImage.size)
+            if (spriteBitmap == null) {
+                println("Android: Error - Failed to decode sprite image")
+                callback(Result.failure(Exception("Failed to decode sprite image")))
+                return
+            }
+
+            // Parse sprite JSON
+            val jsonObject = org.json.JSONObject(spriteJson)
+            val keys = jsonObject.keys()
+            var successCount = 0
+            var failCount = 0
+
+            while (keys.hasNext()) {
+                val name = keys.next()
+                try {
+                    val iconData = jsonObject.getJSONObject(name)
+                    val x = iconData.getInt("x")
+                    val y = iconData.getInt("y")
+                    val width = iconData.getInt("width")
+                    val height = iconData.getInt("height")
+
+                    if (width > 0 && height > 0 && x + width <= spriteBitmap.width && y + height <= spriteBitmap.height) {
+                        // Extract icon from sprite sheet - this is very fast in native code
+                        val iconBitmap = android.graphics.Bitmap.createBitmap(spriteBitmap, x, y, width, height)
+                        style.addImage(name, iconBitmap)
+                        successCount++
+                    } else {
+                        failCount++
+                    }
+                } catch (e: Exception) {
+                    failCount++
+                }
+            }
+
+            spriteBitmap.recycle()
+
+            val elapsed = System.currentTimeMillis() - startTime
+            println("Android: ✅ Native sprite loading complete - $successCount icons in ${elapsed}ms")
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error in addSprite: ${e.message}")
+            callback(Result.failure(e))
         }
     }
 
@@ -762,6 +883,24 @@ class MapLibreMapController(
                             org.json.JSONObject(json).optString("source-layer", "")
                         } ?: ""
 
+                        // Extract geometry coordinates from feature JSON
+                        try {
+                            val featureJson = feature.toJson()
+                            if (featureJson != null) {
+                                val jsonObject = org.json.JSONObject(featureJson)
+                                val geometry = jsonObject.optJSONObject("geometry")
+                                if (geometry != null && geometry.optString("type") == "Point") {
+                                    val coordinates = geometry.optJSONArray("coordinates")
+                                    if (coordinates != null && coordinates.length() >= 2) {
+                                        properties["longitude"] = coordinates.getDouble(0).toString()
+                                        properties["latitude"] = coordinates.getDouble(1).toString()
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            println("Android: Error extracting coordinates: ${e.message}")
+                        }
+
                         // Extract all feature properties (using empty string instead of null)
                         val featureProperties = feature.properties()
                         if (featureProperties != null) {
@@ -776,6 +915,7 @@ class MapLibreMapController(
                             println("Android: First feature layerId='${properties["layerId"]}'")
                             println("Android: First feature sourceId='${properties["sourceId"]}'")
                             println("Android: First feature sourceLayer='${properties["sourceLayer"]}'")
+                            println("Android: First feature coordinates: lat=${properties["latitude"]}, lon=${properties["longitude"]}")
                             println("Android: First feature all properties: $properties")
                         }
 

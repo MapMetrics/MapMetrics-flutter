@@ -9,18 +9,42 @@ class StyleControllerAndroid implements StyleController {
 
   @override
   Future<void> addLayer(StyleLayer layer, {String? belowLayerId}) async {
-    // For SymbolStyleLayer, use Pigeon to properly handle icon-image properties
+    // For SymbolStyleLayer, use Pigeon to properly handle icon-image properties and filters
     // (matching iOS implementation which works correctly with SDF icons)
     if (layer is SymbolStyleLayer) {
       print('Android StyleController: Adding symbol layer via Pigeon');
+      final layout = Map<String, Object>.from(layer.layout ?? {});
+      // Pass filter through layout with special key
+      if (layer.filter != null) {
+        layout['__filter__'] = layer.filter!;
+      }
       await _hostApi.addSymbolLayer(
         id: layer.id,
         sourceId: layer.sourceId,
-        layout: layer.layout ?? {},
+        layout: layout,
         paint: layer.paint ?? {},
         belowLayerId: belowLayerId,
       );
       print('Android StyleController: Symbol layer added successfully');
+      return;
+    }
+
+    // For CircleStyleLayer, use Pigeon to properly handle filters
+    if (layer is CircleStyleLayer) {
+      print('Android StyleController: Adding circle layer via Pigeon');
+      final layout = Map<String, Object>.from(layer.layout ?? {});
+      // Pass filter through layout with special key
+      if (layer.filter != null) {
+        layout['__filter__'] = layer.filter!;
+      }
+      await _hostApi.addCircleLayer(
+        id: layer.id,
+        sourceId: layer.sourceId,
+        layout: layout,
+        paint: layer.paint ?? {},
+        belowLayerId: belowLayerId,
+      );
+      print('Android StyleController: Circle layer added successfully');
       return;
     }
 
@@ -221,6 +245,14 @@ class StyleControllerAndroid implements StyleController {
   Future<void> addImage(String id, Uint8List bytes) =>
   // TODO: use JNI for this method
   _hostApi.addImage(id, bytes);
+
+  @override
+  Future<void> addImages(Map<String, Uint8List> images) =>
+      _hostApi.addImages(images.keys.toList(), images.values.toList());
+
+  @override
+  Future<void> addSprite(String spriteJson, Uint8List spriteImage) =>
+      _hostApi.addSprite(spriteJson, spriteImage);
 
   @override
   Future<void> removeImage(String id) async =>
