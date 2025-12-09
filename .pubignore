@@ -1,0 +1,23 @@
+# Exclude example app (has path dependency)
+example/
+
+# Exclude build artifacts
+build/
+*.log
+
+# Exclude IDE files
+.idea/
+.vscode/
+*.iml
+
+# Exclude iOS/macOS build files that are gitignored but checked in
+ios/Flutter/
+ios/Runner.xcodeproj/project.xcworkspace/
+ios/Runner.xcworkspace/
+macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Exclude test coverage
+coverage/
+
+# Exclude documentation build
+doc/api/

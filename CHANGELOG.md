@@ -1,3 +1,9 @@
+## 1.0.3
+* Add native sprite loading for iOS via Pigeon channel
+* Add addImages() and addSprite() methods for iOS
+* Fix duplicate onStyleLoaded callback issue on iOS
+* Improve icon loading performance on both platforms
+
 ## 1.0.0
 * Fix iOS compilation errors (NSNumber extensions, CGPoint struct)
 * Add type safety improvements for FFI stubs
