@@ -12,6 +12,8 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     private var _viewId: Int64
     private var _flutterApi: MapLibreFlutterApi
     private var _mapOptions: MapOptions? = nil
+    private var _isMapInitialized = false
+    private var _pendingOperations: [(MLNMapView) -> Void] = []
 
     init(
         frame _: CGRect,
@@ -77,6 +79,11 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                 self._mapView.allowsZooming = mapOptions.gestures.zoom
 
                 self._flutterApi.onMapReady { _ in }
+                
+                // Mark map as initialized and execute pending operations
+                self._isMapInitialized = true
+                self.executePendingOperations()
+                
                 // tap gestures
                 self._mapView.addGestureRecognizer(
                     UITapGestureRecognizer(
@@ -125,6 +132,28 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
 
     func view() -> UIView {
         _view
+    }
+    
+    private func executePendingOperations() {
+        guard _isMapInitialized && _mapView != nil else { return }
+        
+        print("iOS: Executing \(_pendingOperations.count) pending operations")
+        for operation in _pendingOperations {
+            operation(_mapView)
+        }
+        _pendingOperations.removeAll()
+    }
+    
+    private func executeOrQueue<T>(_ operation: @escaping (MLNMapView) -> T, completion: @escaping (Result<T, Error>) -> Void) {
+        if _isMapInitialized && _mapView != nil {
+            let result = operation(_mapView)
+            completion(.success(result))
+        } else {
+            _pendingOperations.append { mapView in
+                let result = operation(mapView)
+                completion(.success(result))
+            }
+        }
     }
 
     func gestureRecognizer(
@@ -1107,39 +1136,34 @@ func addSymbolLayer(
     ) {
         print("iOS: addImage called with id: \(id), data length: \(bytes.data.count)")
 
-        guard _mapView != nil else {
-            print("iOS: Error - MapView not initialized for addImage")
-            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
-            return
-        }
+        executeOrQueue({ mapView in
+            guard let style = mapView.style else {
+                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                return
+            }
 
-        guard let style = _mapView.style else {
-            print("iOS: ERROR - Style not available")
-            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
-            return
-        }
+            let imageData = bytes.data
 
-        let imageData = bytes.data
+            // IMPORTANT: Use scale 1.0 for MapLibre icons, not UIScreen.main.scale
+            // MapLibre expects images at 1x resolution and will handle scaling internally
+            guard let image = UIImage(data: imageData, scale: 1.0) else {
+                print("iOS: ERROR - Failed to decode UIImage from data")
+                completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])))
+                return
+            }
 
-        // IMPORTANT: Use scale 1.0 for MapLibre icons, not UIScreen.main.scale
-        // MapLibre expects images at 1x resolution and will handle scaling internally
-        guard let image = UIImage(data: imageData, scale: 1.0) else {
-            print("iOS: ERROR - Failed to decode UIImage from data")
-            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])))
-            return
-        }
+            print("iOS: Image decoded successfully - size: \(image.size.width) x \(image.size.height), scale: \(image.scale)")
+            style.setImage(image, forName: id)
 
-        print("iOS: Image decoded successfully - size: \(image.size.width) x \(image.size.height), scale: \(image.scale)")
-        style.setImage(image, forName: id)
+            // Verify the image was added
+            if let verifyImage = style.image(forName: id) {
+                print("iOS: ✅ Image '\(id)' added to style successfully - verified size: \(verifyImage.size.width) x \(verifyImage.size.height)")
+            } else {
+                print("iOS: ⚠️ WARNING - Image '\(id)' was set but cannot be retrieved from style")
+            }
 
-        // Verify the image was added
-        if let verifyImage = style.image(forName: id) {
-            print("iOS: ✅ Image '\(id)' added to style successfully - verified size: \(verifyImage.size.width) x \(verifyImage.size.height)")
-        } else {
-            print("iOS: ⚠️ WARNING - Image '\(id)' was set but cannot be retrieved from style")
-        }
-
-        completion(.success(()))
+            completion(.success(()))
+        }, completion: { _ in })
     }
 
     func addImages(
@@ -1363,39 +1387,35 @@ func addSymbolLayer(
         maxZoom: Double,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        do {
-            print("✅ iOS: Set VectorSource called with id: \(id), tiles: \(tiles), minZoom: \(minZoom), maxZoom: \(maxZoom)")
+        print("✅ iOS: Set VectorSource called with id: \(id), tiles: \(tiles), minZoom: \(minZoom), maxZoom: \(maxZoom)")
 
-            guard _mapView != nil else {
-                print("iOS: Error - MapView not initialized for addVectorSource")
-                completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
-                return
+        executeOrQueue({ mapView in
+            do {
+                guard let style = mapView.style else {
+                    print("iOS: Error - Style not available")
+                    completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                    return
+                }
+
+                // Configure tile source options with min/max zoom
+                var options: [MLNTileSourceOption: Any] = [:]
+                options[.minimumZoomLevel] = NSNumber(value: minZoom)
+                options[.maximumZoomLevel] = NSNumber(value: maxZoom)
+
+                print("iOS: Configuring vector source with options: minZoom=\(minZoom), maxZoom=\(maxZoom)")
+
+                // Create MLNVectorTileSource with tiles array and options
+                let source = MLNVectorTileSource(identifier: id, tileURLTemplates: tiles, options: options)
+
+                style.addSource(source)
+                print("✅ iOS: Successfully added vector source with ID: \(id) and zoom range \(minZoom)-\(maxZoom)")
+
+                completion(.success(()))
+            } catch {
+                print("iOS: Error adding vector source: \(error.localizedDescription)")
+                completion(.failure(error))
             }
-
-            guard let style = _mapView.style else {
-                print("iOS: Error - Style not available")
-                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
-                return
-            }
-
-            // Configure tile source options with min/max zoom
-            var options: [MLNTileSourceOption: Any] = [:]
-            options[.minimumZoomLevel] = NSNumber(value: minZoom)
-            options[.maximumZoomLevel] = NSNumber(value: maxZoom)
-
-            print("iOS: Configuring vector source with options: minZoom=\(minZoom), maxZoom=\(maxZoom)")
-
-            // Create MLNVectorTileSource with tiles array and options
-            let source = MLNVectorTileSource(identifier: id, tileURLTemplates: tiles, options: options)
-
-            style.addSource(source)
-            print("✅ iOS: Successfully added vector source with ID: \(id) and zoom range \(minZoom)-\(maxZoom)")
-
-            completion(.success(()))
-        } catch {
-            print("iOS: Error adding vector source: \(error.localizedDescription)")
-            completion(.failure(error))
-        }
+        }, completion: { _ in })
     }
 
     // Test method for debugging Pigeon generation
@@ -1968,47 +1988,42 @@ func addSymbolLayer(
     ) {
       print("iOS: updateGeoJsonSource called for id: \(id)")
 
-      guard _mapView != nil else {
-        print("iOS: Error - MapView not initialized for updateGeoJsonSource")
-        completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
-        return
-      }
-
-      guard let style = _mapView.style else {
-        print("iOS: Error - Style not available for updateGeoJsonSource")
-        completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
-        return
-      }
-
-      guard let source = style.source(withIdentifier: id) as? MLNShapeSource else {
-        print("iOS: Error - Source not found or not a GeoJSON source: \(id)")
-        completion(.failure(NSError(domain: "MapLibre", code: 4, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(id)"])))
-        return
-      }
-
-      // Parse the GeoJSON data
-      if data.hasPrefix("http://") || data.hasPrefix("https://") {
-        // Handle URL source
-        guard let url = URL(string: data) else {
-          print("iOS: Error - Invalid URL: \(data)")
-          completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])))
+      executeOrQueue({ mapView in
+        guard let style = mapView.style else {
+          completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
           return
         }
-        source.url = url
-        print("iOS: Updated source with URL: \(data)")
-      } else {
-        // Handle GeoJSON data
-        guard let dataBytes = data.data(using: .utf8),
-              let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
-          print("iOS: Error - Invalid GeoJSON data")
-          completion(.failure(NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])))
+
+        guard let source = style.source(withIdentifier: id) as? MLNShapeSource else {
+          print("iOS: Error - Source not found or not a GeoJSON source: \(id)")
+          completion(.failure(NSError(domain: "MapLibre", code: 4, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(id)"])))
           return
         }
-        source.shape = shape
-        print("iOS: Updated source with GeoJSON data (\(data.count) characters)")
-      }
 
-      completion(.success(()))
+        // Parse the GeoJSON data
+        if data.hasPrefix("http://") || data.hasPrefix("https://") {
+          // Handle URL source
+          guard let url = URL(string: data) else {
+            print("iOS: Error - Invalid URL: \(data)")
+            completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])))
+            return
+          }
+          source.url = url
+          print("iOS: Updated source with URL: \(data)")
+        } else {
+          // Handle GeoJSON data
+          guard let dataBytes = data.data(using: .utf8),
+                let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
+            print("iOS: Error - Invalid GeoJSON data")
+            completion(.failure(NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])))
+            return
+          }
+          source.shape = shape
+          print("iOS: Updated source with GeoJSON data (\(data.count) characters)")
+        }
+
+        completion(.success(()))
+      }, completion: { _ in })
     }
 
     // MARK: - Helper Methods for Property Parsing
