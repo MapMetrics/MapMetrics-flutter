@@ -180,6 +180,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         belowLayerId: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        // Guard against nil _mapView before accessing it
+        guard _mapView != nil else {
+            print("iOS: Error - MapView not initialized for addFillLayer")
+            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+            return
+        }
+
         guard let style = _mapView.style else {
             completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
             return
@@ -236,6 +243,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         belowLayerId: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        // Guard against nil _mapView before accessing it
+        guard _mapView != nil else {
+            print("iOS: Error - MapView not initialized for addCircleLayer")
+            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+            return
+        }
+
         guard let style = _mapView.style else {
             completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
             return
@@ -346,9 +360,9 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                     print("iOS: ⚠️ mglJSONObject also failed: \(error)")
                     print("iOS: Expression that failed: \(arrayValue)")
 
-                    // This should not happen if buildNativeExpression is comprehensive
-                    // But if it does, we need to know about it
-                    fatalError("iOS: CRITICAL - Expression not supported by either native builder or mglJSONObject: \(arrayValue)")
+                    // Return nil constant instead of crashing - graceful degradation
+                    print("iOS: ⚠️ Expression not supported, returning nil constant: \(arrayValue)")
+                    return NSExpression(forConstantValue: nil)
                 }
             } else {
                 // Regular array
@@ -665,6 +679,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         belowLayerId: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        // Guard against nil _mapView before accessing it
+        guard _mapView != nil else {
+            print("iOS: Error - MapView not initialized for addBackgroundLayer")
+            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+            return
+        }
+
         guard let style = _mapView.style else {
             completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
             return
@@ -741,6 +762,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       print("iOS: addLineLayer called with id: \(id), sourceId: \(sourceId)")
       print("iOS: Paint properties: \(paint)")
       print("iOS: Layout properties: \(layout)")
+
+      // Guard against nil _mapView before accessing it
+      guard _mapView != nil else {
+        print("iOS: Error - MapView not initialized for addLineLayer")
+        completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+        return
+      }
 
       guard let style = _mapView.style else {
         print("iOS: Error - Style not available for addLineLayer")
@@ -942,6 +970,12 @@ func addSymbolLayer(
     print("iOS: Layout properties: \(layout)")
     print("iOS: Paint properties: \(paint)")
 
+    guard _mapView != nil else {
+        print("iOS: Error - MapView not yet initialized")
+        completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not yet initialized"])))
+        return
+    }
+
     guard let style = _mapView.style else {
         print("iOS: Error - Style not available")
         completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
@@ -1073,6 +1107,12 @@ func addSymbolLayer(
     ) {
         print("iOS: addImage called with id: \(id), data length: \(bytes.data.count)")
 
+        guard _mapView != nil else {
+            print("iOS: Error - MapView not initialized for addImage")
+            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+            return
+        }
+
         guard let style = _mapView.style else {
             print("iOS: ERROR - Style not available")
             completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
@@ -1107,6 +1147,12 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         print("iOS: addImages called with \(ids.count) images")
+
+        guard _mapView != nil else {
+            print("iOS: Error - MapView not initialized for addImages")
+            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+            return
+        }
 
         guard let style = _mapView.style else {
             print("iOS: ERROR - Style not available")
@@ -1143,6 +1189,12 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         print("iOS: addSprite called - native sprite extraction")
+
+        guard _mapView != nil else {
+            print("iOS: Error - MapView not initialized for addSprite")
+            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+            return
+        }
 
         guard let style = _mapView.style else {
             print("iOS: ERROR - Style not available")
@@ -1211,6 +1263,13 @@ func addSymbolLayer(
     ) {
         do {
             print("iOS: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
+
+            // Guard against nil _mapView before accessing it
+            guard _mapView != nil else {
+                print("iOS: Error - MapView not yet initialized")
+                completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+                return
+            }
 
             guard let style = _mapView.style else {
                 print("iOS: Error - Style not available")
@@ -1307,6 +1366,12 @@ func addSymbolLayer(
         do {
             print("✅ iOS: Set VectorSource called with id: \(id), tiles: \(tiles), minZoom: \(minZoom), maxZoom: \(maxZoom)")
 
+            guard _mapView != nil else {
+                print("iOS: Error - MapView not initialized for addVectorSource")
+                completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+                return
+            }
+
             guard let style = _mapView.style else {
                 print("iOS: Error - Style not available")
                 completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
@@ -1353,6 +1418,11 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                // Map view not yet initialized, skip camera animation
+                completion(.success(()))
+                return
+            }
             var camera = self._mapView.camera
 
             // Use sentinel values (-1.0 or NaN) to indicate "no change"
@@ -1383,6 +1453,15 @@ func addSymbolLayer(
 
     // Get the current camera state
     func getCamera() -> MapCamera {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return default camera
+            return MapCamera(
+                center: LngLat(lng: 0.0, lat: 0.0),
+                zoom: 0.0,
+                pitch: 0.0,
+                bearing: 0.0
+            )
+        }
         let camera = _mapView.camera
         let center = LngLat(
             lng: camera.centerCoordinate.longitude,
@@ -1398,11 +1477,19 @@ func addSymbolLayer(
 
     // Get the current zoom level
     func getZoomLevel() -> Double {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return default zoom
+            return 0.0
+        }
         return _mapView.zoomLevel
     }
 
     // Get the user's current location
     func getUserLocation() -> LngLat {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return default location
+            return LngLat(lng: 0.0, lat: 0.0)
+        }
         if let userLocation = _mapView.userLocation?.location {
             return LngLat(
                 lng: userLocation.coordinate.longitude,
@@ -1426,6 +1513,11 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                // Map view not yet initialized, skip camera move
+                completion(.success(()))
+                return
+            }
             var camera = self._mapView.camera
 
             // Use sentinel values (-1.0 or NaN) to indicate "no change"
@@ -1468,6 +1560,11 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                // Map view not yet initialized, skip map options update
+                completion(.success(()))
+                return
+            }
             // Update zoom and pitch limits
             if !minZoom.isNaN && minZoom != -1.0 {
                 self._mapView.minimumZoomLevel = minZoom
@@ -1513,6 +1610,11 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                // Map view not yet initialized, skip enable location
+                completion(.success(()))
+                return
+            }
             self._mapView.showsUserLocation = true
             // Note: iOS MapLibre doesn't have all the detailed location settings like Android
             // The parameters here would need custom implementation if needed
@@ -1536,6 +1638,11 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                // Map view not yet initialized, skip fit bounds
+                completion(.success(()))
+                return
+            }
             let bounds = MLNCoordinateBounds(
                 sw: CLLocationCoordinate2D(latitude: south, longitude: west),
                 ne: CLLocationCoordinate2D(latitude: north, longitude: east)
@@ -1561,6 +1668,11 @@ func addSymbolLayer(
         latitude: Double,
         completion: @escaping (Result<Double, Error>) -> Void
     ) {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return a default value instead of crashing
+            completion(.success(1.0))
+            return
+        }
         let metersPerPixel = _mapView.metersPerPoint(atLatitude: latitude)
         completion(.success(metersPerPixel))
     }
@@ -1569,6 +1681,11 @@ func addSymbolLayer(
     func getVisibleRegion(
         completion: @escaping (Result<[Double], Error>) -> Void
     ) {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return empty bounds
+            completion(.success([0.0, 0.0, 0.0, 0.0]))
+            return
+        }
         let bounds = _mapView.visibleCoordinateBounds
         let result = [
             bounds.sw.longitude, bounds.sw.latitude, bounds.ne.longitude, bounds.ne.latitude,
@@ -1582,6 +1699,11 @@ func addSymbolLayer(
         y: Double,
         completion: @escaping (Result<[Double], Error>) -> Void
     ) {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return default coordinates
+            completion(.success([0.0, 0.0]))
+            return
+        }
         let screenPoint = CGPoint(x: x, y: y)
         let coordinate = _mapView.convert(screenPoint, toCoordinateFrom: _mapView)  // Remove asterisks
         let result = [coordinate.longitude, coordinate.latitude]
@@ -1594,6 +1716,11 @@ func addSymbolLayer(
         lat: Double,
         completion: @escaping (Result<[Double], Error>) -> Void
     ) {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return default screen location
+            completion(.success([0.0, 0.0]))
+            return
+        }
         let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
         let screenPoint = _mapView.convert(coordinate, toPointTo: _mapView)  // Remove asterisks
         let result = [Double(screenPoint.x), Double(screenPoint.y)]
@@ -1606,6 +1733,12 @@ func addSymbolLayer(
         y: Double,
         completion: @escaping (Result<[[String: String]], Error>) -> Void
     ) {
+        guard _mapView != nil else {
+            // Map view not yet initialized, return empty results
+            completion(.success([]))
+            return
+        }
+
         let screenPoint = CGPoint(x: x, y: y)
         print("iOS: queryLayers called at screen point: (\(x), \(y))")
 
@@ -1724,6 +1857,11 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                // Map view not yet initialized, skip track location
+                completion(.success(()))
+                return
+            }
             if track {
                 // Convert bearingMode to appropriate iOS tracking mode
                 switch bearingMode {
@@ -1750,6 +1888,11 @@ func addSymbolLayer(
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                // Map view not yet initialized, skip show user location puck
+                completion(.success(()))
+                return
+            }
             self._mapView.showsUserLocation = show
             print("iOS: showUserLocationPuck set to \(show)")
             completion(.success(()))
@@ -1763,6 +1906,13 @@ func addSymbolLayer(
       completion: @escaping (Result<Void, Error>) -> Void
     ) {
       print("iOS: removeLayer called for id: \(id)")
+
+      // Guard against nil _mapView before accessing it
+      guard _mapView != nil else {
+        print("iOS: Warning - MapView not yet initialized for removeLayer, returning success (layer doesn't exist)")
+        completion(.success(()))
+        return
+      }
 
       guard let style = _mapView.style else {
         print("iOS: Error - Style not available for removeLayer")
@@ -1787,6 +1937,13 @@ func addSymbolLayer(
     ) {
       print("iOS: removeSource called for id: \(id)")
 
+      // Guard against nil _mapView before accessing it
+      guard _mapView != nil else {
+        print("iOS: Warning - MapView not yet initialized for removeSource, returning success (source doesn't exist)")
+        completion(.success(()))
+        return
+      }
+
       guard let style = _mapView.style else {
         print("iOS: Error - Style not available for removeSource")
         completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
@@ -1810,6 +1967,12 @@ func addSymbolLayer(
       completion: @escaping (Result<Void, Error>) -> Void
     ) {
       print("iOS: updateGeoJsonSource called for id: \(id)")
+
+      guard _mapView != nil else {
+        print("iOS: Error - MapView not initialized for updateGeoJsonSource")
+        completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+        return
+      }
 
       guard let style = _mapView.style else {
         print("iOS: Error - Style not available for updateGeoJsonSource")
