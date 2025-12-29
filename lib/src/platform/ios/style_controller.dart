@@ -33,29 +33,29 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> addSprite(String spriteJson, Uint8List spriteImage) async {
-    print('iOS: addSprite called - native sprite extraction via Pigeon');
+   // print('iOS: addSprite called - native sprite extraction via Pigeon');
     await _hostApi.addSprite(spriteJson, spriteImage);
   }
 
   @override
   Future<void> addLayer(StyleLayer layer, {String? belowLayerId}) async {
-    print(
-      'iOS StyleController: Creating layer for source: ${layer.runtimeType}',
-    );
+    // print(
+    //   'iOS StyleController: Creating layer for source: ${layer.runtimeType}',
+    // );
 
     switch (layer) {
       case BackgroundStyleLayer():
-        print('iOS StyleController: Adding background layer via Pigeon');
+     //   print('iOS StyleController: Adding background layer via Pigeon');
         await _hostApi.addBackgroundLayer(
           id: layer.id,
           layout: layer.layout ?? {},
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Background layer added successfully');
+      //  print('iOS StyleController: Background layer added successfully');
 
       case CircleStyleLayer():
-        print('iOS StyleController: Adding circle layer via Pigeon');
+      //  print('iOS StyleController: Adding circle layer via Pigeon');
         await _hostApi.addCircleLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -63,10 +63,10 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Circle layer added successfully');
+      //  print('iOS StyleController: Circle layer added successfully');
 
       case FillStyleLayer():
-        print('iOS StyleController: Adding fill layer via Pigeon');
+      //  print('iOS StyleController: Adding fill layer via Pigeon');
         await _hostApi.addFillLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -74,10 +74,10 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Fill layer added successfully');
+       // print('iOS StyleController: Fill layer added successfully');
 
       case LineStyleLayer():
-        print('iOS StyleController: Adding line layer via Pigeon');
+      //  print('iOS StyleController: Adding line layer via Pigeon');
         await _hostApi.addLineLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -85,10 +85,10 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Line layer added successfully');
+       // print('iOS StyleController: Line layer added successfully');
 
       case SymbolStyleLayer():
-        print('iOS StyleController: Adding symbol layer via Pigeon');
+       // print('iOS StyleController: Adding symbol layer via Pigeon');
         await _hostApi.addSymbolLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -96,10 +96,10 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Symbol layer added successfully');
+      //  print('iOS StyleController: Symbol layer added successfully');
 
       case FillExtrusionStyleLayer():
-        print('iOS StyleController: Adding fill extrusion layer via Pigeon');
+     //   print('iOS StyleController: Adding fill extrusion layer via Pigeon');
         await _hostApi.addFillExtrusionLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -107,10 +107,10 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Fill extrusion layer added successfully');
+      //  print('iOS StyleController: Fill extrusion layer added successfully');
 
       case HeatmapStyleLayer():
-        print('iOS StyleController: Adding heatmap layer via Pigeon');
+       // print('iOS StyleController: Adding heatmap layer via Pigeon');
         await _hostApi.addHeatmapLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -118,10 +118,10 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Heatmap layer added successfully');
+     //   print('iOS StyleController: Heatmap layer added successfully');
 
       case HillshadeStyleLayer():
-        print('iOS StyleController: Adding hillshade layer via Pigeon');
+      //  print('iOS StyleController: Adding hillshade layer via Pigeon');
         await _hostApi.addHillshadeLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -129,10 +129,10 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Hillshade layer added successfully');
+     //   print('iOS StyleController: Hillshade layer added successfully');
 
       case RasterStyleLayer():
-        print('iOS StyleController: Adding raster layer via Pigeon');
+       // print('iOS StyleController: Adding raster layer via Pigeon');
         await _hostApi.addRasterLayer(
           id: layer.id,
           sourceId: layer.sourceId,
@@ -140,7 +140,7 @@ class StyleControllerIos implements StyleController {
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
-        print('iOS StyleController: Raster layer added successfully');
+      //  print('iOS StyleController: Raster layer added successfully');
 
       default:
         throw UnimplementedError(
@@ -151,20 +151,20 @@ class StyleControllerIos implements StyleController {
 
   @override
   Future<void> addSource(Source source) async {
-    print(
-      'iOS StyleController: addSource called for ${source.runtimeType} with ID: ${source.id}',
-    );
+ //   print(
+   //   'iOS StyleController: addSource called for ${source.runtimeType} with ID: ${source.id}',
+   // );
 
     switch (source) {
       case GeoJsonSource():
-        print(
-          'iOS StyleController: Processing GeoJsonSource with cluster: ${source.cluster}',
-        );
+        // print(
+        //   'iOS StyleController: Processing GeoJsonSource with cluster: ${source.cluster}',
+        // );
         if (source.cluster) {
           // Use the new Pigeon method for clustering
-          print(
-            'iOS StyleController: Calling addClusteredGeoJsonSource via Pigeon',
-          );
+          // print(
+          //   'iOS StyleController: Calling addClusteredGeoJsonSource via Pigeon',
+          // );
           try {
             await _hostApi.addClusteredGeoJsonSource(
               id: source.id,
@@ -173,15 +173,15 @@ class StyleControllerIos implements StyleController {
               clusterRadius: source.clusterRadius.toDouble(),
               clusterMaxZoom: (source.clusterMaxZoom ?? 16.0).toDouble(),
             );
-            print(
-              'iOS: Successfully added clustered source via Pigeon: ${source.id}',
-            );
+            // print(
+            //   'iOS: Successfully added clustered source via Pigeon: ${source.id}',
+            // );
           } catch (e) {
             print('iOS: Error adding clustered source via Pigeon: $e');
           }
         } else {
           // For non-clustered sources, we'll use the same Pigeon method with clustering disabled
-          print('iOS StyleController: Using Pigeon for non-clustered source');
+         // print('iOS StyleController: Using Pigeon for non-clustered source');
           try {
             await _hostApi.addClusteredGeoJsonSource(
               id: source.id,
@@ -190,29 +190,29 @@ class StyleControllerIos implements StyleController {
               clusterRadius: 0.0,
               clusterMaxZoom: 0.0,
             );
-            print('iOS: Added regular GeoJSON source via Pigeon: ${source.id}');
+         //   print('iOS: Added regular GeoJSON source via Pigeon: ${source.id}');
           } catch (e) {
             print('iOS: Error adding regular source via Pigeon: $e');
           }
         }
       case RasterDemSource():
         // TODO: Implement Pigeon method for RasterDemSource
-        print(
-          'iOS StyleController: RasterDemSource not yet implemented via Pigeon',
-        );
+        // print(
+        //   'iOS StyleController: RasterDemSource not yet implemented via Pigeon',
+        // );
         throw UnimplementedError(
           'RasterDemSource not yet implemented via Pigeon',
         );
       case RasterSource():
         // TODO: Implement Pigeon method for RasterSource
-        print(
-          'iOS StyleController: RasterSource not yet implemented via Pigeon',
-        );
+        // print(
+        //   'iOS StyleController: RasterSource not yet implemented via Pigeon',
+        // );
         throw UnimplementedError('RasterSource not yet implemented via Pigeon');
       case VectorSource():
-        print(
-          'iOS StyleController: Adding VectorSource via Pigeon with ID: ${source.id}',
-        );
+        // print(
+        //   'iOS StyleController: Adding VectorSource via Pigeon with ID: ${source.id}',
+        // );
         try {
           await _hostApi.addVectorSource(
             id: source.id,
@@ -220,7 +220,7 @@ class StyleControllerIos implements StyleController {
             minZoom: source.minZoom ?? 0.0,
             maxZoom: source.maxZoom ?? 22.0,
           );
-          print('iOS: Successfully added vector source via Pigeon: ${source.id}');
+         // print('iOS: Successfully added vector source via Pigeon: ${source.id}');
         } catch (e) {
           print('iOS: Error adding vector source via Pigeon: $e');
           rethrow;
@@ -249,33 +249,33 @@ class StyleControllerIos implements StyleController {
   @override
   Future<void> removeImage(String id) async {
     // TODO: Implement Pigeon method for removeImage
-    print('iOS StyleController: removeImage not yet implemented via Pigeon');
+  //  print('iOS StyleController: removeImage not yet implemented via Pigeon');
   }
 
   @override
   Future<void> removeLayer(String id) async {
-    print('iOS StyleController: removeLayer called for id: $id');
+  //  print('iOS StyleController: removeLayer called for id: $id');
 
     // TODO: Implement native iOS removeLayer method
     try {
       await _hostApi.removeLayer(id);
-      print('iOS StyleController: Successfully removed layer: $id');
+   //   print('iOS StyleController: Successfully removed layer: $id');
     } catch (e) {
-      print('iOS StyleController: Error removing layer $id: $e');
+   //   print('iOS StyleController: Error removing layer $id: $e');
       rethrow;
     }
   }
 
   @override
   Future<void> removeSource(String id) async {
-    print('iOS StyleController: removeSource called for id: $id');
+   // print('iOS StyleController: removeSource called for id: $id');
 
     // TODO: Implement native iOS removeSource method
     try {
       await _hostApi.removeSource(id);
-      print('iOS StyleController: Successfully removed source: $id');
+    //  print('iOS StyleController: Successfully removed source: $id');
     } catch (e) {
-      print('iOS StyleController: Error removing source $id: $e');
+     // print('iOS StyleController: Error removing source $id: $e');
       rethrow;
     }
   }
@@ -284,14 +284,14 @@ class StyleControllerIos implements StyleController {
     required String id,
     required String data,
   }) async {
-    print('iOS StyleController: updateGeoJsonSource called for id: $id');
+   // print('iOS StyleController: updateGeoJsonSource called for id: $id');
 
     // TODO: Implement native iOS updateGeoJsonSource method
     try {
       await _hostApi.updateGeoJsonSource(id, data);
-      print('iOS StyleController: Successfully updated source: $id');
+    //  print('iOS StyleController: Successfully updated source: $id');
     } catch (e) {
-      print('iOS StyleController: Error updating source $id: $e');
+     // print('iOS StyleController: Error updating source $id: $e');
       rethrow;
     }
   }

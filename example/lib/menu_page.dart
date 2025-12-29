@@ -27,7 +27,7 @@ import 'package:maplibre_example/user_location_page.dart';
 import 'package:maplibre_example/widget_layer_interactive_page.dart';
 import 'package:maplibre_example/widget_layer_page.dart';
 import 'package:maplibre_example/poi_demo_page.dart';
-import 'package:mapmetrics/mapmetrics.dart';
+import 'package:maplibre_example/cached_map_page.dart';
 
 class MenuPage extends StatelessWidget {
   const MenuPage({super.key});
@@ -197,6 +197,11 @@ class MenuPage extends StatelessWidget {
                   label: 'POI Demo',
                   iconData: Icons.place,
                   location: PoiDemoPage.route,
+                ),
+                ItemCard(
+                  label: 'Cached Map (MVVM)',
+                  iconData: Icons.speed,
+                  location: CachedMapPage.route,
                 ),
               ],
             ),
