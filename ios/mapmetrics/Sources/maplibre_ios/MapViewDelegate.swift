@@ -15,6 +15,11 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     private var _isMapInitialized = false
     private var _pendingOperations: [(MLNMapView) -> Void] = []
 
+    // THREAD SAFETY: Serial queue for all style operations to prevent race conditions
+    private let styleOperationQueue = DispatchQueue(label: "com.mapmetrics.styleOperations", qos: .userInitiated)
+    private var _isProcessingStyleOperation = false
+    private let styleLock = NSLock()
+
     init(
         frame _: CGRect,
         viewId: Int64,
@@ -1136,34 +1141,71 @@ func addSymbolLayer(
     ) {
         print("iOS: addImage called with id: \(id), data length: \(bytes.data.count)")
 
-        executeOrQueue({ mapView in
-            guard let style = mapView.style else {
-                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+        // THREAD SAFETY: Decode image off main thread, then add to style on main thread with lock
+        styleOperationQueue.async { [weak self] in
+            guard let self = self else {
+                completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView deallocated"])))
                 return
             }
 
             let imageData = bytes.data
 
-            // IMPORTANT: Use scale 1.0 for MapLibre icons, not UIScreen.main.scale
-            // MapLibre expects images at 1x resolution and will handle scaling internally
+            // Decode image on background queue
             guard let image = UIImage(data: imageData, scale: 1.0) else {
                 print("iOS: ERROR - Failed to decode UIImage from data")
-                completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])))
+                DispatchQueue.main.async {
+                    completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to decode image"])))
+                }
                 return
             }
 
             print("iOS: Image decoded successfully - size: \(image.size.width) x \(image.size.height), scale: \(image.scale)")
-            style.setImage(image, forName: id)
 
-            // Verify the image was added
-            if let verifyImage = style.image(forName: id) {
-                print("iOS: ✅ Image '\(id)' added to style successfully - verified size: \(verifyImage.size.width) x \(verifyImage.size.height)")
-            } else {
-                print("iOS: ⚠️ WARNING - Image '\(id)' was set but cannot be retrieved from style")
+            // THREAD SAFETY: Acquire lock and execute on main thread
+            self.styleLock.lock()
+            DispatchQueue.main.async { [weak self] in
+                defer { self?.styleLock.unlock() }
+
+                guard let self = self else {
+                    completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView deallocated"])))
+                    return
+                }
+
+                guard self._isMapInitialized else {
+                    print("iOS: Map not initialized, queueing addImage for '\(id)'")
+                    self._pendingOperations.append { mapView in
+                        guard let style = mapView.style else { return }
+                        style.setImage(image, forName: id)
+                        print("iOS: ✅ Queued image '\(id)' added to style")
+                    }
+                    completion(.success(()))
+                    return
+                }
+
+                guard let mapView = self._mapView else {
+                    completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not available"])))
+                    return
+                }
+
+                guard let style = mapView.style else {
+                    print("iOS: Style not available yet for addImage '\(id)'")
+                    completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                    return
+                }
+
+                // SAFE: Add image to style
+                style.setImage(image, forName: id)
+
+                // Verify the image was added
+                if let verifyImage = style.image(forName: id) {
+                    print("iOS: ✅ Image '\(id)' added to style successfully - verified size: \(verifyImage.size.width) x \(verifyImage.size.height)")
+                } else {
+                    print("iOS: ⚠️ WARNING - Image '\(id)' was set but cannot be retrieved from style")
+                }
+
+                completion(.success(()))
             }
-
-            completion(.success(()))
-        }, completion: { _ in })
+        }
     }
 
     func addImages(
@@ -1172,40 +1214,75 @@ func addSymbolLayer(
     ) {
         print("iOS: addImages called with \(ids.count) images")
 
-        guard _mapView != nil else {
-            print("iOS: Error - MapView not initialized for addImages")
-            completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
-            return
-        }
-
-        guard let style = _mapView.style else {
-            print("iOS: ERROR - Style not available")
-            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
-            return
-        }
-
         guard ids.count == images.count else {
             print("iOS: ERROR - ids and images count mismatch")
             completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "ids and images count mismatch"])))
             return
         }
 
-        var successCount = 0
-        var failCount = 0
+        // THREAD SAFETY: Decode all images off main thread
+        styleOperationQueue.async { [weak self] in
+            guard let self = self else {
+                completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView deallocated"])))
+                return
+            }
 
-        for (index, id) in ids.enumerated() {
-            let imageData = images[index].data
-            if let image = UIImage(data: imageData, scale: 1.0) {
-                style.setImage(image, forName: id)
-                successCount += 1
-            } else {
-                print("iOS: Failed to decode image for id: \(id)")
-                failCount += 1
+            // Decode all images on background queue
+            var decodedImages: [(String, UIImage)] = []
+            for (index, id) in ids.enumerated() {
+                let imageData = images[index].data
+                if let image = UIImage(data: imageData, scale: 1.0) {
+                    decodedImages.append((id, image))
+                } else {
+                    print("iOS: Failed to decode image for id: \(id)")
+                }
+            }
+
+            // THREAD SAFETY: Acquire lock and add to style on main thread
+            self.styleLock.lock()
+            DispatchQueue.main.async { [weak self] in
+                defer { self?.styleLock.unlock() }
+
+                guard let self = self else {
+                    completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView deallocated"])))
+                    return
+                }
+
+                guard self._isMapInitialized else {
+                    print("iOS: Map not initialized, queueing addImages for \(decodedImages.count) images")
+                    self._pendingOperations.append { mapView in
+                        guard let style = mapView.style else { return }
+                        for (id, image) in decodedImages {
+                            style.setImage(image, forName: id)
+                        }
+                        print("iOS: ✅ Queued \(decodedImages.count) images added to style")
+                    }
+                    completion(.success(()))
+                    return
+                }
+
+                guard let mapView = self._mapView else {
+                    completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not available"])))
+                    return
+                }
+
+                guard let style = mapView.style else {
+                    print("iOS: ERROR - Style not available for addImages")
+                    completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                    return
+                }
+
+                // SAFE: Add all images to style
+                var successCount = 0
+                for (id, image) in decodedImages {
+                    style.setImage(image, forName: id)
+                    successCount += 1
+                }
+
+                print("iOS: addImages complete - success: \(successCount), total: \(ids.count)")
+                completion(.success(()))
             }
         }
-
-        print("iOS: addImages complete - success: \(successCount), failed: \(failCount)")
-        completion(.success(()))
     }
 
     func addSprite(

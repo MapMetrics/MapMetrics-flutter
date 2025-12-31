@@ -42,6 +42,10 @@ import org.maplibre.android.style.layers.RasterLayer
 import org.maplibre.android.style.layers.SymbolLayer
 import java.io.IOException
 import java.net.URL
+import android.os.Handler
+import android.os.Looper
+import java.util.concurrent.Executors
+import java.util.concurrent.locks.ReentrantLock
 
 class MapLibreMapController(
     private val viewId: Int,
@@ -58,6 +62,12 @@ class MapLibreMapController(
     private val flutterApi: MapLibreFlutterApi
     private lateinit var mapOptions: MapOptions
     private var style: Style? = null
+
+    // THREAD SAFETY: Handler for main thread, executor for background work, lock for synchronization
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private val backgroundExecutor = Executors.newSingleThreadExecutor()
+    private val styleLock = ReentrantLock()
+    private var isMapReady = false
 
     init {
         val channelSuffix = viewId.toString()
@@ -145,6 +155,8 @@ class MapLibreMapController(
         val style = Style.Builder().fromUri(mapOptions.style)
         mapLibreMap.setStyle(style) { loadedStyle ->
             this.style = loadedStyle
+            isMapReady = true
+            println("Android: Map and style ready, isMapReady = true")
             flutterApi.onStyleLoaded { }
         }
         flutterApi.onMapReady { }
@@ -152,6 +164,9 @@ class MapLibreMapController(
 
     override fun dispose() {
         // free any resources
+        isMapReady = false
+        backgroundExecutor.shutdown()
+        println("Android: MapController disposed, executor shutdown")
     }
 
     private val gson = Gson()
@@ -432,24 +447,61 @@ class MapLibreMapController(
         bytes: ByteArray,
         callback: (Result<Unit>) -> Unit,
     ) {
-        println("Android: addImage called with id: $id, bytes length: ${bytes.size} - BUILD_TIMESTAMP_2025_01_17_v2")
-        val bitmap = BitmapFactory.decodeStream(bytes.inputStream())
-        if (bitmap != null) {
-            println("Android: Bitmap decoded successfully - width: ${bitmap.width}, height: ${bitmap.height}")
-            mapLibreMap.style?.addImage(id, bitmap)
+        println("Android: addImage called with id: $id, bytes length: ${bytes.size} - THREAD_SAFE_v1")
 
-            // Verify the image was added
-            val verifyImage = mapLibreMap.style?.getImage(id)
-            if (verifyImage != null) {
-                println("Android: ✅ Image '$id' added to style successfully - verified")
-            } else {
-                println("Android: ⚠️ WARNING - Image '$id' was set but cannot be retrieved from style")
+        // THREAD SAFETY: Decode bitmap on background thread
+        backgroundExecutor.execute {
+            try {
+                val bitmap = BitmapFactory.decodeStream(bytes.inputStream())
+                if (bitmap == null) {
+                    println("Android: ERROR - Failed to decode bitmap from bytes")
+                    mainHandler.post {
+                        callback(Result.failure(Exception("Failed to decode image bitmap")))
+                    }
+                    return@execute
+                }
+
+                println("Android: Bitmap decoded successfully - width: ${bitmap.width}, height: ${bitmap.height}")
+
+                // THREAD SAFETY: Add to style on main thread with lock
+                mainHandler.post {
+                    styleLock.lock()
+                    try {
+                        if (!isMapReady) {
+                            println("Android: Map not ready yet for addImage '$id'")
+                            callback(Result.failure(Exception("Map not ready")))
+                            return@post
+                        }
+
+                        val currentStyle = mapLibreMap.style
+                        if (currentStyle == null) {
+                            println("Android: Style not available for addImage '$id'")
+                            callback(Result.failure(Exception("Style not available")))
+                            return@post
+                        }
+
+                        // SAFE: Add image to style
+                        currentStyle.addImage(id, bitmap)
+
+                        // Verify the image was added
+                        val verifyImage = currentStyle.getImage(id)
+                        if (verifyImage != null) {
+                            println("Android: ✅ Image '$id' added to style successfully - verified")
+                        } else {
+                            println("Android: ⚠️ WARNING - Image '$id' was set but cannot be retrieved from style")
+                        }
+
+                        callback(Result.success(Unit))
+                    } finally {
+                        styleLock.unlock()
+                    }
+                }
+            } catch (e: Exception) {
+                println("Android: Exception in addImage: ${e.message}")
+                mainHandler.post {
+                    callback(Result.failure(e))
+                }
             }
-
-            callback(Result.success(Unit))
-        } else {
-            println("Android: ERROR - Failed to decode bitmap from bytes")
-            callback(Result.failure(Exception("Failed to decode image bitmap")))
         }
     }
 
@@ -458,39 +510,63 @@ class MapLibreMapController(
         images: List<ByteArray>,
         callback: (Result<Unit>) -> Unit,
     ) {
-        println("Android: addImages called with ${ids.size} images - bulk loading")
+        println("Android: addImages called with ${ids.size} images - THREAD_SAFE_v1")
         val startTime = System.currentTimeMillis()
 
-        try {
-            val style = mapLibreMap.style
-            if (style == null) {
-                println("Android: Error - Style not available for bulk addImages")
-                callback(Result.failure(Exception("Style not available")))
-                return
-            }
+        // THREAD SAFETY: Decode all bitmaps on background thread
+        backgroundExecutor.execute {
+            try {
+                // Decode all bitmaps on background thread
+                val decodedImages = mutableListOf<Pair<String, android.graphics.Bitmap>>()
+                var failCount = 0
 
-            var successCount = 0
-            var failCount = 0
+                for (i in ids.indices) {
+                    val id = ids[i]
+                    val bytes = images[i]
+                    val bitmap = BitmapFactory.decodeStream(bytes.inputStream())
+                    if (bitmap != null) {
+                        decodedImages.add(Pair(id, bitmap))
+                    } else {
+                        failCount++
+                        println("Android: Failed to decode image: $id")
+                    }
+                }
 
-            for (i in ids.indices) {
-                val id = ids[i]
-                val bytes = images[i]
-                val bitmap = BitmapFactory.decodeStream(bytes.inputStream())
-                if (bitmap != null) {
-                    style.addImage(id, bitmap)
-                    successCount++
-                } else {
-                    failCount++
-                    println("Android: Failed to decode image: $id")
+                // THREAD SAFETY: Add all to style on main thread with lock
+                mainHandler.post {
+                    styleLock.lock()
+                    try {
+                        if (!isMapReady) {
+                            println("Android: Map not ready for bulk addImages")
+                            callback(Result.failure(Exception("Map not ready")))
+                            return@post
+                        }
+
+                        val currentStyle = mapLibreMap.style
+                        if (currentStyle == null) {
+                            println("Android: Error - Style not available for bulk addImages")
+                            callback(Result.failure(Exception("Style not available")))
+                            return@post
+                        }
+
+                        // SAFE: Add all images to style
+                        for ((id, bitmap) in decodedImages) {
+                            currentStyle.addImage(id, bitmap)
+                        }
+
+                        val elapsed = System.currentTimeMillis() - startTime
+                        println("Android: ✅ Bulk addImages complete - ${decodedImages.size} success, $failCount failed in ${elapsed}ms")
+                        callback(Result.success(Unit))
+                    } finally {
+                        styleLock.unlock()
+                    }
+                }
+            } catch (e: Exception) {
+                println("Android: Error in bulk addImages: ${e.message}")
+                mainHandler.post {
+                    callback(Result.failure(e))
                 }
             }
-
-            val elapsed = System.currentTimeMillis() - startTime
-            println("Android: ✅ Bulk addImages complete - $successCount success, $failCount failed in ${elapsed}ms")
-            callback(Result.success(Unit))
-        } catch (e: Exception) {
-            println("Android: Error in bulk addImages: ${e.message}")
-            callback(Result.failure(e))
         }
     }
 
