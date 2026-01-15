@@ -56,10 +56,23 @@ class StyleControllerIos implements StyleController {
 
       case CircleStyleLayer():
         print('iOS StyleController: Adding circle layer via Pigeon');
+        final circleLayout = Map<String, Object>.from(layer.layout ?? {});
+        // Pass filter through layout with special key (matching Android implementation)
+        if (layer.filter != null) {
+          circleLayout['__filter__'] = layer.filter!;
+          print('iOS StyleController: Adding filter to circle layer');
+        }
+        // Pass minZoom/maxZoom through layout
+        if (layer.minZoom != null) {
+          circleLayout['__minZoom__'] = layer.minZoom!;
+        }
+        if (layer.maxZoom != null) {
+          circleLayout['__maxZoom__'] = layer.maxZoom!;
+        }
         await _hostApi.addCircleLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
+          layout: circleLayout,
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );
@@ -89,10 +102,23 @@ class StyleControllerIos implements StyleController {
 
       case SymbolStyleLayer():
         print('iOS StyleController: Adding symbol layer via Pigeon');
+        final layout = Map<String, Object>.from(layer.layout ?? {});
+        // Pass filter through layout with special key (matching Android implementation)
+        if (layer.filter != null) {
+          layout['__filter__'] = layer.filter!;
+          print('iOS StyleController: Adding filter to symbol layer');
+        }
+        // Pass minZoom/maxZoom through layout
+        if (layer.minZoom != null) {
+          layout['__minZoom__'] = layer.minZoom!;
+        }
+        if (layer.maxZoom != null) {
+          layout['__maxZoom__'] = layer.maxZoom!;
+        }
         await _hostApi.addSymbolLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
+          layout: layout,
           paint: layer.paint ?? {},
           belowLayerId: belowLayerId,
         );

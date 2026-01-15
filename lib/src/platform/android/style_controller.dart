@@ -18,6 +18,13 @@ class StyleControllerAndroid implements StyleController {
       if (layer.filter != null) {
         layout['__filter__'] = layer.filter!;
       }
+      // Pass minZoom/maxZoom through layout (matching iOS implementation)
+      if (layer.minZoom != null) {
+        layout['__minZoom__'] = layer.minZoom!;
+      }
+      if (layer.maxZoom != null) {
+        layout['__maxZoom__'] = layer.maxZoom!;
+      }
       await _hostApi.addSymbolLayer(
         id: layer.id,
         sourceId: layer.sourceId,
@@ -36,6 +43,13 @@ class StyleControllerAndroid implements StyleController {
       // Pass filter through layout with special key
       if (layer.filter != null) {
         layout['__filter__'] = layer.filter!;
+      }
+      // Pass minZoom/maxZoom through layout (matching iOS implementation)
+      if (layer.minZoom != null) {
+        layout['__minZoom__'] = layer.minZoom!;
+      }
+      if (layer.maxZoom != null) {
+        layout['__maxZoom__'] = layer.maxZoom!;
       }
       await _hostApi.addCircleLayer(
         id: layer.id,

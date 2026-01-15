@@ -267,8 +267,20 @@ class MapLibreMapController(
             layer.setFilter(expression)
         }
 
-        // Filter out source-layer and __filter__ from layout properties before parsing
-        val filteredLayout = layout.filterKeys { it != "source-layer" && it != "__filter__" }
+        // Handle minZoom/maxZoom if they exist in layout
+        val minZoom = layout["__minZoom__"] as? Double
+        val maxZoom = layout["__maxZoom__"] as? Double
+        if (minZoom != null) {
+            layer.minZoom = minZoom.toFloat()
+            println("Android: minZoom applied to circle layer: $minZoom")
+        }
+        if (maxZoom != null) {
+            layer.maxZoom = maxZoom.toFloat()
+            println("Android: maxZoom applied to circle layer: $maxZoom")
+        }
+
+        // Filter out source-layer, __filter__, __minZoom__, __maxZoom__ from layout properties before parsing
+        val filteredLayout = layout.filterKeys { it != "source-layer" && it != "__filter__" && it != "__minZoom__" && it != "__maxZoom__" }
 
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
         if (belowLayerId == null) {
@@ -415,8 +427,20 @@ class MapLibreMapController(
             println("Android: Filter applied to symbol layer: $filterArray")
         }
 
-        // Filter out source-layer and __filter__ from layout properties before parsing
-        val filteredLayout = layout.filterKeys { it != "source-layer" && it != "__filter__" }
+        // Handle minZoom/maxZoom if they exist in layout
+        val minZoom = layout["__minZoom__"] as? Double
+        val maxZoom = layout["__maxZoom__"] as? Double
+        if (minZoom != null) {
+            layer.minZoom = minZoom.toFloat()
+            println("Android: minZoom applied to symbol layer: $minZoom")
+        }
+        if (maxZoom != null) {
+            layer.maxZoom = maxZoom.toFloat()
+            println("Android: maxZoom applied to symbol layer: $maxZoom")
+        }
+
+        // Filter out source-layer, __filter__, __minZoom__, __maxZoom__ from layout properties before parsing
+        val filteredLayout = layout.filterKeys { it != "source-layer" && it != "__filter__" && it != "__minZoom__" && it != "__maxZoom__" }
 
         // Use parseLayoutProperties and parsePaintProperties to handle complex expressions
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))

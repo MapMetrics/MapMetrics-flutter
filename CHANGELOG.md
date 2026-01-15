@@ -1,3 +1,8 @@
+## 1.0.6
+* Thread-safe image handling improvements for iOS and Android
+* Style controller thread safety enhancements
+* MapViewDelegate thread safety improvements
+
 ## 1.0.3
 * Add native sprite loading for iOS via Pigeon channel
 * Add addImages() and addSprite() methods for iOS

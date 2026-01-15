@@ -313,6 +313,27 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             print("iOS: Set source-layer to: \(sourceLayer)")
         }
 
+        // Handle __filter__ property for filtering features
+        if let filterArray = layout["__filter__"] as? [Any] {
+            print("iOS: Found filter in layout for circle layer: \(filterArray)")
+            if let predicate = predicateFromFilter(filterArray) {
+                layer.predicate = predicate
+                print("iOS: Applied filter predicate to circle layer")
+            } else {
+                print("iOS: Warning - Could not convert filter to predicate for circle layer")
+            }
+        }
+
+        // Handle __minZoom__ and __maxZoom__ for zoom level restrictions
+        if let minZoom = layout["__minZoom__"] as? Double {
+            layer.minimumZoomLevel = Float(minZoom)
+            print("iOS: Set circle layer minZoom to: \(minZoom)")
+        }
+        if let maxZoom = layout["__maxZoom__"] as? Double {
+            layer.maximumZoomLevel = Float(maxZoom)
+            print("iOS: Set circle layer maxZoom to: \(maxZoom)")
+        }
+
         applyCircleProperties(to: layer, paint: paint, layout: layout)
 
         if let belowLayerId = belowLayerId {
@@ -415,6 +436,45 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         default:
             // Numbers, etc.
             return NSExpression(forConstantValue: value)
+        }
+    }
+
+    // Convert MapLibre filter expression to NSPredicate (handles 'all', 'any' compound operators)
+    private func predicateFromFilter(_ filter: [Any]) -> NSPredicate? {
+        guard !filter.isEmpty, let op = filter.first as? String else {
+            return nil
+        }
+
+        switch op {
+        case "all":
+            // ['all', predicate1, predicate2, ...] -> AND compound predicate
+            var subpredicates: [NSPredicate] = []
+            for i in 1..<filter.count {
+                if let subFilter = filter[i] as? [Any], let subPredicate = predicateFromFilter(subFilter) {
+                    subpredicates.append(subPredicate)
+                }
+            }
+            if subpredicates.isEmpty {
+                return nil
+            }
+            return NSCompoundPredicate(andPredicateWithSubpredicates: subpredicates)
+
+        case "any":
+            // ['any', predicate1, predicate2, ...] -> OR compound predicate
+            var subpredicates: [NSPredicate] = []
+            for i in 1..<filter.count {
+                if let subFilter = filter[i] as? [Any], let subPredicate = predicateFromFilter(subFilter) {
+                    subpredicates.append(subPredicate)
+                }
+            }
+            if subpredicates.isEmpty {
+                return nil
+            }
+            return NSCompoundPredicate(orPredicateWithSubpredicates: subpredicates)
+
+        default:
+            // For simple predicates, use buildPredicate
+            return buildPredicate(from: filter)
         }
     }
 
@@ -631,6 +691,34 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                 }
 
                 return resultExpr
+            }
+
+        case "interpolate":
+            // ['interpolate', ['linear'], ['zoom'], stop1, output1, stop2, output2, ...]
+            // Use MapLibre's mglJSONObject for interpolate expressions as it handles them correctly
+            print("iOS: Processing interpolate expression")
+            do {
+                let result = try NSExpression(mglJSONObject: expression)
+                print("iOS: ✅ Successfully built interpolate NSExpression via mglJSONObject")
+                return result
+            } catch {
+                print("iOS: ⚠️ Failed to build interpolate expression: \(error)")
+                // Return nil to trigger fallback
+                return nil
+            }
+
+        case "step":
+            // ['step', input, defaultValue, stop1, output1, stop2, output2, ...]
+            // Use MapLibre's mglJSONObject for step expressions as it handles them correctly
+            print("iOS: Processing step expression")
+            do {
+                let result = try NSExpression(mglJSONObject: expression)
+                print("iOS: ✅ Successfully built step NSExpression via mglJSONObject")
+                return result
+            } catch {
+                print("iOS: ⚠️ Failed to build step expression: \(error)")
+                // Return nil to trigger fallback
+                return nil
             }
 
         default:
@@ -1030,6 +1118,27 @@ func addSymbolLayer(
         print("iOS: Set source-layer to: \(sourceLayer)")
     }
 
+    // Handle __filter__ property for filtering features
+    if let filterArray = layout["__filter__"] as? [Any] {
+        print("iOS: Found filter in layout: \(filterArray)")
+        if let predicate = predicateFromFilter(filterArray) {
+            layer.predicate = predicate
+            print("iOS: Applied filter predicate to symbol layer")
+        } else {
+            print("iOS: Warning - Could not convert filter to predicate")
+        }
+    }
+
+    // Handle __minZoom__ and __maxZoom__ for zoom level restrictions
+    if let minZoom = layout["__minZoom__"] as? Double {
+        layer.minimumZoomLevel = Float(minZoom)
+        print("iOS: Set symbol layer minZoom to: \(minZoom)")
+    }
+    if let maxZoom = layout["__maxZoom__"] as? Double {
+        layer.maximumZoomLevel = Float(maxZoom)
+        print("iOS: Set symbol layer maxZoom to: \(maxZoom)")
+    }
+
     applySymbolProperties(to: layer, paint: paint, layout: layout)
 
     if let belowLayerId = belowLayerId {
@@ -1105,6 +1214,9 @@ func addSymbolLayer(
                     layer.iconIgnoresPlacement = NSExpression(forConstantValue: boolValue)
                     print("iOS: Set icon-ignore-placement to \(boolValue)")
                 }
+            case "icon-padding":
+                layer.iconPadding = createExpression(from: value)
+                print("iOS: Set icon-padding")
             case "icon-anchor":
                 layer.iconAnchor = createExpression(from: value)
             case "icon-offset":
@@ -1362,98 +1474,111 @@ func addSymbolLayer(
         clusterMaxZoom: Double,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        do {
-            print("iOS: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
+        print("iOS: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
 
-            // Guard against nil _mapView before accessing it
-            guard _mapView != nil else {
-                print("iOS: Error - MapView not yet initialized")
-                completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+        // THREAD SAFETY: Execute on main thread with proper error handling
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView deallocated"])))
                 return
             }
 
-            guard let style = _mapView.style else {
-                print("iOS: Error - Style not available")
-                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
-                return
-            }
-
-            var options: [MLNShapeSourceOption: Any] = [:]
-            if clustered {
-                options[.clustered] = true
-                options[.clusterRadius] = NSNumber(value: clusterRadius)
-                options[.maximumZoomLevelForClustering] = NSNumber(value: clusterMaxZoom)
-                print("iOS: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
-            }
-
-            let source: MLNShapeSource
-            if data.hasPrefix("http://") || data.hasPrefix("https://") {
-                print("iOS: Creating URL source")
-                guard let url = URL(string: data) else {
-                    throw NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])
+            do {
+                // Guard against nil _mapView before accessing it
+                guard self._mapView != nil else {
+                    print("iOS: Error - MapView not yet initialized")
+                    completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+                    return
                 }
-                source = MLNShapeSource(identifier: id, url: url, options: options)
-            } else {
-                print("iOS: Creating GeoJSON data source with \(data.count) characters")
-                guard let dataBytes = data.data(using: .utf8),
-                      let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
-                    throw NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])
+
+                guard let style = self._mapView.style else {
+                    print("iOS: Error - Style not available")
+                    completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                    return
                 }
-                source = MLNShapeSource(identifier: id, shape: shape, options: options)
+
+                // SAFETY: Check if source already exists and remove it first
+                if let existingSource = style.source(withIdentifier: id) {
+                    print("iOS: Source '\(id)' already exists, removing first")
+                    style.removeSource(existingSource)
+                }
+
+                var options: [MLNShapeSourceOption: Any] = [:]
+                if clustered {
+                    options[.clustered] = true
+                    options[.clusterRadius] = NSNumber(value: clusterRadius)
+                    options[.maximumZoomLevelForClustering] = NSNumber(value: clusterMaxZoom)
+                    print("iOS: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
+                }
+
+                let source: MLNShapeSource
+                if data.hasPrefix("http://") || data.hasPrefix("https://") {
+                    print("iOS: Creating URL source")
+                    guard let url = URL(string: data) else {
+                        throw NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])
+                    }
+                    source = MLNShapeSource(identifier: id, url: url, options: options)
+                } else {
+                    print("iOS: Creating GeoJSON data source with \(data.count) characters")
+                    guard let dataBytes = data.data(using: .utf8),
+                          let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
+                        throw NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])
+                    }
+                    source = MLNShapeSource(identifier: id, shape: shape, options: options)
+                }
+
+                style.addSource(source)
+                print("iOS: Successfully added clustered source with ID: \(id)")
+
+                // Add clustering visualization if enabled
+                if clustered {
+                    print("iOS: Adding visualization layers for clusters")
+
+                    // Add layer for unclustered points (individual points only)
+                    let unclusteredLayer = MLNCircleStyleLayer(identifier: "\(id)-unclustered", source: source)
+                    unclusteredLayer.circleRadius = NSExpression(forConstantValue: 8)
+                    unclusteredLayer.circleColor = NSExpression(forConstantValue: UIColor(hexString: "#11b4da") ?? UIColor.blue)
+                    unclusteredLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+                    unclusteredLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+                    unclusteredLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                    // Show only individual points that are NOT part of clusters
+                    unclusteredLayer.predicate = NSPredicate(format: "point_count == nil")
+                    style.addLayer(unclusteredLayer)
+                    print("iOS: Added unclustered points layer with predicate: point_count == nil")
+
+                    // Add layer for clusters only
+                    let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
+                    clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
+                    clustersLayer.circleColor = NSExpression(forConstantValue: UIColor.systemOrange)
+                    clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
+                    clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
+                    clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                    // Show only cluster points (multiple points grouped together)
+                    clustersLayer.predicate = NSPredicate(format: "point_count != nil")
+                    style.addLayer(clustersLayer)
+                    print("iOS: Added clusters layer with predicate: point_count != nil")
+
+                    // Add layer for cluster count labels
+                    let clusterCountLayer = MLNSymbolStyleLayer(identifier: "\(id)-cluster-count", source: source)
+                    clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
+                    clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
+                    clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
+
+                    // Same predicate as clusters
+                    clusterCountLayer.predicate = NSPredicate(format: "point_count != nil")
+                    style.addLayer(clusterCountLayer)
+                    print("iOS: Added cluster count labels layer with predicate: point_count != nil")
+                } else {
+                    print("iOS: No visualization layers added - clustering disabled")
+                }
+
+                completion(.success(()))
+            } catch {
+                print("iOS: Error adding clustered source: \(error.localizedDescription)")
+                completion(.failure(error))
             }
-
-            style.addSource(source)
-            print("iOS: Successfully added clustered source with ID: \(id)")
-
-            // Replace the clustering visualization section in your addClusteredGeoJsonSource method:
-
-            if clustered {
-                print("iOS: Adding visualization layers for clusters")
-
-                // Add layer for unclustered points (individual points only)
-                let unclusteredLayer = MLNCircleStyleLayer(identifier: "\(id)-unclustered", source: source)
-                unclusteredLayer.circleRadius = NSExpression(forConstantValue: 8)
-                unclusteredLayer.circleColor = NSExpression(forConstantValue: UIColor(hexString: "#11b4da") ?? UIColor.blue)
-                unclusteredLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
-                unclusteredLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
-                unclusteredLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
-
-                // Show only individual points that are NOT part of clusters
-                unclusteredLayer.predicate = NSPredicate(format: "point_count == nil")
-                style.addLayer(unclusteredLayer)
-                print("iOS: Added unclustered points layer with predicate: point_count == nil")
-
-                // Add layer for clusters only
-                let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
-                clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
-                clustersLayer.circleColor = NSExpression(forConstantValue: UIColor.systemOrange)
-                clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
-                clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
-                clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
-
-                // Show only cluster points (multiple points grouped together)
-                clustersLayer.predicate = NSPredicate(format: "point_count != nil")
-                style.addLayer(clustersLayer)
-                print("iOS: Added clusters layer with predicate: point_count != nil")
-
-                // Add layer for cluster count labels
-                let clusterCountLayer = MLNSymbolStyleLayer(identifier: "\(id)-cluster-count", source: source)
-                clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
-                clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
-                clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
-
-                // Same predicate as clusters
-                clusterCountLayer.predicate = NSPredicate(format: "point_count != nil")
-                style.addLayer(clusterCountLayer)
-                print("iOS: Added cluster count labels layer with predicate: point_count != nil")
-            } else {
-                print("iOS: No visualization layers added - clustering disabled")
-            }
-
-            completion(.success(()))
-        } catch {
-            print("iOS: Error adding clustered source: \(error.localizedDescription)")
-            completion(.failure(error))
         }
     }
 

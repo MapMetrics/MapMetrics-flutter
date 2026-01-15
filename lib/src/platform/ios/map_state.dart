@@ -139,7 +139,12 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
 
   @override
   MapCamera getCamera() {
-    // Return cached camera if available, otherwise return a default
+    // Use the camera from the base class which is updated via onMoveCamera callback
+    // This ensures we always get the latest camera state including user gestures
+    if (camera != null) {
+      return camera!;
+    }
+    // Fallback to cached camera if base class camera not yet initialized
     return _cachedCamera ?? MapCamera(
       center: Position(0, 0),
       zoom: 0,
