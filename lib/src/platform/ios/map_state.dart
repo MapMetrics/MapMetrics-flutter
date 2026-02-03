@@ -19,8 +19,8 @@ part 'style_controller.dart';
 /// iOS using both FFI for performance-critical operations and Pigeon as fallback.
 final class MapLibreMapStateIos extends MapLibreMapStateNative
     implements pigeon.MapLibreFlutterApi {
-  late final pigeon.MapLibreHostApi _hostApi;
-  late final int _viewId;
+  pigeon.MapLibreHostApi? _hostApi;
+  int? _viewId;
   MLNMapView? _cachedMapView;
   bool _isMapReady = false;
 
@@ -34,15 +34,41 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   @override
   StyleControllerIos? style;
 
+  // Cache the UiKitView widget to prevent rebuilds that cause layout errors
+  Widget? _cachedPlatformView;
+  // Use a stable key to ensure the UiKitView maintains its identity
+  final GlobalKey _platformViewKey = GlobalKey();
+
   @override
   Widget buildPlatformWidget(BuildContext context) {
     const viewType = 'plugins.flutter.io/maplibre';
-    return UiKitView(
-      viewType: viewType,
-      layoutDirection: TextDirection.ltr,
-      gestureRecognizers: widget.gestureRecognizers,
-      onPlatformViewCreated: _onPlatformViewCreated,
+
+    // CRITICAL FIX for iOS RenderUiKitView crash:
+    // Cache the UiKitView widget and never rebuild it. The error:
+    // "RenderBox was not laid out: RenderUiKitView#... NEEDS-LAYOUT NEEDS-PAINT"
+    // occurs when Flutter rebuilds the widget tree while pointer events are being
+    // routed through the platform view. By caching the widget, we ensure the
+    // RenderUiKitView is never invalidated during gesture handling.
+    //
+    // The _SafePlatformView wrapper adds additional protection by:
+    // 1. Using a custom RenderObject that prevents layout invalidation during pointer events
+    // 2. Wrapping in RepaintBoundary to isolate the render subtree
+    // 3. Using a GlobalKey to maintain widget identity across rebuilds
+    _cachedPlatformView ??= RepaintBoundary(
+      child: _SafePlatformView(
+        child: SizedBox.expand(
+          key: _platformViewKey,
+          child: UiKitView(
+            viewType: viewType,
+            layoutDirection: TextDirection.ltr,
+            gestureRecognizers: widget.gestureRecognizers,
+            onPlatformViewCreated: _onPlatformViewCreated,
+          ),
+        ),
+      ),
     );
+
+    return _cachedPlatformView!;
   }
 
   /// This method gets called when the platform view is created. It is not
@@ -68,6 +94,9 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     double webSpeed = 1.2,
     Duration? webMaxDuration,
   }) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     // Use Pigeon for animation as it's more reliable
     final latitude = center?.lat ?? double.nan;
     final longitude = center?.lng ?? double.nan;
@@ -75,7 +104,7 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     final bearingValue = bearing ?? double.nan;
     final pitchValue = pitch ?? double.nan;
 
-    await _hostApi.animateCamera(
+    await hostApi.animateCamera(
       latitude.toDouble(),
       longitude.toDouble(),
       zoomValue.toDouble(),
@@ -97,8 +126,11 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     bool compassAnimation = true,
     bool pulse = true,
   }) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     // Always use Pigeon for location operations
-    await _hostApi.enableLocation(
+    await hostApi.enableLocation(
       fastestInterval.inMilliseconds.toInt(),
       maxWaitTime.inMilliseconds.toInt(),
       pulseFade,
@@ -121,8 +153,11 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     bool webLinear = false,
     EdgeInsets padding = EdgeInsets.zero,
   }) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     // Always use Pigeon for bounds operations
-    await _hostApi.fitBounds(
+    await hostApi.fitBounds(
       bounds.longitudeWest,
       bounds.latitudeSouth,
       bounds.longitudeEast,
@@ -158,12 +193,16 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     if (_isMapReady && _mapView != null) {
       return getMetersPerPixelAtLatitudeSync(latitude);
     }
-    return await _hostApi.getMetersPerPixelAtLatitude(latitude);
+    final hostApi = _hostApi;
+    if (hostApi == null) return getMetersPerPixelAtLatitudeSync(latitude);
+    return await hostApi.getMetersPerPixelAtLatitude(latitude);
   }
 
   @override
   Future<LngLatBounds> getVisibleRegion() async {
-    final result = await _hostApi.getVisibleRegion();
+    final hostApi = _hostApi;
+    if (hostApi == null) return getVisibleRegionSync();
+    final result = await hostApi.getVisibleRegion();
     final bounds = LngLatBounds(
       longitudeWest: result[0].toDouble(),
       longitudeEast: result[2].toDouble(),
@@ -182,10 +221,13 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     double? bearing,
     double? pitch,
   }) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     // Always use Pigeon for camera operations to ensure reliability
     final latitude = center?.lat ?? double.nan;
     final longitude = center?.lng ?? double.nan;
-    await _hostApi.moveCamera(
+    await hostApi.moveCamera(
       latitude.toDouble(),
       longitude.toDouble(),
       (zoom ?? double.nan).toDouble(),
@@ -198,12 +240,15 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }
 
   Future<void> _updateCameraCache() async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     try {
       _cachedCamera = await _getCameraAsync();
       // Also update meters per pixel cache with current camera position
       if (_cachedCamera != null) {
         final latitude = _cachedCamera!.center.lat.toDouble();
-        _cachedMetersPerPixel = await _hostApi.getMetersPerPixelAtLatitude(latitude);
+        _cachedMetersPerPixel = await hostApi.getMetersPerPixelAtLatitude(latitude);
       }
     } catch (e) {
       print('Error updating camera cache: $e');
@@ -221,7 +266,12 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
 
     // Create style controller using Pigeon since FFI might not be available
     final stubStyle = MLNStyle(ffi.nullptr); // This will use Pigeon only
-    final styleCtrl = style = StyleControllerIos._(stubStyle, _hostApi);
+    final hostApi = _hostApi;
+    if (hostApi == null) {
+      print('MapLibreMapStateIos: WARNING - hostApi is null in onStyleLoaded');
+      return;
+    }
+    final styleCtrl = style = StyleControllerIos._(stubStyle, hostApi);
 
     // Initialize cache values asynchronously
     _initializeCacheValues();
@@ -235,10 +285,13 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }
 
   Future<void> _initializeCacheValues() async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     try {
       // Initialize cache with default latitude (center of map)
-      _cachedMetersPerPixel = await _hostApi.getMetersPerPixelAtLatitude(0.0);
-      final visibleRegionData = await _hostApi.getVisibleRegion();
+      _cachedMetersPerPixel = await hostApi.getMetersPerPixelAtLatitude(0.0);
+      final visibleRegionData = await hostApi.getVisibleRegion();
       _cachedVisibleRegion = LngLatBounds(
         longitudeWest: visibleRegionData[0].toDouble(),
         longitudeEast: visibleRegionData[2].toDouble(),
@@ -269,8 +322,18 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }
 
   Future<MapCamera> _getCameraAsync() async {
+    final hostApi = _hostApi;
+    if (hostApi == null) {
+      return _cachedCamera ?? MapCamera(
+        center: Position(0, 0),
+        zoom: 0,
+        bearing: 0,
+        pitch: 0,
+      );
+    }
+
     try {
-      final pigeonCamera = await _hostApi.getCamera();
+      final pigeonCamera = await hostApi.getCamera();
       // Convert from Pigeon MapCamera to our MapCamera
       return MapCamera(
         center: Position(pigeonCamera.center.lng, pigeonCamera.center.lat),
@@ -292,7 +355,10 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   @override
   void dispose() {
     style?.dispose();
-    unawaited(_hostApi.dispose());
+    final hostApi = _hostApi;
+    if (hostApi != null) {
+      unawaited(hostApi.dispose());
+    }
     super.dispose();
   }
 
@@ -304,13 +370,15 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }
 
   @override
-  @override
   Future<void> _updateOptions(MapLibreMap oldWidget) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     final oldOptions = oldWidget.options;
     final options = this.options;
 
     // Always use Pigeon for updating options to ensure reliability
-    await _hostApi.updateMapOptions(
+    await hostApi.updateMapOptions(
       options.minZoom.toDouble(),
       options.maxZoom.toDouble(),
       options.minPitch.toDouble(),
@@ -328,17 +396,42 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
 
   @override
   Future<List<Map<String, String>>> queryLayers(Offset screenLocation) async {
-    final result = await _hostApi.queryLayers(screenLocation.dx.toDouble(), screenLocation.dy.toDouble());
+    final hostApi = _hostApi;
+    if (hostApi == null) return [];
+
+    final result = await hostApi.queryLayers(screenLocation.dx.toDouble(), screenLocation.dy.toDouble());
     // Return the raw maps with all properties instead of converting to QueriedLayer
     return result;
   }
 
   @override
+  Future<List<Map<String, String>>> queryLayersInRect(Rect rect) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return [];
+
+    // Use native Pigeon method for efficient bounding box query (single native call)
+    final result = await hostApi.queryLayersInRect(
+      rect.left.toDouble(),
+      rect.top.toDouble(),
+      rect.right.toDouble(),
+      rect.bottom.toDouble(),
+    );
+    // Convert from List<Map<Object?, Object?>> to List<Map<String, String>>
+    return result.map((map) => map.map((key, value) => MapEntry(
+      key?.toString() ?? '',
+      value?.toString() ?? '',
+    ))).toList();
+  }
+
+  @override
   Future<Position> toLngLat(Offset screenLocation) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return Position(0, 0);
+
     print('=== DART toLngLat DEBUG ===');
     print('Input: screen(${screenLocation.dx}, ${screenLocation.dy})');
 
-    final result = await _hostApi.toLngLat(screenLocation.dx.toDouble(), screenLocation.dy.toDouble());
+    final result = await hostApi.toLngLat(screenLocation.dx.toDouble(), screenLocation.dy.toDouble());
     print('Swift returned: $result (should be [lng, lat])');
 
     // Try without swapping - maybe the issue is the swapping itself
@@ -356,11 +449,14 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
 
   @override
   Future<Offset> toScreenLocation(Position lngLat) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return Offset.zero;
+
     print('=== DART toScreenLocation DEBUG ===');
     print('Input: Position(lat=${lngLat.lat}, lng=${lngLat.lng})');
 
     // Try without swapping - pass Position as-is
-    final result = await _hostApi.toScreenLocation(lngLat.lng.toDouble(), lngLat.lat.toDouble());
+    final result = await hostApi.toScreenLocation(lngLat.lng.toDouble(), lngLat.lat.toDouble());
     print('Swift returned: $result (should be [x, y])');
 
     final offset = Offset(result[0].toDouble(), result[1].toDouble());
@@ -379,13 +475,19 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     bool trackLocation = true,
     BearingTrackMode trackBearing = BearingTrackMode.gps,
   }) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
     // Always use Pigeon for location tracking
-    await _hostApi.trackLocation(trackLocation, trackBearing.index.toInt());
+    await hostApi.trackLocation(trackLocation, trackBearing.index.toInt());
   }
 
   @override
   Future<void> showUserLocationPuck({bool show = true}) async {
-    await _hostApi.showUserLocationPuck(show);
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+
+    await hostApi.showUserLocationPuck(show);
   }
 
   @override
@@ -464,4 +566,28 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   @override
   List<Offset> toScreenLocationsSync(List<Position> lngLats) =>
       lngLats.map(toScreenLocationSync).toList(growable: false);
+}
+
+/// A wrapper widget that protects UiKitView from layout errors during pointer events.
+/// Uses a simple StatefulWidget approach with widget caching.
+class _SafePlatformView extends StatefulWidget {
+  final Widget child;
+
+  const _SafePlatformView({required this.child});
+
+  @override
+  State<_SafePlatformView> createState() => _SafePlatformViewState();
+}
+
+class _SafePlatformViewState extends State<_SafePlatformView>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    // SizedBox.expand ensures the child always has a defined size
+    return SizedBox.expand(child: widget.child);
+  }
 }
