@@ -583,6 +583,12 @@ interface MapLibreHostApi {
   fun toScreenLocation(lng: Double, lat: Double, callback: (Result<List<Double>>) -> Unit)
   /** Query rendered layers at the specified screen location. */
   fun queryLayers(x: Double, y: Double, callback: (Result<List<Map<String, String>>>) -> Unit)
+  /**
+   * Query rendered layers within a bounding box (more efficient for hit detection).
+   * [left], [top], [right], [bottom] define the screen-space bounding box.
+   * Returns list of maps (Object? used for platform compatibility).
+   */
+  fun queryLayersInRect(left: Double, top: Double, right: Double, bottom: Double, callback: (Result<List<Map<Any?, Any?>>>) -> Unit)
   /** Enable/disable location tracking with bearing mode. */
   fun trackLocation(track: Boolean, bearingMode: Long, callback: (Result<Unit>) -> Unit)
   /** Show/hide the user location puck (blue dot). */
@@ -1229,6 +1235,29 @@ interface MapLibreHostApi {
             val xArg = args[0] as Double
             val yArg = args[1] as Double
             api.queryLayers(xArg, yArg) { result: Result<List<Map<String, String>>> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayersInRect$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val leftArg = args[0] as Double
+            val topArg = args[1] as Double
+            val rightArg = args[2] as Double
+            val bottomArg = args[3] as Double
+            api.queryLayersInRect(leftArg, topArg, rightArg, bottomArg) { result: Result<List<Map<Any?, Any?>>> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

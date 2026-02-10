@@ -44,6 +44,10 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                 self._mapOptions = mapOptions
                 // init map view
                 self._mapView = MLNMapView(frame: self._view.bounds)
+                
+                // CRITICAL: Ensure user location is disabled initially to prevent layer conflicts
+                self._mapView.showsUserLocation = false
+                
                 MapLibreRegistry.addMap(viewId: viewId, map: self._mapView)
                 self._mapView.autoresizingMask = [
                     .flexibleWidth, .flexibleHeight,
@@ -108,8 +112,16 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     func dispose() throws {
         print("### dispose MapLibre view ### \(_viewId) ###")
         MapLibreRegistry.removeMap(viewId: _viewId)
-        _mapView.removeFromSuperview()
-        _mapView.delegate = nil
+        
+        // CRITICAL: Disable user location before disposing to prevent layer conflicts
+        if let mapView = _mapView {
+            print("iOS: Disabling user location before disposal to prevent layer conflicts")
+            mapView.showsUserLocation = false
+            mapView.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+            mapView.removeFromSuperview()
+            mapView.delegate = nil
+        }
+        
         _mapView = nil
         _view.removeFromSuperview()
     }
@@ -189,6 +201,34 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
 
     func mapViewRegionIsChanging(_: MLNMapView) {
         onCameraMoved()
+    }
+
+    // MARK: - User Location Delegate Methods
+
+    /// Called when the user's location is updated
+    /// This helps us track if the user location is being set incorrectly during camera moves
+    func mapView(_ mapView: MLNMapView, didUpdate userLocation: MLNUserLocation?) {
+        if let location = userLocation?.location {
+            let cameraCenter = mapView.camera.centerCoordinate
+            let userLat = location.coordinate.latitude
+            let userLng = location.coordinate.longitude
+            let cameraLat = cameraCenter.latitude
+            let cameraLng = cameraCenter.longitude
+
+            // Calculate distance between user location and camera center
+            let latDiff = abs(userLat - cameraLat)
+            let lngDiff = abs(userLng - cameraLng)
+
+            // Only log if there's a significant difference (debugging)
+            if latDiff > 0.0001 || lngDiff > 0.0001 {
+                print("📍 iOS didUpdateUserLocation: user=(\(userLat),\(userLng)) camera=(\(cameraLat),\(cameraLng))")
+            }
+        }
+    }
+
+    /// Called when user tracking mode changes
+    func mapView(_ mapView: MLNMapView, didChange mode: MLNUserTrackingMode, animated: Bool) {
+        print("🔵 iOS didChangeTrackingMode: mode=\(mode.rawValue), animated=\(animated)")
     }
 
     func onCameraMoved() {
@@ -308,9 +348,35 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         let layer = MLNCircleStyleLayer(identifier: id, source: source)
 
         // Handle source-layer property for vector tile sources
+        // DEBUG: Log the entire layout to see what we're receiving
+        NSLog("🔴 iOS NATIVE: addCircleLayer received layout: %@", layout as NSDictionary)
+        NSLog("🔴 iOS NATIVE: layout keys: %@", layout.keys.joined(separator: ", "))
+
+        // DEBUG: Check if source is a vector tile source and FORCE sourceLayerIdentifier
+        if source is MLNVectorTileSource {
+            print("iOS: Source \(sourceId) IS a vector tile source!")
+            NSLog("🔴 iOS NATIVE: Source is MLNVectorTileSource - will set sourceLayerIdentifier")
+
+            // FORCE set to "pois" for poi-source (the actual POI layer in tiles), otherwise use layout value
+            if sourceId == "poi-source" || id.contains("poi-debug") {
+                layer.sourceLayerIdentifier = "pois"
+                print("iOS: FORCED sourceLayerIdentifier to 'pois' for layer: \(id)")
+                NSLog("🔴 iOS NATIVE: FORCED sourceLayerIdentifier to 'pois'")
+            } else if let sourceLayer = layout["source-layer"] as? String {
+                layer.sourceLayerIdentifier = sourceLayer
+                print("iOS: Set source-layer from layout to: \(sourceLayer)")
+            }
+        } else {
+            print("iOS: Source \(sourceId) is NOT a vector tile source (type: \(type(of: source)))")
+        }
+
         if let sourceLayer = layout["source-layer"] as? String {
             layer.sourceLayerIdentifier = sourceLayer
+            NSLog("🔴 iOS NATIVE: Set sourceLayerIdentifier to: %@", sourceLayer)
             print("iOS: Set source-layer to: \(sourceLayer)")
+        } else {
+            NSLog("🔴 iOS NATIVE: WARNING - source-layer not found or not a String!")
+            NSLog("🔴 iOS NATIVE: source-layer value type: %@", String(describing: type(of: layout["source-layer"])))
         }
 
         // Handle __filter__ property for filtering features
@@ -344,6 +410,18 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             }
         } else {
             style.addLayer(layer)
+        }
+
+        // DEBUG: Verify the layer was added and has correct properties
+        if let addedLayer = style.layer(withIdentifier: id) as? MLNCircleStyleLayer {
+            print("✅ iOS: Verified circle layer '\(id)' exists in style")
+            print("✅ iOS: Layer sourceLayerIdentifier: \(addedLayer.sourceLayerIdentifier ?? "nil")")
+            print("✅ iOS: Layer circleRadius: \(addedLayer.circleRadius)")
+            print("✅ iOS: Layer circleColor: \(addedLayer.circleColor)")
+            NSLog("🔴 iOS NATIVE: Layer verified - sourceLayerIdentifier: %@", addedLayer.sourceLayerIdentifier ?? "nil")
+        } else {
+            print("❌ iOS: Could not verify layer '\(id)' in style!")
+            NSLog("🔴 iOS NATIVE: FAILED to verify layer in style!")
         }
 
         completion(.success(()))
@@ -472,6 +550,16 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             }
             return NSCompoundPredicate(orPredicateWithSubpredicates: subpredicates)
 
+        case "!":
+            // ['!', predicate] -> NOT compound predicate
+            // Example: ['!', ['has', 'highway']] -> NOT (highway != nil)
+            if filter.count >= 2, let subFilter = filter[1] as? [Any],
+               let subPredicate = predicateFromFilter(subFilter) {
+                print("iOS: Creating NOT predicate for: \(subFilter)")
+                return NSCompoundPredicate(notPredicateWithSubpredicate: subPredicate)
+            }
+            return nil
+
         default:
             // For simple predicates, use buildPredicate
             return buildPredicate(from: filter)
@@ -531,6 +619,16 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                     modifier: .direct,
                     type: predicateType
                 )
+            }
+
+        case "!":
+            // ['!', subExpression] -> NOT predicate
+            // Example: ['!', ['has', 'highway']] -> NOT (highway != nil)
+            if expression.count >= 2, let subExpr = expression[1] as? [Any] {
+                if let subPredicate = buildPredicate(from: subExpr) {
+                    print("iOS: buildPredicate creating NOT for: \(subExpr)")
+                    return NSCompoundPredicate(notPredicateWithSubpredicate: subPredicate)
+                }
             }
 
         default:
@@ -1612,6 +1710,22 @@ func addSymbolLayer(
                 style.addSource(source)
                 print("✅ iOS: Successfully added vector source with ID: \(id) and zoom range \(minZoom)-\(maxZoom)")
 
+                // DEBUG: Verify the source was actually added
+                if let addedSource = style.source(withIdentifier: id) {
+                    print("✅ iOS: Verified source '\(id)' exists in style (type: \(type(of: addedSource)))")
+                    NSLog("🔴 iOS NATIVE: Source verified - type: %@", String(describing: type(of: addedSource)))
+
+                    // Check if it's a vector tile source
+                    if let vectorSource = addedSource as? MLNVectorTileSource {
+                        print("✅ iOS: Source is MLNVectorTileSource")
+                        print("✅ iOS: configurationURL: \(vectorSource.configurationURL?.absoluteString ?? "nil")")
+                        NSLog("🔴 iOS NATIVE: Vector source configurationURL: %@", vectorSource.configurationURL?.absoluteString ?? "nil")
+                    }
+                } else {
+                    print("❌ iOS: FAILED to verify source '\(id)' in style!")
+                    NSLog("🔴 iOS NATIVE: FAILED to verify source in style!")
+                }
+
                 completion(.success(()))
             } catch {
                 print("iOS: Error adding vector source: \(error.localizedDescription)")
@@ -1639,9 +1753,11 @@ func addSymbolLayer(
         duration: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        print("🎬 iOS animateCamera CALLED: lat=\(latitude), lng=\(longitude), zoom=\(zoom), bearing=\(bearing), pitch=\(pitch), duration=\(duration)ms")
         DispatchQueue.main.async {
             guard self._mapView != nil else {
                 // Map view not yet initialized, skip camera animation
+                print("🎬 iOS animateCamera: mapView is nil, skipping")
                 completion(.success(()))
                 return
             }
@@ -1659,22 +1775,30 @@ func addSymbolLayer(
                 camera.pitch = pitch
             }
 
-            // Set camera with animation
-            let animationDuration = duration > 0 ? Double(duration) / 1000.0 : 0.2
+            // Use CATransaction to prevent implicit animations that could affect user location display
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            if duration == 0 {
+                CATransaction.setAnimationDuration(0)
+            }
+
+            let animationDuration = Double(duration) / 1000.0
+            print("🎬 iOS animateCamera: animationDuration=\(animationDuration)s")
             self._mapView.setCamera(
                 camera, withDuration: animationDuration, animationTimingFunction: nil)
 
-            // Handle zoom separately if needed
             if !zoom.isNaN && zoom != -1.0 {
-                self._mapView.setZoomLevel(zoom, animated: true)
+                self._mapView.setZoomLevel(zoom, animated: duration > 0)
             }
+
+            CATransaction.commit()
 
             completion(.success(()))
         }
     }
 
     // Get the current camera state
-    func getCamera() -> MapCamera {
+    func getCamera() throws -> MapCamera {
         guard _mapView != nil else {
             // Map view not yet initialized, return default camera
             return MapCamera(
@@ -1698,7 +1822,7 @@ func addSymbolLayer(
     }
 
     // Get the current zoom level
-    func getZoomLevel() -> Double {
+    func getZoomLevel() throws -> Double {
         guard _mapView != nil else {
             // Map view not yet initialized, return default zoom
             return 0.0
@@ -1707,7 +1831,7 @@ func addSymbolLayer(
     }
 
     // Get the user's current location
-    func getUserLocation() -> LngLat {
+    func getUserLocation() throws -> LngLat {
         guard _mapView != nil else {
             // Map view not yet initialized, return default location
             return LngLat(lng: 0.0, lat: 0.0)
@@ -1734,9 +1858,11 @@ func addSymbolLayer(
         pitch: Double,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        print("📍 iOS moveCamera CALLED: lat=\(lat), lng=\(lng), zoom=\(zoom), bearing=\(bearing), pitch=\(pitch) (NO ANIMATION)")
         DispatchQueue.main.async {
             guard self._mapView != nil else {
                 // Map view not yet initialized, skip camera move
+                print("📍 iOS moveCamera: mapView is nil, skipping")
                 completion(.success(()))
                 return
             }
@@ -1753,13 +1879,22 @@ func addSymbolLayer(
                 camera.pitch = pitch
             }
 
-            // Set camera without animation
+            // Set camera without animation - use CATransaction to disable ALL implicit animations
+            print("📍 iOS moveCamera: setCamera animated=false (with CATransaction disabled)")
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            CATransaction.setAnimationDuration(0)
+
             self._mapView.setCamera(camera, animated: false)
 
             // Handle zoom separately if needed
             if !zoom.isNaN && zoom != -1.0 {
+                print("📍 iOS moveCamera: setZoomLevel animated=false")
                 self._mapView.setZoomLevel(zoom, animated: false)
             }
+
+            CATransaction.commit()
+            print("📍 iOS moveCamera: CATransaction committed")
 
             completion(.success(()))
         }
@@ -1837,9 +1972,26 @@ func addSymbolLayer(
                 completion(.success(()))
                 return
             }
+
+            // Only enable if not already enabled to prevent duplicate layer errors
+            guard !self._mapView.showsUserLocation else {
+                print("📍 iOS enableLocation: User location already enabled, skipping")
+                completion(.success(()))
+                return
+            }
+
+            // Wrap in CATransaction to disable implicit animations when showing user location
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            CATransaction.setAnimationDuration(0)
+
             self._mapView.showsUserLocation = true
             // Note: iOS MapLibre doesn't have all the detailed location settings like Android
             // The parameters here would need custom implementation if needed
+
+            CATransaction.commit()
+            print("📍 iOS enableLocation: showsUserLocation=true with CATransaction")
+
             completion(.success(()))
         }
     }
@@ -1859,9 +2011,11 @@ func addSymbolLayer(
         paddingBottom: Double,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        print("🗺️ iOS fitBounds CALLED: bounds=(\(south),\(west))->(\(north),\(east)), duration=\(duration)ms")
         DispatchQueue.main.async {
             guard self._mapView != nil else {
                 // Map view not yet initialized, skip fit bounds
+                print("🗺️ iOS fitBounds: mapView is nil, skipping")
                 completion(.success(()))
                 return
             }
@@ -1877,9 +2031,17 @@ func addSymbolLayer(
                 right: CGFloat(paddingRight)
             )
 
+            // Use CATransaction to prevent any implicit animations that could affect user location display
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            CATransaction.setAnimationDuration(0)
+
             let animated = duration > 0
+            print("🗺️ iOS fitBounds: setVisibleCoordinateBounds animated=\(animated)")
             self._mapView.setVisibleCoordinateBounds(
                 bounds, edgePadding: edgeInsets, animated: animated)
+
+            CATransaction.commit()
 
             completion(.success(()))
         }
@@ -2072,33 +2234,153 @@ func addSymbolLayer(
         completion(.success(result))
     }
 
+    // Query rendered layers within a bounding box (more efficient for hit detection)
+    func queryLayersInRect(
+        left: Double,
+        top: Double,
+        right: Double,
+        bottom: Double,
+        completion: @escaping (Result<[[AnyHashable?: Any?]], Error>) -> Void
+    ) {
+        guard _mapView != nil else {
+            completion(.success([]))
+            return
+        }
+
+        let rect = CGRect(x: left, y: top, width: right - left, height: bottom - top)
+        print("iOS: queryLayersInRect called with rect: \(rect)")
+
+        guard let style = _mapView.style else {
+            print("iOS: ERROR - Style not available for queryLayersInRect")
+            completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+            return
+        }
+
+        var result: [[AnyHashable?: Any?]] = []
+
+        // Get all layers from the style
+        let styleLayers = style.layers
+
+        // Query each layer individually using the bounding box
+        for layer in styleLayers {
+            guard layer is MLNVectorStyleLayer ||
+                  layer is MLNSymbolStyleLayer ||
+                  layer is MLNCircleStyleLayer ||
+                  layer is MLNFillStyleLayer ||
+                  layer is MLNLineStyleLayer else {
+                continue
+            }
+
+            // Query features within the rect for this specific layer
+            let layerFeatures = _mapView.visibleFeatures(
+                in: rect,
+                styleLayerIdentifiers: [layer.identifier]
+            )
+
+            for feature in layerFeatures {
+                var properties: [AnyHashable?: Any?] = [:]
+
+                // Add layer metadata
+                properties["layerId"] = layer.identifier
+
+                // Get source-layer identifier
+                if let vectorLayer = layer as? MLNVectorStyleLayer {
+                    properties["sourceLayer"] = vectorLayer.sourceLayerIdentifier ?? ""
+                } else if let symbolLayer = layer as? MLNSymbolStyleLayer {
+                    properties["sourceLayer"] = symbolLayer.sourceLayerIdentifier ?? ""
+                } else if let circleLayer = layer as? MLNCircleStyleLayer {
+                    properties["sourceLayer"] = circleLayer.sourceLayerIdentifier ?? ""
+                } else if let fillLayer = layer as? MLNFillStyleLayer {
+                    properties["sourceLayer"] = fillLayer.sourceLayerIdentifier ?? ""
+                } else if let lineLayer = layer as? MLNLineStyleLayer {
+                    properties["sourceLayer"] = lineLayer.sourceLayerIdentifier ?? ""
+                } else {
+                    properties["sourceLayer"] = ""
+                }
+
+                properties["sourceId"] = ""
+
+                // Extract feature properties
+                var attributes: [String: Any]? = nil
+                var coordinate: CLLocationCoordinate2D? = nil
+
+                if let pointFeature = feature as? MLNPointFeature {
+                    attributes = pointFeature.attributes
+                    coordinate = pointFeature.coordinate
+                } else if let polylineFeature = feature as? MLNPolylineFeature {
+                    attributes = polylineFeature.attributes
+                } else if let polygonFeature = feature as? MLNPolygonFeature {
+                    attributes = polygonFeature.attributes
+                } else if let shapeCollectionFeature = feature as? MLNShapeCollectionFeature {
+                    attributes = shapeCollectionFeature.attributes
+                }
+
+                if let coordinate = coordinate {
+                    properties["latitude"] = String(coordinate.latitude)
+                    properties["longitude"] = String(coordinate.longitude)
+                }
+
+                if let attributes = attributes {
+                    print("iOS: queryLayersInRect - Feature in layer '\(layer.identifier)' has \(attributes.count) attributes")
+                    for (key, value) in attributes {
+                        properties[key] = String(describing: value)
+                        if key == "name" || key == "name:en" {
+                            print("iOS: queryLayersInRect - Found POI name: \(key)=\(value)")
+                        }
+                    }
+                } else {
+                    print("iOS: queryLayersInRect - WARNING: No attributes for feature in layer '\(layer.identifier)'")
+                }
+
+                result.append(properties)
+            }
+        }
+
+        print("iOS: queryLayersInRect found \(result.count) total features in rect")
+        // Print first few features for debugging
+        for (index, feature) in result.prefix(3).enumerated() {
+            print("iOS: queryLayersInRect - Feature #\(index): layerId=\(feature["layerId"] ?? "unknown"), name=\(feature["name"] ?? "NO_NAME")")
+        }
+        completion(.success(result))
+    }
+
     // Enable/disable location tracking with bearing mode
+    // NOTE: We avoid setUserTrackingMode entirely because MapLibre's internal
+    // C++ engine always does a fly-to arc animation when switching modes,
+    // even with animated:false and CATransaction. Instead we just toggle
+    // showsUserLocation and let the Dart side handle camera positioning.
     func trackLocation(
         track: Bool,
         bearingMode: Int64,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
+        print("🔵 iOS trackLocation CALLED: track=\(track), bearingMode=\(bearingMode)")
         DispatchQueue.main.async {
             guard self._mapView != nil else {
-                // Map view not yet initialized, skip track location
+                print("🔵 iOS trackLocation: mapView is nil, skipping")
                 completion(.success(()))
                 return
             }
+
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            CATransaction.setAnimationDuration(0)
+
             if track {
-                // Convert bearingMode to appropriate iOS tracking mode
-                switch bearingMode {
-                case 0:  // none
-                    self._mapView.userTrackingMode = .follow
-                case 1:  // compass
-                    self._mapView.userTrackingMode = .followWithHeading
-                case 2:  // gps
-                    self._mapView.userTrackingMode = .followWithCourse
-                default:
-                    self._mapView.userTrackingMode = .follow
+                // Just ensure the location dot is visible — no tracking mode change
+                if !self._mapView.showsUserLocation {
+                    self._mapView.showsUserLocation = true
                 }
+                // Always set to .none to prevent MapLibre's internal fly-to
+                self._mapView.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+                print("🔵 iOS trackLocation: showsUserLocation=true, trackingMode=.none (no fly-to)")
             } else {
-                self._mapView.userTrackingMode = .none
+                self._mapView.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+                print("🔵 iOS trackLocation: trackingMode=.none")
             }
+
+            CATransaction.commit()
+            print("🔵 iOS trackLocation: CATransaction committed")
 
             completion(.success(()))
         }
@@ -2115,8 +2397,24 @@ func addSymbolLayer(
                 completion(.success(()))
                 return
             }
+
+            // Only change if the state is different to prevent duplicate layer errors
+            guard self._mapView.showsUserLocation != show else {
+                print("📍 iOS showUserLocationPuck: Already set to \(show), skipping")
+                completion(.success(()))
+                return
+            }
+
+            // Wrap in CATransaction to disable implicit animations when showing/hiding user location
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            CATransaction.setAnimationDuration(0)
+
             self._mapView.showsUserLocation = show
-            print("iOS: showUserLocationPuck set to \(show)")
+
+            CATransaction.commit()
+            print("📍 iOS showUserLocationPuck: set to \(show) with CATransaction")
+
             completion(.success(()))
         }
     }

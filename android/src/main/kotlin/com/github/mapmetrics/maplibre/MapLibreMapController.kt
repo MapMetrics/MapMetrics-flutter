@@ -1033,6 +1033,93 @@ class MapLibreMapController(
         }
     }
 
+    override fun queryLayersInRect(
+        left: Double,
+        top: Double,
+        right: Double,
+        bottom: Double,
+        callback: (Result<List<Map<Any?, Any?>>>) -> Unit
+    ) {
+        try {
+            val rect = android.graphics.RectF(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat())
+            val results = mutableListOf<Map<Any?, Any?>>()
+
+            // Get all layers from the style
+            val style = mapLibreMap.style
+            if (style != null) {
+                val layers = style.layers
+
+                // Query each layer individually using the bounding box
+                for (layer in layers) {
+                    // Query features within the rect for this specific layer
+                    val layerFeatures = mapLibreMap.queryRenderedFeatures(rect, layer.id)
+
+                    for (feature in layerFeatures) {
+                        val properties = mutableMapOf<Any?, Any?>()
+
+                        // Add layer metadata
+                        properties["layerId"] = layer.id
+                        properties["sourceId"] = ""
+                        properties["sourceLayer"] = feature.toJson()?.let { json ->
+                            org.json.JSONObject(json).optString("source-layer", "")
+                        } ?: ""
+
+                        // Extract geometry coordinates
+                        try {
+                            val featureJson = feature.toJson()
+                            if (featureJson != null) {
+                                val jsonObject = org.json.JSONObject(featureJson)
+                                val geometry = jsonObject.optJSONObject("geometry")
+                                if (geometry != null && geometry.optString("type") == "Point") {
+                                    val coordinates = geometry.optJSONArray("coordinates")
+                                    if (coordinates != null && coordinates.length() >= 2) {
+                                        properties["longitude"] = coordinates.getDouble(0).toString()
+                                        properties["latitude"] = coordinates.getDouble(1).toString()
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            println("Android: Error extracting coordinates in rect query: ${e.message}")
+                        }
+
+                        // Extract all feature properties
+                        val featureProperties = feature.properties()
+                        if (featureProperties != null) {
+                            println("Android: queryLayersInRect - Feature in layer '${layer.id}' has ${featureProperties.size()} properties")
+                            for (key in featureProperties.keySet()) {
+                                val value = featureProperties.get(key)
+                                // Strip quotes from string values (JsonElement.toString() keeps quotes)
+                                var strValue = value?.toString() ?: ""
+                                if (strValue.startsWith("\"") && strValue.endsWith("\"")) {
+                                    strValue = strValue.substring(1, strValue.length - 1)
+                                }
+                                properties[key] = strValue
+                                if (key == "name" || key == "name:en") {
+                                    println("Android: queryLayersInRect - Found POI name: $key=$strValue")
+                                }
+                            }
+                        } else {
+                            println("Android: queryLayersInRect - WARNING: No properties for feature in layer '${layer.id}'")
+                        }
+
+                        results.add(properties)
+                    }
+                }
+            }
+
+            println("Android: queryLayersInRect found ${results.size} features in rect ($left,$top,$right,$bottom)")
+            // Print first few features for debugging
+            results.take(3).forEachIndexed { index, feature ->
+                println("Android: queryLayersInRect - Feature #$index: layerId=${feature["layerId"]}, name=${feature["name"] ?: "NO_NAME"}")
+            }
+            callback(Result.success(results))
+        } catch (e: Exception) {
+            println("Android: Error querying layers in rect: ${e.message}")
+            e.printStackTrace()
+            callback(Result.failure(e))
+        }
+    }
+
     override fun trackLocation(
         track: Boolean,
         bearingMode: Long,
