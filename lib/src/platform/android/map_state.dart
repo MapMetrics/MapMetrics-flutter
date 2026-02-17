@@ -21,7 +21,9 @@ part 'style_controller.dart';
 /// android using JNI and Pigeon as a fallback.
 final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   late final pigeon.MapLibreHostApi _hostApi;
-  late final int _viewId;
+  int? _viewId;
+  bool _isViewCreated = false;
+  bool _isDisposed = false;
   jni.MapLibreMap? _cachedJniMapLibreMap;
   jni.Projection? _cachedJniProjection;
   jni.LocationComponent? _cachedLocationComponent;
@@ -45,8 +47,14 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   @override
   StyleControllerAndroid? style;
 
-  jni.MapLibreMap? get _jniMapLibreMap =>
-      _cachedJniMapLibreMap ??= jni.MapLibreRegistry.INSTANCE.getMap(_viewId);
+  jni.MapLibreMap? get _jniMapLibreMap {
+    if (_isDisposed || !_isViewCreated) return null;
+    final viewId = _viewId;
+    if (viewId == null) return null;
+    return _cachedJniMapLibreMap ??= jni.MapLibreRegistry.INSTANCE.getMap(
+      viewId,
+    );
+  }
 
   jni.Projection get _jniProjection =>
       _cachedJniProjection ??= _jniMapLibreMap!.getProjection();
@@ -126,15 +134,19 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   /// This method gets called when the platform view is created. It is not
   /// guaranteed that the map is ready.
   void _onPlatformViewCreated(int viewId) {
+    if (_isDisposed) return;
+
     final channelSuffix = viewId.toString();
     _hostApi = pigeon.MapLibreHostApi(messageChannelSuffix: channelSuffix);
     pigeon.MapLibreFlutterApi.setUp(this, messageChannelSuffix: channelSuffix);
     _viewId = viewId;
+    _isViewCreated = true;
     jni.Logger.setVerbosity(jni.Logger.WARN);
   }
 
   @override
   void didUpdateWidget(covariant MapLibreMap oldWidget) {
+    if (_isDisposed) return;
     _updateOptions(oldWidget);
     layerManager?.updateLayers(widget.layers);
     super.didUpdateWidget(oldWidget);
@@ -142,6 +154,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
   @override
   void dispose() {
+    _isDisposed = true;
+    _isViewCreated = false;
+    _viewId = null;
     _locationSubscription?.cancel();
     _cachedJniProjection?.release();
     _cachedJniMapLibreMap?.release();
@@ -236,8 +251,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
       cameraUpdate,
       jni.MapLibreMap$CancelableCallback.implement(
         jni.$MapLibreMap$CancelableCallback(
-          onCancel:
-              () => completer.completeError(Exception('Animation cancelled.')),
+          onCancel: () {
+            if (!completer.isCompleted) completer.complete();
+          },
           onFinish: completer.complete,
           onCancel$async: true,
           onFinish$async: true,
@@ -276,8 +292,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
       nativeDuration.inMilliseconds,
       jni.MapLibreMap$CancelableCallback.implement(
         jni.$MapLibreMap$CancelableCallback(
-          onCancel:
-              () => completer.completeError(Exception('Animation cancelled.')),
+          onCancel: () {
+            if (!completer.isCompleted) completer.complete();
+          },
           onFinish: completer.complete,
           onFinish$async: true,
           onCancel$async: true,
@@ -321,8 +338,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
       nativeDuration.inMilliseconds,
       jni.MapLibreMap$CancelableCallback.implement(
         jni.$MapLibreMap$CancelableCallback(
-          onCancel:
-              () => completer.completeError(Exception('Animation cancelled.')),
+          onCancel: () {
+            if (!completer.isCompleted) completer.complete();
+          },
           onFinish: completer.complete,
           onCancel$async: true,
           onFinish$async: true,
@@ -347,8 +365,11 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     widget.onEvent?.call(MapEventStyleLoaded(styleCtrl));
     widget.onStyleLoaded?.call(styleCtrl);
     layerManager = LayerManager(styleCtrl, widget.layers);
-    // setState is needed to refresh the flutter widgets used in MapLibreMap.children.
-    setState(() {});
+    // Defer setState to after the current frame to prevent RenderBox "not laid out"
+    // crash when scheduleWarmUpFrame triggers _setOffset before layout completes.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -377,8 +398,29 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   @override
   Future<List<Map<String, String>>> queryLayers(Offset screenLocation) async {
     // Use Pigeon to call the native implementation which extracts all feature properties
-    final result = await _hostApi.queryLayers(screenLocation.dx.toDouble(), screenLocation.dy.toDouble());
+    final result = await _hostApi.queryLayers(
+      screenLocation.dx.toDouble(),
+      screenLocation.dy.toDouble(),
+    );
     return result;
+  }
+
+  @override
+  Future<List<Map<String, String>>> queryLayersInRect(Rect rect) async {
+    // Use native Pigeon method for efficient bounding box query (single native call)
+    final result = await _hostApi.queryLayersInRect(
+      rect.left.toDouble(),
+      rect.top.toDouble(),
+      rect.right.toDouble(),
+      rect.bottom.toDouble(),
+    );
+    // Cast from Pigeon's Map<Object?, Object?> to Map<String, String>
+    return result.map((map) {
+      return map.map(
+        (key, value) =>
+            MapEntry(key?.toString() ?? '', value?.toString() ?? ''),
+      );
+    }).toList();
   }
 
   @override
@@ -409,7 +451,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
             .pulseEnabled(pulse)!;
     final locOptions = locOptionsBuilder.build();
     final locationEngineRequestBuilder =
-        jni.LocationEngineRequest$Builder(100) // 100ms = 10 updates per second for smooth tracking
+        jni.LocationEngineRequest$Builder(
+              100,
+            ) // 100ms = 10 updates per second for smooth tracking
             .setFastestInterval(fastestInterval.inMilliseconds)!
             .setMaxWaitTime(maxWaitTime.inMilliseconds)!
             .setPriority(jni.LocationEngineRequest.PRIORITY_HIGH_ACCURACY)!;
@@ -480,9 +524,12 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     // _isTrackingLocation = trackLocation;
 
     // If we're in navigation mode (have an active route), hide the location icon
-    if (_currentNavigationRoute != null && _currentNavigationRoute!.isNotEmpty) {
+    if (_currentNavigationRoute != null &&
+        _currentNavigationRoute!.isNotEmpty) {
       hideLocationIcon();
-      debugPrint('🚫 Location icon hidden during trackLocation (navigation mode active)');
+      debugPrint(
+        '🚫 Location icon hidden during trackLocation (navigation mode active)',
+      );
     }
   }
 
@@ -507,10 +554,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     //   }
     // });
 
-
-     if (_currentNavigationRoute != null) {
-        _applyRoadSnapping();
-      }
+    if (_currentNavigationRoute != null) {
+      _applyRoadSnapping();
+    }
     debugPrint('✅ Location snapping setup complete');
   }
 
@@ -608,7 +654,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
             // Force the location component to this position
             _forceLocationUpdate(_manualLocationOverride!);
 
-            debugPrint('📍 Location moved to: ${_manualLocationOverride!.lat}, ${_manualLocationOverride!.lng}');
+            debugPrint(
+              '📍 Location moved to: ${_manualLocationOverride!.lat}, ${_manualLocationOverride!.lng}',
+            );
 
             // Optionally snap to road if near a road
             _snapToNearestRoad(_manualLocationOverride!);
@@ -707,7 +755,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     _isLocationDraggable = draggable;
 
     if (draggable) {
-      debugPrint('📍 Location marker drag mode ENABLED - Click on the location marker to start dragging');
+      debugPrint(
+        '📍 Location marker drag mode ENABLED - Click on the location marker to start dragging',
+      );
       debugPrint('📍 Then click or long-press anywhere on the map to move it');
     } else {
       debugPrint('📍 Location marker drag mode DISABLED');
@@ -723,7 +773,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     _currentNavigationRoute = routePoints;
     _roadSnappingService.clearNavigationRoute(); // Clear old route first
     _roadSnappingService.setNavigationRoute(routePoints);
-    debugPrint('📍 Navigation route updated with ${routePoints.length} points for road snapping');
+    debugPrint(
+      '📍 Navigation route updated with ${routePoints.length} points for road snapping',
+    );
 
     // Hide the native location icon when navigation starts
     hideLocationIcon();
@@ -731,7 +783,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
     // Set navigation state to true
     _isNavigationActive = true;
-    debugPrint('🧭 Navigation started - using custom navigation marker from road snapping service');
+    debugPrint(
+      '🧭 Navigation started - using custom navigation marker from road snapping service',
+    );
 
     // Ensure navigation icon stays above route polylines during rerouting
     _ensureNavigationIconAboveRoute();
@@ -760,6 +814,17 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     debugPrint('✅ Native location icon restored after navigation');
   }
 
+  @override
+  Future<void> setStyleUri(String styleUri) async {
+    // Dispose old style controller before switching
+    style?.dispose();
+    style = null;
+
+    // Go through Pigeon so Kotlin controller registers the onStyleLoaded listener.
+    // JNI direct call bypasses the listener → onStyleLoaded never fires.
+    await _hostApi.setStyleUri(styleUri);
+  }
+
   /// Hide the native location icon (useful for navigation mode)
   void hideLocationIcon() {
     if (_locationComponent != null) {
@@ -777,9 +842,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
       // Then set the appropriate render mode
       final renderMode = switch (mode) {
-        BearingTrackMode.none => jni.RenderMode.NORMAL,  // 18
-        BearingTrackMode.compass => jni.RenderMode.COMPASS,  // 4
-        BearingTrackMode.gps => jni.RenderMode.GPS,  // 8
+        BearingTrackMode.none => jni.RenderMode.NORMAL, // 18
+        BearingTrackMode.compass => jni.RenderMode.COMPASS, // 4
+        BearingTrackMode.gps => jni.RenderMode.GPS, // 8
       };
       _locationComponent.setRenderMode(renderMode);
       debugPrint('✅ Native location component re-enabled with mode: $mode');
@@ -789,7 +854,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   /// Ensure navigation icon stays above route polylines during rerouting
   void _ensureNavigationIconAboveRoute() {
     if (_isNavigationActive) {
-      debugPrint('🧭 Ensuring navigation icon stays above route polylines during rerouting');
+      debugPrint(
+        '🧭 Ensuring navigation icon stays above route polylines during rerouting',
+      );
 
       try {
         // During navigation, we use a custom marker from the road snapping service
@@ -811,5 +878,4 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
       }
     }
   }
-
 }
