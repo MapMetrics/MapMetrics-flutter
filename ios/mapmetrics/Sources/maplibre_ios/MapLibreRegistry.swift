@@ -7,21 +7,57 @@ import UIKit
 // swiftc -c MapLibreRegistry.swift -module-name maplibre_ios -emit-objc-header-path MapLibreRegistry.h -emit-library -o libmaplibreios.dylib -target arm64-apple-ios18.1-simulator -sdk $(xcrun --sdk iphonesimulator --show-sdk-path) -F /Users/joscha/Library/Caches/CocoaPods/Pods/Release/MapLibre/6.8.1-46c5f/MapLibre.xcframework/ios-arm64_x86_64-simulator
 
 @objc public class MapLibreRegistry: NSObject {
-  private static var mapRegistry: [Int64: AnyObject] = [:]
+  private static var mapRegistry: [Int64: MLNMapView] = [:]
 
   // Method to get the map for a given viewId
-  @objc public static func getMap(viewId: Int64) -> AnyObject? {
-    mapRegistry[viewId]
+  @objc public static func getMap(viewId: Int64) -> MLNMapView? {
+    return mapRegistry[viewId]
   }
 
   // Method to add a map to the registry
-  public static func addMap(viewId: Int64, map: AnyObject) {
+  public static func addMap(viewId: Int64, map: MLNMapView) {
+    // CRITICAL: Clean up any existing map with this viewId first
+    if let existingMap = mapRegistry[viewId] {
+      print("MapLibreRegistry: WARNING - Map already exists for viewId: \(viewId), cleaning up first")
+      existingMap.showsUserLocation = false
+      existingMap.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+      existingMap.delegate = nil
+      existingMap.removeFromSuperview()
+    }
+    
     mapRegistry[viewId] = map
+    print("MapLibreRegistry: Added map for viewId: \(viewId)")
   }
 
-  // Method to remove a map to the registry
+  // Method to remove a map from the registry
   public static func removeMap(viewId: Int64) {
+    // CRITICAL: Properly clean up the map before removing
+    if let map = mapRegistry[viewId] {
+      print("MapLibreRegistry: Cleaning up map for viewId: \(viewId)")
+      map.showsUserLocation = false
+      map.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+      map.delegate = nil
+    }
+    
     mapRegistry.removeValue(forKey: viewId)
+    print("MapLibreRegistry: Removed map for viewId: \(viewId)")
+  }
+  
+  // Method to get all maps
+  public static func getAllMaps() -> [Int64: MLNMapView] {
+    return mapRegistry
+  }
+  
+  // Method to clear all maps
+  public static func clearAll() {
+    for (viewId, map) in mapRegistry {
+      print("MapLibreRegistry: Force cleaning map for viewId: \(viewId)")
+      map.showsUserLocation = false
+      map.setUserTrackingMode(.none, animated: false, completionHandler: nil)
+      map.delegate = nil
+    }
+    mapRegistry.removeAll()
+    print("MapLibreRegistry: Cleared all maps")
   }
 
   // Warning: Storing Activity in a static field may lead to memory leaks.
@@ -87,7 +123,12 @@ import UIKit
             }
           }
         }
-        return NSExpression(mglJSONObject: json)
+        // Use ObjC exception catcher to safely handle mglJSONObject
+        if let safeExpr = MLNExpressionCatcher.tryMglJSONObject(json) {
+          return safeExpr
+        }
+        print("iOS: ⚠️ mglJSONObject failed for expression in MapLibreRegistry, using constant fallback")
+        return NSExpression(forConstantValue: nil)
       }
       // parse as a constant value
       return NSExpression(forConstantValue: expression)
@@ -97,28 +138,4 @@ import UIKit
     }
     return nil
   }
-  private static var maps: [Int64: MLNMapView] = [:]
-
-      static func addMap(viewId: Int64, map: MLNMapView) {
-          maps[viewId] = map
-          print("MapLibreRegistry: Added map for viewId: \(viewId)")
-      }
-
-      static func getMap(viewId: Int64) -> MLNMapView? {
-          return maps[viewId]
-      }
-
-      static func removeMap(viewId: Int64) {
-          maps.removeValue(forKey: viewId)
-          print("MapLibreRegistry: Removed map for viewId: \(viewId)")
-      }
-
-      static func getAllMaps() -> [Int64: MLNMapView] {
-          return maps
-      }
-
-      static func clear() {
-          maps.removeAll()
-          print("MapLibreRegistry: Cleared all maps")
-      }
 }

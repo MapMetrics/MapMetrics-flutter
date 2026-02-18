@@ -87,6 +87,14 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                 self._mapView.allowsTilting = mapOptions.gestures.tilt
                 self._mapView.allowsZooming = mapOptions.gestures.zoom
 
+                // Disable double-tap zoom gesture while keeping pinch-to-zoom
+                for gestureRecognizer in self._mapView.gestureRecognizers ?? [] {
+                    if let tapGR = gestureRecognizer as? UITapGestureRecognizer,
+                       tapGR.numberOfTapsRequired == 2 {
+                        tapGR.isEnabled = false
+                    }
+                }
+
                 self._flutterApi.onMapReady { _ in }
                 
                 // Mark map as initialized and execute pending operations
@@ -288,23 +296,33 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     }
 
     private func applyFillProperties(to layer: MLNFillStyleLayer, paint: [String: Any], layout: [String: Any]) {
-        // Apply paint properties
+        // Apply paint properties — wrap in ObjC exception catcher for safety
         paint.forEach { key, value in
-            switch key {
-            case "fill-color": layer.fillColor = parseColor(value)
-            case "fill-opacity": layer.fillOpacity = parseValue(value)
-            case "fill-outline-color": layer.fillOutlineColor = parseColor(value)
-            case "fill-pattern": layer.fillPattern = NSExpression(forConstantValue: value)
-            default: break
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "fill-color": layer.fillColor = self.parseColor(value)
+                case "fill-opacity": layer.fillOpacity = self.parseValue(value)
+                case "fill-outline-color": layer.fillOutlineColor = self.parseColor(value)
+                case "fill-pattern": layer.fillPattern = NSExpression(forConstantValue: value)
+                default: break
+                }
+            }
+            if !success {
+                print("iOS: ⚠️ Skipped fill paint property '\(key)' (ObjC exception caught safely)")
             }
         }
 
-        // Apply layout properties
+        // Apply layout properties — wrap in ObjC exception catcher for safety
         layout.forEach { key, value in
-            switch key {
-            case "visibility": layer.isVisible = (value as? String == "visible")
-            case "fill-sort-key": layer.fillSortKey = parseValue(value)
-            default: break
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "visibility": layer.isVisible = (value as? String == "visible")
+                case "fill-sort-key": layer.fillSortKey = self.parseValue(value)
+                default: break
+                }
+            }
+            if !success {
+                print("iOS: ⚠️ Skipped fill layout property '\(key)' (ObjC exception caught safely)")
             }
         }
     }
@@ -429,41 +447,47 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
 
     private func applyCircleProperties(to layer: MLNCircleStyleLayer, paint: [String: Any], layout: [String: Any]) {
 
-        // Apply paint properties with proper mapping
+        // Apply paint properties — wrap in ObjC exception catcher for safety
         paint.forEach { key, value in
-            print("iOS: Setting paint property \(key) = \(value)")
-
-            switch key {
-            case "circle-radius":
-                layer.circleRadius = createExpression(from: value)
-            case "circle-color":
-                layer.circleColor = createExpression(from: value)
-            case "circle-opacity":
-                layer.circleOpacity = createExpression(from: value)
-            case "circle-stroke-width":
-                layer.circleStrokeWidth = createExpression(from: value)
-            case "circle-stroke-color":
-                layer.circleStrokeColor = createExpression(from: value)
-            case "circle-stroke-opacity":
-                layer.circleStrokeOpacity = createExpression(from: value)
-            case "circle-blur":
-                layer.circleBlur = createExpression(from: value)
-            default:
-                print("iOS: Unknown circle paint property: \(key)")
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "circle-radius":
+                    layer.circleRadius = self.createExpression(from: value)
+                case "circle-color":
+                    layer.circleColor = self.createExpression(from: value)
+                case "circle-opacity":
+                    layer.circleOpacity = self.createExpression(from: value)
+                case "circle-stroke-width":
+                    layer.circleStrokeWidth = self.createExpression(from: value)
+                case "circle-stroke-color":
+                    layer.circleStrokeColor = self.createExpression(from: value)
+                case "circle-stroke-opacity":
+                    layer.circleStrokeOpacity = self.createExpression(from: value)
+                case "circle-blur":
+                    layer.circleBlur = self.createExpression(from: value)
+                default:
+                    print("iOS: Unknown circle paint property: \(key)")
+                }
+            }
+            if !success {
+                print("iOS: ⚠️ Skipped circle paint property '\(key)' (ObjC exception caught safely)")
             }
         }
 
-        // Apply layout properties
+        // Apply layout properties — wrap in ObjC exception catcher for safety
         layout.forEach { key, value in
-            print("iOS: Setting layout property \(key) = \(value)")
-
-            switch key {
-            case "visibility":
-                layer.isVisible = (value as? String == "visible")
-            case "circle-sort-key":
-                layer.circleSortKey = createExpression(from: value)
-            default:
-                print("iOS: Unknown circle layout property: \(key)")
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "visibility":
+                    layer.isVisible = (value as? String == "visible")
+                case "circle-sort-key":
+                    layer.circleSortKey = self.createExpression(from: value)
+                default:
+                    print("iOS: Unknown circle layout property: \(key)")
+                }
+            }
+            if !success {
+                print("iOS: ⚠️ Skipped circle layout property '\(key)' (ObjC exception caught safely)")
             }
         }
     }
@@ -485,12 +509,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                     return nativeExpr
                 }
 
-                // SECOND: Try MapMetrics's mglJSONObject converter for simpler expressions
-                print("iOS: Native builder didn't handle this, trying mglJSONObject...")
-                do {
-                    return try NSExpression(mglJSONObject: arrayValue)
-                } catch let error {
-                    print("iOS: ⚠️ mglJSONObject also failed: \(error)")
+                // SECOND: Try MapLibre's mglJSONObject converter via ObjC exception catcher
+                print("iOS: Native builder didn't handle this, trying mglJSONObject via safe catcher...")
+                if let safeExpr = MLNExpressionCatcher.tryMglJSONObject(arrayValue) {
+                    print("iOS: ✅ mglJSONObject succeeded via safe catcher")
+                    return safeExpr
+                } else {
+                    print("iOS: ⚠️ mglJSONObject failed (ObjC exception caught safely)")
                     print("iOS: Expression that failed: \(arrayValue)")
 
                     // Return nil constant instead of crashing - graceful degradation
@@ -573,6 +598,26 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         }
 
         switch op {
+        case "all":
+            // ['all', pred1, pred2, ...] -> AND compound predicate
+            var subpredicates: [NSPredicate] = []
+            for i in 1..<expression.count {
+                if let subFilter = expression[i] as? [Any], let subPredicate = buildPredicate(from: subFilter) {
+                    subpredicates.append(subPredicate)
+                }
+            }
+            return subpredicates.isEmpty ? nil : NSCompoundPredicate(andPredicateWithSubpredicates: subpredicates)
+
+        case "any":
+            // ['any', pred1, pred2, ...] -> OR compound predicate
+            var subpredicates: [NSPredicate] = []
+            for i in 1..<expression.count {
+                if let subFilter = expression[i] as? [Any], let subPredicate = buildPredicate(from: subFilter) {
+                    subpredicates.append(subPredicate)
+                }
+            }
+            return subpredicates.isEmpty ? nil : NSCompoundPredicate(orPredicateWithSubpredicates: subpredicates)
+
         case "has":
             // ['has', 'key'] -> keyPath != nil
             if expression.count >= 2, let key = expression[1] as? String {
@@ -648,6 +693,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         print("iOS: Building native NSExpression for operator: \(op)")
 
         switch op {
+        case "accumulated":
+            // ['accumulated'] -> The accumulated cluster property value
+            // Used in clusterProperties reduce expressions
+            // CRITICAL: Must use "$accumulated" (with $ prefix) so that MapLibre's
+            // mgl_jsonExpressionObject serializes it back to ["accumulated"], not ["var", "accumulated"]
+            return NSExpression(forVariable: "$accumulated")
+
         case "get":
             // ['get', 'property_name'] -> NSExpression for key path
             if expression.count >= 2, let key = expression[1] as? String {
@@ -669,6 +721,9 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                 var resultExpr: NSExpression
                 if let fallbackArray = expression.last as? [Any], let built = buildNativeExpression(fallbackArray) {
                     resultExpr = built
+                } else if let colorStr = expression.last as? String, isColorString(colorStr),
+                          let color = getColorFromNameOrHex(colorStr) {
+                    resultExpr = NSExpression(forConstantValue: color)
                 } else {
                     resultExpr = NSExpression(forConstantValue: expression.last!)
                 }
@@ -679,10 +734,13 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                     let outputValue = expression[i]
                     let conditionValue = expression[i - 1]
 
-                    // Build output expression
+                    // Build output expression (convert color strings to UIColor)
                     let outputExpr: NSExpression
                     if let outputArray = outputValue as? [Any], let built = buildNativeExpression(outputArray) {
                         outputExpr = built
+                    } else if let colorStr = outputValue as? String, isColorString(colorStr),
+                              let color = getColorFromNameOrHex(colorStr) {
+                        outputExpr = NSExpression(forConstantValue: color)
                     } else {
                         outputExpr = NSExpression(forConstantValue: outputValue)
                     }
@@ -755,67 +813,47 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
 
         case "coalesce":
             // ['coalesce', val1, val2, ...] -> Return first non-null value
-            // In iOS, we can simulate this with nested conditionals
+            // CRITICAL: Must use mgl_coalesce: function so that MapLibre's
+            // mgl_jsonExpressionObject serializes it back to ["coalesce", ...],
+            // NOT ["case", ...] which happens with NSExpression(forConditional:).
             if expression.count >= 2 {
-                var resultExpr: NSExpression
-                if let lastArray = expression.last as? [Any], let built = buildNativeExpression(lastArray) {
-                    resultExpr = built
-                } else {
-                    resultExpr = NSExpression(forConstantValue: expression.last!)
-                }
-
-                for i in stride(from: expression.count - 2, through: 1, by: -1) {
+                var arguments: [NSExpression] = []
+                for i in 1..<expression.count {
                     let value = expression[i]
-                    let valueExpr: NSExpression
                     if let valueArray = value as? [Any], let built = buildNativeExpression(valueArray) {
-                        valueExpr = built
+                        arguments.append(built)
                     } else {
-                        valueExpr = NSExpression(forConstantValue: value)
+                        arguments.append(NSExpression(forConstantValue: value))
                     }
-
-                    // Check if value is not nil
-                    let notNilCheck = NSComparisonPredicate(
-                        leftExpression: valueExpr,
-                        rightExpression: NSExpression(forConstantValue: nil),
-                        modifier: .direct,
-                        type: .notEqualTo
-                    )
-
-                    resultExpr = NSExpression(
-                        forConditional: notNilCheck,
-                        trueExpression: valueExpr,
-                        falseExpression: resultExpr
-                    )
                 }
-
-                return resultExpr
+                // mgl_coalesce: takes a single aggregate argument containing all values
+                return NSExpression(
+                    forFunction: "mgl_coalesce:",
+                    arguments: [NSExpression(forAggregate: arguments)]
+                )
             }
 
         case "interpolate":
             // ['interpolate', ['linear'], ['zoom'], stop1, output1, stop2, output2, ...]
-            // Use MapLibre's mglJSONObject for interpolate expressions as it handles them correctly
+            // Use MapLibre's mglJSONObject via ObjC exception catcher for safety
             print("iOS: Processing interpolate expression")
-            do {
-                let result = try NSExpression(mglJSONObject: expression)
-                print("iOS: ✅ Successfully built interpolate NSExpression via mglJSONObject")
+            if let result = MLNExpressionCatcher.tryMglJSONObject(expression) {
+                print("iOS: ✅ Successfully built interpolate NSExpression via safe catcher")
                 return result
-            } catch {
-                print("iOS: ⚠️ Failed to build interpolate expression: \(error)")
-                // Return nil to trigger fallback
+            } else {
+                print("iOS: ⚠️ Failed to build interpolate expression (ObjC exception caught)")
                 return nil
             }
 
         case "step":
             // ['step', input, defaultValue, stop1, output1, stop2, output2, ...]
-            // Use MapLibre's mglJSONObject for step expressions as it handles them correctly
+            // Use MapLibre's mglJSONObject via ObjC exception catcher for safety
             print("iOS: Processing step expression")
-            do {
-                let result = try NSExpression(mglJSONObject: expression)
-                print("iOS: ✅ Successfully built step NSExpression via mglJSONObject")
+            if let result = MLNExpressionCatcher.tryMglJSONObject(expression) {
+                print("iOS: ✅ Successfully built step NSExpression via safe catcher")
                 return result
-            } catch {
-                print("iOS: ⚠️ Failed to build step expression: \(error)")
-                // Return nil to trigger fallback
+            } else {
+                print("iOS: ⚠️ Failed to build step expression (ObjC exception caught)")
                 return nil
             }
 
@@ -825,6 +863,90 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         }
 
         return nil
+    }
+
+    /// Build NSExpression safely from a JSON expression array.
+    /// Uses buildNativeExpression first, falls back to mglJSONObject with error handling.
+    /// Returns nil if the expression cannot be parsed (instead of crashing).
+    private func buildSafeExpression(from jsonExpr: [Any]) -> NSExpression? {
+        // Try the native builder first — handles accumulated, get, coalesce, etc.
+        if let expr = buildNativeExpression(jsonExpr) {
+            return expr
+        }
+        // Fallback: try mglJSONObject via ObjC exception catcher (catches NSException safely)
+        if let result = MLNExpressionCatcher.tryMglJSONObject(jsonExpr) {
+            return result
+        }
+        print("iOS: ⚠️ buildSafeExpression failed for \(jsonExpr)")
+        return nil
+    }
+
+    /// Build the "reduce" expression for a cluster property.
+    /// Input JSON example: ["coalesce", ["accumulated"], ["get", "clusterIconId"]]
+    /// Uses MapLibre's official NSExpression API with $featureAccumulated variable.
+    private func buildClusterReduceExpression(key: String, reduceJson: [Any]) -> NSExpression? {
+        guard !reduceJson.isEmpty, let op = reduceJson.first as? String else {
+            print("iOS: ⚠️ Empty or invalid reduce expression")
+            return nil
+        }
+
+        print("iOS: Building cluster reduce expression, op='\(op)' for key='\(key)'")
+
+        // Map the operator to the NSExpression format string function name
+        // MapLibre iOS expects: NSExpression(format: "FUNCTION:({$featureAccumulated, key})")
+        // Where FUNCTION is sum:, max:, min:, etc.
+        // For coalesce: use mgl_coalesce: function
+        let functionName: String
+        switch op {
+        case "coalesce":
+            functionName = "mgl_coalesce:"
+        case "+", "sum":
+            functionName = "sum:"
+        case "max":
+            functionName = "max:"
+        case "min":
+            functionName = "min:"
+        case "concat":
+            functionName = "mgl_join:"
+        case "any":
+            functionName = "mgl_any:"
+        case "all":
+            functionName = "mgl_all:"
+        default:
+            print("iOS: ⚠️ Unsupported cluster reduce operator: \(op)")
+            return nil
+        }
+
+        // Build using NSExpression(format:) which MapLibre can properly round-trip
+        // The format uses $featureAccumulated which MapLibre knows how to serialize
+        let formatString = "\(functionName)({$featureAccumulated, \(key)})"
+        print("iOS: Using format string: \(formatString)")
+
+        do {
+            let expr = NSExpression(format: formatString)
+            print("iOS: ✅ Successfully built reduce expression via format string")
+            return expr
+        } catch {
+            print("iOS: ⚠️ NSExpression(format:) failed: \(error)")
+            return nil
+        }
+    }
+
+    /// Build the "map" expression for a cluster property.
+    /// Input JSON example: ["get", "iconId"]
+    /// Returns an NSExpression that extracts the property value from each feature.
+    private func buildClusterMapExpression(mapJson: [Any]) -> NSExpression? {
+        guard !mapJson.isEmpty, let op = mapJson.first as? String else {
+            print("iOS: ⚠️ Empty or invalid map expression")
+            return nil
+        }
+
+        if op == "get", mapJson.count >= 2, let key = mapJson[1] as? String {
+            return NSExpression(forKeyPath: key)
+        }
+
+        // Fallback: try buildSafeExpression for other map expression types
+        return buildSafeExpression(from: mapJson)
     }
 
     // Convert unsupported MapLibre expressions to iOS-compatible ones
@@ -928,21 +1050,31 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     }
 
     private func applyBackgroundProperties(to layer: MLNBackgroundStyleLayer, paint: [String: Any], layout: [String: Any]) {
-        // Apply paint properties
+        // Apply paint properties — wrap in ObjC exception catcher for safety
         paint.forEach { key, value in
-            switch key {
-            case "background-color": layer.backgroundColor = parseColor(value)
-            case "background-opacity": layer.backgroundOpacity = parseValue(value)
-            case "background-pattern": layer.backgroundPattern = NSExpression(forConstantValue: value)
-            default: break
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "background-color": layer.backgroundColor = self.parseColor(value)
+                case "background-opacity": layer.backgroundOpacity = self.parseValue(value)
+                case "background-pattern": layer.backgroundPattern = NSExpression(forConstantValue: value)
+                default: break
+                }
+            }
+            if !success {
+                print("iOS: ⚠️ Skipped background paint property '\(key)' (ObjC exception caught safely)")
             }
         }
 
-        // Apply layout properties
+        // Apply layout properties — wrap in ObjC exception catcher for safety
         layout.forEach { key, value in
-            switch key {
-            case "visibility": layer.isVisible = (value as? String == "visible")
-            default: break
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "visibility": layer.isVisible = (value as? String == "visible")
+                default: break
+                }
+            }
+            if !success {
+                print("iOS: ⚠️ Skipped background layout property '\(key)' (ObjC exception caught safely)")
             }
         }
     }
@@ -1258,81 +1390,79 @@ func addSymbolLayer(
     private func applySymbolProperties(to layer: MLNSymbolStyleLayer, paint: [String: Any], layout: [String: Any]) {
         print("iOS: Applying symbol properties using proper MapLibre setters")
 
-        // Apply paint properties
+        // Apply paint properties — wrap in ObjC exception catcher for safety
         paint.forEach { key, value in
-            print("iOS: Setting symbol paint property \(key) = \(value)")
-
-            switch key {
-            case "icon-opacity":
-                layer.iconOpacity = createExpression(from: value)
-            case "icon-color":
-                layer.iconColor = createExpression(from: value)
-            case "icon-halo-color":
-                layer.iconHaloColor = createExpression(from: value)
-            case "icon-halo-width":
-                layer.iconHaloWidth = createExpression(from: value)
-            case "text-opacity":
-                layer.textOpacity = createExpression(from: value)
-            case "text-color":
-                layer.textColor = createExpression(from: value)
-            case "text-halo-color":
-                layer.textHaloColor = createExpression(from: value)
-            case "text-halo-width":
-                layer.textHaloWidth = createExpression(from: value)
-            default:
-                print("iOS: Unknown symbol paint property: \(key)")
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "icon-opacity":
+                    layer.iconOpacity = self.createExpression(from: value)
+                case "icon-color":
+                    layer.iconColor = self.createExpression(from: value)
+                case "icon-halo-color":
+                    layer.iconHaloColor = self.createExpression(from: value)
+                case "icon-halo-width":
+                    layer.iconHaloWidth = self.createExpression(from: value)
+                case "text-opacity":
+                    layer.textOpacity = self.createExpression(from: value)
+                case "text-color":
+                    layer.textColor = self.createExpression(from: value)
+                case "text-halo-color":
+                    layer.textHaloColor = self.createExpression(from: value)
+                case "text-halo-width":
+                    layer.textHaloWidth = self.createExpression(from: value)
+                default:
+                    print("iOS: Unknown symbol paint property: \(key)")
+                }
+            }
+            if !success {
+                print("iOS: ⚠️ Skipped symbol paint property '\(key)' (ObjC exception caught safely)")
             }
         }
 
-        // Apply layout properties with proper mapping
+        // Apply layout properties — wrap in ObjC exception catcher for safety
         layout.forEach { key, value in
-            // Skip source-layer as it's handled separately
-            if key == "source-layer" {
-                return
+            if key == "source-layer" { return }
+
+            let success = MLNExpressionCatcher.performSafely {
+                switch key {
+                case "visibility":
+                    layer.isVisible = (value as? String == "visible")
+                case "icon-image":
+                    layer.iconImageName = self.createExpression(from: value)
+                case "icon-size":
+                    layer.iconScale = self.createExpression(from: value)
+                case "icon-allow-overlap":
+                    if let boolValue = value as? Bool {
+                        layer.iconAllowsOverlap = NSExpression(forConstantValue: boolValue)
+                    }
+                case "icon-ignore-placement":
+                    if let boolValue = value as? Bool {
+                        layer.iconIgnoresPlacement = NSExpression(forConstantValue: boolValue)
+                    }
+                case "icon-padding":
+                    layer.iconPadding = self.createExpression(from: value)
+                case "icon-anchor":
+                    layer.iconAnchor = self.createExpression(from: value)
+                case "icon-offset":
+                    layer.iconOffset = self.createExpression(from: value)
+                case "icon-rotate", "icon-rotation":
+                    layer.iconRotation = self.createExpression(from: value)
+                case "text-field":
+                    layer.text = self.createExpression(from: value)
+                case "text-size":
+                    layer.textFontSize = self.createExpression(from: value)
+                case "text-font":
+                    layer.textFontNames = self.createExpression(from: value)
+                case "text-anchor":
+                    layer.textAnchor = self.createExpression(from: value)
+                case "text-offset":
+                    layer.textOffset = self.createExpression(from: value)
+                default:
+                    print("iOS: Unknown symbol layout property: \(key)")
+                }
             }
-
-            print("iOS: Setting symbol layout property \(key) = \(value)")
-
-            switch key {
-            case "visibility":
-                layer.isVisible = (value as? String == "visible")
-            case "icon-image":
-                layer.iconImageName = createExpression(from: value)
-                print("iOS: Set icon-image to \(value)")
-            case "icon-size":
-                layer.iconScale = createExpression(from: value)
-                print("iOS: Set icon-size/scale")
-            case "icon-allow-overlap":
-                if let boolValue = value as? Bool {
-                    layer.iconAllowsOverlap = NSExpression(forConstantValue: boolValue)
-                    print("iOS: Set icon-allow-overlap to \(boolValue)")
-                }
-            case "icon-ignore-placement":
-                if let boolValue = value as? Bool {
-                    layer.iconIgnoresPlacement = NSExpression(forConstantValue: boolValue)
-                    print("iOS: Set icon-ignore-placement to \(boolValue)")
-                }
-            case "icon-padding":
-                layer.iconPadding = createExpression(from: value)
-                print("iOS: Set icon-padding")
-            case "icon-anchor":
-                layer.iconAnchor = createExpression(from: value)
-            case "icon-offset":
-                layer.iconOffset = createExpression(from: value)
-            case "icon-rotation":
-                layer.iconRotation = createExpression(from: value)
-            case "text-field":
-                layer.text = createExpression(from: value)
-            case "text-size":
-                layer.textFontSize = createExpression(from: value)
-            case "text-font":
-                layer.textFontNames = createExpression(from: value)
-            case "text-anchor":
-                layer.textAnchor = createExpression(from: value)
-            case "text-offset":
-                layer.textOffset = createExpression(from: value)
-            default:
-                print("iOS: Unknown symbol layout property: \(key)")
+            if !success {
+                print("iOS: ⚠️ Skipped symbol layout property '\(key)' (ObjC exception caught safely)")
             }
         }
     }
@@ -1385,8 +1515,17 @@ func addSymbolLayer(
                     print("iOS: Map not initialized, queueing addImage for '\(id)'")
                     self._pendingOperations.append { mapView in
                         guard let style = mapView.style else { return }
-                        style.setImage(image, forName: id)
-                        print("iOS: ✅ Queued image '\(id)' added to style")
+                        let ok = MLNExpressionCatcher.performSafely {
+                            if style.image(forName: id) != nil {
+                                style.removeImage(forName: id)
+                            }
+                            style.setImage(image, forName: id)
+                        }
+                        if ok {
+                            print("iOS: ✅ Queued image '\(id)' added to style")
+                        } else {
+                            print("iOS: ⚠️ Queued image '\(id)' skipped due to ObjC exception")
+                        }
                     }
                     completion(.success(()))
                     return
@@ -1403,8 +1542,18 @@ func addSymbolLayer(
                     return
                 }
 
-                // SAFE: Add image to style
-                style.setImage(image, forName: id)
+                // SAFETY: setImage can throw uncaught ObjC exceptions on iOS.
+                // Use ObjC catcher to avoid process crash.
+                let setOk = MLNExpressionCatcher.performSafely {
+                    if style.image(forName: id) != nil {
+                        style.removeImage(forName: id)
+                    }
+                    style.setImage(image, forName: id)
+                }
+                if !setOk {
+                    completion(.failure(NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "ObjC exception while adding image"])))
+                    return
+                }
 
                 // Verify the image was added
                 if let verifyImage = style.image(forName: id) {
@@ -1463,7 +1612,12 @@ func addSymbolLayer(
                     self._pendingOperations.append { mapView in
                         guard let style = mapView.style else { return }
                         for (id, image) in decodedImages {
-                            style.setImage(image, forName: id)
+                            _ = MLNExpressionCatcher.performSafely {
+                                if style.image(forName: id) != nil {
+                                    style.removeImage(forName: id)
+                                }
+                                style.setImage(image, forName: id)
+                            }
                         }
                         print("iOS: ✅ Queued \(decodedImages.count) images added to style")
                     }
@@ -1485,8 +1639,17 @@ func addSymbolLayer(
                 // SAFE: Add all images to style
                 var successCount = 0
                 for (id, image) in decodedImages {
-                    style.setImage(image, forName: id)
-                    successCount += 1
+                    let ok = MLNExpressionCatcher.performSafely {
+                        if style.image(forName: id) != nil {
+                            style.removeImage(forName: id)
+                        }
+                        style.setImage(image, forName: id)
+                    }
+                    if ok {
+                        successCount += 1
+                    } else {
+                        print("iOS: ⚠️ Skipped image '\(id)' due to ObjC exception in setImage")
+                    }
                 }
 
                 print("iOS: addImages complete - success: \(successCount), total: \(ids.count)")
@@ -1570,6 +1733,7 @@ func addSymbolLayer(
         clustered: Bool,
         clusterRadius: Double,
         clusterMaxZoom: Double,
+        clusterPropertiesJson: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
         print("iOS: addClusteredGeoJsonSource called with id: \(id), clustered: \(clustered)")
@@ -1596,9 +1760,34 @@ func addSymbolLayer(
                 }
 
                 // SAFETY: Check if source already exists and remove it first
+                // CRASH FIX: Must remove all dependent layers BEFORE removing source,
+                // otherwise MapLibre throws an uncaught ObjC NSInvalidArgumentException
+                // that Swift's do/catch cannot handle → SIGABRT.
                 if let existingSource = style.source(withIdentifier: id) {
-                    print("iOS: Source '\(id)' already exists, removing first")
+                    print("iOS: Source '\(id)' already exists, removing layers then source")
+                    // Collect all dependent layers first (avoid mutation during enumeration)
+                    var layersToRemove: [MLNStyleLayer] = []
+                    for layer in style.layers {
+                        if let vectorLayer = layer as? MLNVectorStyleLayer,
+                           vectorLayer.sourceIdentifier == id {
+                            layersToRemove.append(layer)
+                        }
+                    }
+                    // Also check known auto-generated cluster layer suffixes
+                    for layerSuffix in ["-unclustered", "-clusters", "-cluster-count"] {
+                        let layerId = "\(id)\(layerSuffix)"
+                        if let layer = style.layer(withIdentifier: layerId),
+                           !layersToRemove.contains(where: { $0.identifier == layerId }) {
+                            layersToRemove.append(layer)
+                        }
+                    }
+                    // Now remove all collected layers
+                    for layer in layersToRemove {
+                        style.removeLayer(layer)
+                        print("iOS: Removed dependent layer '\(layer.identifier)'")
+                    }
                     style.removeSource(existingSource)
+                    print("iOS: Removed existing source '\(id)'")
                 }
 
                 var options: [MLNShapeSourceOption: Any] = [:]
@@ -1607,6 +1796,34 @@ func addSymbolLayer(
                     options[.clusterRadius] = NSNumber(value: clusterRadius)
                     options[.maximumZoomLevelForClustering] = NSNumber(value: clusterMaxZoom)
                     print("iOS: Clustering enabled with radius: \(clusterRadius), maxZoom: \(clusterMaxZoom)")
+
+                    // Apply cluster properties if provided
+                    // Uses MapLibre's official NSExpression API:
+                    //   - NSExpression.featureAccumulatedVariableExpression for ["accumulated"]
+                    //   - NSExpression(format:) with function syntax for reduce expressions
+                    // Previous approaches (buildNativeExpression, mglJSONObject) crashed because
+                    // MLNGeoJSONOptionsFromDictionary couldn't round-trip the NSExpressions.
+                    if let cpJson = clusterPropertiesJson,
+                       let cpData = cpJson.data(using: .utf8),
+                       let cpDict = try? JSONSerialization.jsonObject(with: cpData) as? [String: [[Any]]] {
+                        var clusterProps: [String: [NSExpression]] = [:]
+                        for (key, exprs) in cpDict {
+                            if exprs.count == 2 {
+                                // Build the reduce and map expressions using MapLibre's API
+                                if let reduceExpr = self.buildClusterReduceExpression(key: key, reduceJson: exprs[0]),
+                                   let mapExpr = self.buildClusterMapExpression(mapJson: exprs[1]) {
+                                    clusterProps[key] = [reduceExpr, mapExpr]
+                                    print("iOS: ✅ Built cluster property '\(key)' successfully")
+                                } else {
+                                    print("iOS: ⚠️ Failed to build cluster property '\(key)' — skipping")
+                                }
+                            }
+                        }
+                        if !clusterProps.isEmpty {
+                            options[.clusterProperties] = clusterProps
+                            print("iOS: Applied \(clusterProps.count) cluster properties")
+                        }
+                    }
                 }
 
                 let source: MLNShapeSource
@@ -2471,6 +2688,27 @@ func addSymbolLayer(
       }
 
       if let source = style.source(withIdentifier: id) {
+        // CRASH FIX: Remove all dependent layers BEFORE removing source,
+        // otherwise MapLibre throws an uncaught ObjC NSInvalidArgumentException.
+        // Collect first to avoid mutation during enumeration.
+        var layersToRemove: [MLNStyleLayer] = []
+        for layer in style.layers {
+            if let vectorLayer = layer as? MLNVectorStyleLayer,
+               vectorLayer.sourceIdentifier == id {
+                layersToRemove.append(layer)
+            }
+        }
+        for suffix in ["-unclustered", "-clusters", "-cluster-count"] {
+            let layerId = "\(id)\(suffix)"
+            if let layer = style.layer(withIdentifier: layerId),
+               !layersToRemove.contains(where: { $0.identifier == layerId }) {
+                layersToRemove.append(layer)
+            }
+        }
+        for layer in layersToRemove {
+            style.removeLayer(layer)
+            print("iOS: Removed dependent layer '\(layer.identifier)' before source removal")
+        }
         style.removeSource(source)
         print("iOS: Successfully removed source: \(id)")
         completion(.success(()))
@@ -2486,44 +2724,65 @@ func addSymbolLayer(
       data: String,
       completion: @escaping (Result<Void, Error>) -> Void
     ) {
-      print("iOS: updateGeoJsonSource called for id: \(id)")
+      DispatchQueue.main.async { [weak self] in
+        guard let self = self else {
+          completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView deallocated"])))
+          return
+        }
 
-      executeOrQueue({ mapView in
-        guard let style = mapView.style else {
+        guard self._mapView != nil else {
+          completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView not initialized"])))
+          return
+        }
+
+        guard let style = self._mapView.style else {
           completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
           return
         }
 
         guard let source = style.source(withIdentifier: id) as? MLNShapeSource else {
-          print("iOS: Error - Source not found or not a GeoJSON source: \(id)")
           completion(.failure(NSError(domain: "MapLibre", code: 4, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(id)"])))
           return
         }
 
-        // Parse the GeoJSON data
         if data.hasPrefix("http://") || data.hasPrefix("https://") {
-          // Handle URL source
           guard let url = URL(string: data) else {
-            print("iOS: Error - Invalid URL: \(data)")
             completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(data)"])))
             return
           }
           source.url = url
-          print("iOS: Updated source with URL: \(data)")
+          completion(.success(()))
         } else {
-          // Handle GeoJSON data
           guard let dataBytes = data.data(using: .utf8),
                 let shape = try? MLNShape(data: dataBytes, encoding: String.Encoding.utf8.rawValue) else {
-            print("iOS: Error - Invalid GeoJSON data")
             completion(.failure(NSError(domain: "MapLibre", code: 3, userInfo: [NSLocalizedDescriptionKey: "Invalid GeoJSON data"])))
             return
           }
-          source.shape = shape
-          print("iOS: Updated source with GeoJSON data (\(data.count) characters)")
-        }
 
+          // Simple shape assignment — MapLibre redraws the source automatically.
+          source.shape = shape
+          completion(.success(()))
+        }
+      }
+    }
+
+    func setStyleUri(
+      styleUri: String,
+      completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+      DispatchQueue.main.async { [weak self] in
+        guard let self = self else {
+          completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "MapView deallocated"])))
+          return
+        }
+        guard let url = URL(string: styleUri) else {
+          completion(.failure(NSError(domain: "MapLibre", code: 0, userInfo: [NSLocalizedDescriptionKey: "Invalid style URI"])))
+          return
+        }
+        self._mapView.styleURL = url
+        // didFinishLoading delegate will fire onStyleLoaded
         completion(.success(()))
-      }, completion: { _ in })
+      }
     }
 
     // MARK: - Helper Methods for Property Parsing

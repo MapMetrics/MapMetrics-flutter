@@ -14,6 +14,7 @@ Helper package for maplibre that provides iOS FFI bindings
   s.author           = { 'Joscha Eckert' => 'info@joscha-eckert.de' }
   s.source           = { :path => '.' }
   s.source_files = 'mapmetrics/Sources/maplibre_ios/**/*'
+  s.public_header_files = 'mapmetrics/Sources/maplibre_ios/**/*.h'
   s.dependency 'Flutter'
   # Needs to be the same version as in maplibre_ios/Package.swift
   s.dependency 'MapLibre', '~> 6.11'
