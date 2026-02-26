@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' hide Layer;
 import 'package:flutter/services.dart';
+import 'package:jni/_internal.dart' as jni_internal;
 import 'package:jni/jni.dart';
 import 'package:mapmetrics/mapmetrics.dart' hide Position;
 import 'package:geotypes/geotypes.dart' show Position;
@@ -234,6 +237,16 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     double? bearing,
     double? pitch,
   }) async {
+    moveCameraSync(center: center, zoom: zoom, bearing: bearing, pitch: pitch);
+  }
+
+  @override
+  void moveCameraSync({
+    Position? center,
+    double? zoom,
+    double? bearing,
+    double? pitch,
+  }) {
     assert(_jniMapLibreMap != null, '_jniMapLibreMap needs to be not null.');
     final cameraPositionBuilder = jni.CameraPosition$Builder();
     if (center != null) cameraPositionBuilder.target(center.toLatLng());
@@ -246,20 +259,7 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     final cameraUpdate = jni.CameraUpdateFactory.newCameraPosition(
       cameraPosition,
     );
-    final completer = Completer<void>();
-    _jniMapLibreMap?.moveCamera$1(
-      cameraUpdate,
-      jni.MapLibreMap$CancelableCallback.implement(
-        jni.$MapLibreMap$CancelableCallback(
-          onCancel: () {
-            if (!completer.isCompleted) completer.complete();
-          },
-          onFinish: completer.complete,
-          onCancel$async: true,
-          onFinish$async: true,
-        ),
-      ),
-    );
+    _jniMapLibreMap?.moveCamera(cameraUpdate);
     cameraUpdate.release();
   }
 

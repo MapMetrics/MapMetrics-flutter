@@ -55,6 +55,14 @@ class StyleControllerWeb implements StyleController {
   }
 
   @override
+  void updateGeoJsonSourceSync({
+    required String id,
+    required String data,
+  }) {
+    updateGeoJsonSource(id: id, data: data);
+  }
+
+  @override
   Future<List<String>> getAttributions() async => getAttributions();
 
   @override

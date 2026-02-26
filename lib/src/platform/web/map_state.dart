@@ -256,6 +256,16 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
   }
 
   @override
+  void moveCameraSync({
+    Position? center,
+    double? zoom,
+    double? bearing,
+    double? pitch,
+  }) {
+    moveCamera(center: center, zoom: zoom, bearing: bearing, pitch: pitch);
+  }
+
+  @override
   Future<void> animateCamera({
     Position? center,
     double? zoom,
@@ -457,6 +467,14 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
           },
         )
         .toList(growable: false);
+  }
+
+  @override
+  Future<List<Map<String, String>>> queryLayersInRect(Rect rect) async {
+    // Web doesn't have native rect query, use center point only
+    final centerX = (rect.left + rect.right) / 2;
+    final centerY = (rect.top + rect.bottom) / 2;
+    return queryLayers(Offset(centerX, centerY));
   }
 
   @override

@@ -1,5 +1,6 @@
 // Fixed version of map_state.dart for iOS
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi' as ffi;
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -82,6 +83,32 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     // Note: We'll rely on Pigeon for now since FFI registry access is complex
     // The native Swift code handles the map view through the registry
     _isMapReady = false; // Will be set to true in onStyleLoaded
+
+    // iOS safety: if onStyleLoaded Pigeon callback is lost (race condition
+    // where native didFinishLoading fires before Dart handler is registered),
+    // retry after a delay. The native style IS loaded if tiles are visible.
+    _scheduleStyleLoadedSafetyCheck();
+  }
+
+  /// Safety timer: if onMapReady / onStyleLoaded weren't received within 2s,
+  /// manually trigger them. This handles the iOS race condition where the
+  /// Pigeon messages are lost because native fires before Dart handlers are
+  /// registered.
+  void _scheduleStyleLoadedSafetyCheck() {
+    Future.delayed(const Duration(seconds: 2), () {
+      if (_hostApi != null && mounted) {
+        // First, ensure onMapReady was delivered (sets isInitialized + calls onMapCreated)
+        if (!isInitialized) {
+          print('iOS SAFETY: onMapReady not received after 2s, triggering manually');
+          onMapReady();
+        }
+        // Then, ensure onStyleLoaded was delivered (creates StyleController)
+        if (style == null) {
+          print('iOS SAFETY: onStyleLoaded not received after 2s, triggering manually');
+          onStyleLoaded();
+        }
+      }
+    });
   }
 
   @override
@@ -239,6 +266,17 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     _updateCameraCache();
   }
 
+  @override
+  void moveCameraSync({
+    Position? center,
+    double? zoom,
+    double? bearing,
+    double? pitch,
+  }) {
+    // iOS uses Pigeon (async) — delegate to async version
+    moveCamera(center: center, zoom: zoom, bearing: bearing, pitch: pitch);
+  }
+
   Future<void> _updateCameraCache() async {
     final hostApi = _hostApi;
     if (hostApi == null) return;
@@ -280,7 +318,11 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     widget.onEvent?.call(MapEventStyleLoaded(styleCtrl));
     widget.onStyleLoaded?.call(styleCtrl);
     layerManager = LayerManager(styleCtrl, widget.layers);
-    setState(() {});
+    // Defer setState to after the current frame to prevent RenderBox "not laid out"
+    // crash when scheduleWarmUpFrame triggers _setOffset before layout completes.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() {});
+    });
     print('MapLibreMapStateIos: onStyleLoaded completed');
   }
 
@@ -514,6 +556,19 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     print('iOS: clearNavigationRoute called');
     // TODO: Implement when native iOS support is added
     // For now, just log that it was called
+  }
+
+  @override
+  Future<void> setStyleUri(String styleUri) async {
+    // Dispose old style controller before switching
+    style?.dispose();
+    style = null;
+
+    // Call native setStyleUri via Pigeon — switches style in-place
+    // without destroying the map. onStyleLoaded() will fire when done.
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+    await hostApi.setStyleUri(styleUri);
   }
 
   // Sync methods - use cached values when available

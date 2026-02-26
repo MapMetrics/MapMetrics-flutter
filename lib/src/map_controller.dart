@@ -61,6 +61,16 @@ abstract interface class MapController {
     double? pitch,
   });
 
+  /// Instantly move the map camera synchronously (Android JNI only).
+  /// Use this in tight render loops to avoid microtask scheduling gaps.
+  /// Falls back to async moveCamera on other platforms.
+  void moveCameraSync({
+    Position? center,
+    double? zoom,
+    double? bearing,
+    double? pitch,
+  });
+
   /// Animate the map camera to a new location.
   Future<void> animateCamera({
     Position? center,
@@ -116,9 +126,14 @@ abstract interface class MapController {
   /// The smallest bounding box that includes the visible region.
   LngLatBounds getVisibleRegionSync();
 
-  /// Queries the map for rendered features.
+  /// Queries the map for rendered features at a single point.
   /// Returns a list of maps containing all feature properties including layer metadata.
   Future<List<Map<String, String>>> queryLayers(Offset screenLocation);
+
+  /// Queries the map for rendered features within a bounding box.
+  /// This is more efficient than multiple point queries for hit detection.
+  /// [rect] is the screen-space bounding box to query (left, top, right, bottom).
+  Future<List<Map<String, String>>> queryLayersInRect(Rect rect);
 
   /// Show the user location on the map
   Future<void> enableLocation({
@@ -157,6 +172,13 @@ abstract interface class MapController {
 
   /// Clear the navigation route
   Future<void> clearNavigationRoute();
+
+  /// Switch the map style in-place without destroying the native map.
+  /// This avoids SIGSEGV crashes caused by destroying the map while
+  /// GeoJSON messages are queued on the native Looper.
+  /// The [onStyleLoaded] callback on [MapLibreMap] will fire when the
+  /// new style has finished loading.
+  Future<void> setStyleUri(String styleUri);
 }
 
 /// The mode how the bearing should get tracked on the map.

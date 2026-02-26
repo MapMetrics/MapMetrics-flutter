@@ -12,7 +12,7 @@ class StyleControllerAndroid implements StyleController {
     // For SymbolStyleLayer, use Pigeon to properly handle icon-image properties and filters
     // (matching iOS implementation which works correctly with SDF icons)
     if (layer is SymbolStyleLayer) {
-      print('Android StyleController: Adding symbol layer via Pigeon');
+      // Adding symbol layer via Pigeon
       final layout = Map<String, Object>.from(layer.layout ?? {});
       // Pass filter through layout with special key
       if (layer.filter != null) {
@@ -32,13 +32,13 @@ class StyleControllerAndroid implements StyleController {
         paint: layer.paint ?? {},
         belowLayerId: belowLayerId,
       );
-      print('Android StyleController: Symbol layer added successfully');
+      // Symbol layer added
       return;
     }
 
     // For CircleStyleLayer, use Pigeon to properly handle filters
     if (layer is CircleStyleLayer) {
-      print('Android StyleController: Adding circle layer via Pigeon');
+      // Adding circle layer via Pigeon
       final layout = Map<String, Object>.from(layer.layout ?? {});
       // Pass filter through layout with special key
       if (layer.filter != null) {
@@ -163,6 +163,40 @@ class StyleControllerAndroid implements StyleController {
           }
         }
 
+        // Apply cluster properties (propagate custom properties to clusters)
+        if (source.clusterProperties != null) {
+          debugPrint('🔧 clusterProperties: ${source.clusterProperties!.keys.toList()}');
+          for (final entry in source.clusterProperties!.entries) {
+            final expressions = entry.value;
+            if (expressions.length == 2) {
+              try {
+                final reduceJson = json.encode(expressions[0]);
+                final mapJson = json.encode(expressions[1]);
+                debugPrint('🔧 clusterProp "${entry.key}" reduceJson=$reduceJson mapJson=$mapJson');
+                final reduceExpr =
+                    _createExpressionFromJson(reduceJson);
+                final mapExpr =
+                    _createExpressionFromJson(mapJson);
+                debugPrint('🔧 clusterProp "${entry.key}" reduceExpr=$reduceExpr mapExpr=$mapExpr');
+                if (reduceExpr != null && mapExpr != null) {
+                  jniOptions.withClusterProperty(
+                    entry.key.toJString(),
+                    reduceExpr,
+                    mapExpr,
+                  );
+                  reduceExpr.release();
+                  mapExpr.release();
+                  debugPrint('✅ clusterProp "${entry.key}" applied successfully');
+                } else {
+                  debugPrint('❌ clusterProp "${entry.key}" FAILED - null expressions');
+                }
+              } catch (e) {
+                debugPrint('❌ clusterProp "${entry.key}" ERROR: $e');
+              }
+            }
+          }
+        }
+
         if (source.data.startsWith('{')) {
           jniSource = jni.GeoJsonSource.new$4(jniId, jniData, jniOptions);
         } else {
@@ -283,6 +317,16 @@ class StyleControllerAndroid implements StyleController {
   }
 
   @override
+  void updateGeoJsonSourceSync({
+    required String id,
+    required String data,
+  }) {
+    final source =
+        _jniStyle.getSourceAs(id.toJString(), T: jni.GeoJsonSource.type)!;
+    source.setGeoJson$3(data.toJString());
+  }
+
+  @override
   Future<List<String>> getAttributions() async => getAttributionsSync();
 
   @override
@@ -312,5 +356,50 @@ class StyleControllerAndroid implements StyleController {
   @override
   void setProjection(MapProjection projection) {
     // globe is not supported on android.
+  }
+
+  /// Create a MapLibre Expression from a JSON string via JNI reflection.
+  /// Uses Expression.raw(String) which parses a MapLibre expression JSON array.
+  static JObject? _createExpressionFromJson(String jsonString) {
+    try {
+      final expressionClass = JClass.forName(
+        r'org/maplibre/android/style/expressions/Expression',
+      );
+      final rawMethodId = expressionClass.staticMethodId(
+        r'raw',
+        r'(Ljava/lang/String;)Lorg/maplibre/android/style/expressions/Expression;',
+      );
+      final callStaticObjectMethod =
+          jni_internal.ProtectedJniExtensions.lookup<
+                NativeFunction<
+                  JniResult Function(
+                    Pointer<Void>,
+                    JMethodIDPtr,
+                    VarArgs<(Pointer<Void>,)>,
+                  )
+                >
+              >('globalEnv_CallStaticObjectMethod')
+              .asFunction<
+                JniResult Function(
+                  Pointer<Void>,
+                  JMethodIDPtr,
+                  Pointer<Void>,
+                )
+              >();
+      final jString = jsonString.toJString();
+      final result = callStaticObjectMethod(
+        expressionClass.reference.pointer,
+        rawMethodId as JMethodIDPtr,
+        jString.reference.pointer,
+      );
+      jString.release();
+      expressionClass.release();
+      final obj = result.object<JObject?>(const JObjectNullableType());
+      debugPrint('🔧 Expression.raw() result: $obj');
+      return obj;
+    } catch (e) {
+      debugPrint('❌ Expression.raw() FAILED: $e');
+      return null;
+    }
   }
 }

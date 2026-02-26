@@ -22,6 +22,11 @@ abstract interface class StyleController {
   /// Update the data of a GeoJSON source.
   Future<void> updateGeoJsonSource({required String id, required String data});
 
+  /// Update the data of a GeoJSON source synchronously (Android JNI only).
+  /// Falls back to async on other platforms. Use this in tight render loops
+  /// where microtask scheduling causes visible desync with moveCamera.
+  void updateGeoJsonSourceSync({required String id, required String data});
+
   /// Removes the layer with the given ID from the map's style.
   Future<void> removeLayer(String id);
 
