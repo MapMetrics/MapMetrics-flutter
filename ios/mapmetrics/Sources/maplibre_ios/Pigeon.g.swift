@@ -548,7 +548,7 @@ protocol MapLibreHostApi {
   /// spriteImage: The sprite.png as bytes
   func addSprite(spriteJson: String, spriteImage: FlutterStandardTypedData, completion: @escaping (Result<Void, Error>) -> Void)
   /// Add a GeoJSON source with clustering to the map style.
-  func addClusteredGeoJsonSource(id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  func addClusteredGeoJsonSource(id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double, clusterPropertiesJson: String?, completion: @escaping (Result<Void, Error>) -> Void)
   /// Add a vector source to the map style.
   func addVectorSource(id: String, tiles: [String], minZoom: Double, maxZoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
   /// Minimal test method to debug Pigeon generation.
@@ -584,6 +584,10 @@ protocol MapLibreHostApi {
   func toScreenLocation(lng: Double, lat: Double, completion: @escaping (Result<[Double], Error>) -> Void)
   /// Query rendered layers at the specified screen location.
   func queryLayers(x: Double, y: Double, completion: @escaping (Result<[[String: String]], Error>) -> Void)
+  /// Query rendered layers within a bounding box (more efficient for hit detection).
+  /// [left], [top], [right], [bottom] define the screen-space bounding box.
+  /// Returns list of maps (Object? used for platform compatibility).
+  func queryLayersInRect(left: Double, top: Double, right: Double, bottom: Double, completion: @escaping (Result<[[AnyHashable?: Any?]], Error>) -> Void)
   /// Enable/disable location tracking with bearing mode.
   func trackLocation(track: Bool, bearingMode: Int64, completion: @escaping (Result<Void, Error>) -> Void)
   /// Show/hide the user location puck (blue dot).
@@ -591,6 +595,7 @@ protocol MapLibreHostApi {
   func removeLayer(id: String, completion: @escaping (Result<Void, Error>) -> Void)
   func removeSource(id: String, completion: @escaping (Result<Void, Error>) -> Void)
   func updateGeoJsonSource(id: String, data: String, completion: @escaping (Result<Void, Error>) -> Void)
+  func setStyleUri(styleUri: String, completion: @escaping (Result<Void, Error>) -> Void)
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -899,7 +904,8 @@ class MapLibreHostApiSetup {
         let clusteredArg = args[2] as! Bool
         let clusterRadiusArg = args[3] as! Double
         let clusterMaxZoomArg = args[4] as! Double
-        api.addClusteredGeoJsonSource(id: idArg, data: dataArg, clustered: clusteredArg, clusterRadius: clusterRadiusArg, clusterMaxZoom: clusterMaxZoomArg) { result in
+        let clusterPropertiesJsonArg: String? = nilOrValue(args[5])
+        api.addClusteredGeoJsonSource(id: idArg, data: dataArg, clustered: clusteredArg, clusterRadius: clusterRadiusArg, clusterMaxZoom: clusterMaxZoomArg, clusterPropertiesJson: clusterPropertiesJsonArg) { result in
           switch result {
           case .success:
             reply(wrapResult(nil))
@@ -1213,6 +1219,29 @@ class MapLibreHostApiSetup {
     } else {
       queryLayersChannel.setMessageHandler(nil)
     }
+    /// Query rendered layers within a bounding box (more efficient for hit detection).
+    /// [left], [top], [right], [bottom] define the screen-space bounding box.
+    /// Returns list of maps (Object? used for platform compatibility).
+    let queryLayersInRectChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayersInRect\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      queryLayersInRectChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let leftArg = args[0] as! Double
+        let topArg = args[1] as! Double
+        let rightArg = args[2] as! Double
+        let bottomArg = args[3] as! Double
+        api.queryLayersInRect(left: leftArg, top: topArg, right: rightArg, bottom: bottomArg) { result in
+          switch result {
+          case .success(let res):
+            reply(wrapResult(res))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      queryLayersInRectChannel.setMessageHandler(nil)
+    }
     /// Enable/disable location tracking with bearing mode.
     let trackLocationChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
@@ -1301,6 +1330,23 @@ class MapLibreHostApiSetup {
       }
     } else {
       updateGeoJsonSourceChannel.setMessageHandler(nil)
+    }
+    let setStyleUriChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setStyleUriChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let styleUriArg = args[0] as! String
+        api.setStyleUri(styleUri: styleUriArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      setStyleUriChannel.setMessageHandler(nil)
     }
   }
 }

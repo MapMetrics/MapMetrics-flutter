@@ -116,6 +116,12 @@ public class MapLibreIosPlugin: NSObject, FlutterPlugin {
 
             // Add the source to the current style
             if let currentStyle = MapLibreIosPlugin.currentStyle {
+                // CRASH FIX: Check if source already exists to prevent MLNRedundantSourceIdentifierException
+                if let existingSource = currentStyle.source(withIdentifier: id) {
+                    print("iOS: addClusteredGeoJsonSource - Source \(id) already exists, removing first")
+                    currentStyle.removeSource(existingSource)
+                }
+
                 currentStyle.addSource(source)
                 print("iOS: addClusteredGeoJsonSource - Source added to style successfully")
 

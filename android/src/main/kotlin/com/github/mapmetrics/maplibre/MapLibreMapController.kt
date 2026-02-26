@@ -103,7 +103,7 @@ class MapLibreMapController(
                     .maxPitchPreference(mapOptions.maxPitch)
                     .rotateGesturesEnabled(mapOptions.gestures.rotate)
                     .zoomGesturesEnabled(mapOptions.gestures.zoom)
-                    .doubleTapGesturesEnabled(mapOptions.gestures.zoom)
+                    .doubleTapGesturesEnabled(false)
                     .scrollGesturesEnabled(mapOptions.gestures.zoom)
                     .quickZoomGesturesEnabled(mapOptions.gestures.zoom)
                     .tiltGesturesEnabled(mapOptions.gestures.tilt)
@@ -272,11 +272,11 @@ class MapLibreMapController(
         val maxZoom = layout["__maxZoom__"] as? Double
         if (minZoom != null) {
             layer.minZoom = minZoom.toFloat()
-            println("Android: minZoom applied to circle layer: $minZoom")
+            // minZoom applied to circle layer
         }
         if (maxZoom != null) {
             layer.maxZoom = maxZoom.toFloat()
-            println("Android: maxZoom applied to circle layer: $maxZoom")
+            // maxZoom applied to circle layer
         }
 
         // Filter out source-layer, __filter__, __minZoom__, __maxZoom__ from layout properties before parsing
@@ -406,9 +406,7 @@ class MapLibreMapController(
         belowLayerId: String?,
         callback: (Result<Unit>) -> Unit,
     ) {
-        println("Android: addSymbolLayer called with id: $id")
-        println("Android: Layout properties: $layout")
-        println("Android: Paint properties: $paint")
+        // addSymbolLayer: $id
 
         // Handle source-layer separately if it exists in layout
         val sourceLayer = layout["source-layer"] as? String
@@ -424,7 +422,7 @@ class MapLibreMapController(
             val json = gson.toJsonTree(filterArray)
             val expression = Expression.Converter.convert(json)
             layer.setFilter(expression)
-            println("Android: Filter applied to symbol layer: $filterArray")
+            // Filter applied to symbol layer
         }
 
         // Handle minZoom/maxZoom if they exist in layout
@@ -432,11 +430,11 @@ class MapLibreMapController(
         val maxZoom = layout["__maxZoom__"] as? Double
         if (minZoom != null) {
             layer.minZoom = minZoom.toFloat()
-            println("Android: minZoom applied to symbol layer: $minZoom")
+            // minZoom applied
         }
         if (maxZoom != null) {
             layer.maxZoom = maxZoom.toFloat()
-            println("Android: maxZoom applied to symbol layer: $maxZoom")
+            // maxZoom applied
         }
 
         // Filter out source-layer, __filter__, __minZoom__, __maxZoom__ from layout properties before parsing
@@ -450,7 +448,7 @@ class MapLibreMapController(
         } else {
             mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
         }
-        println("Android: Symbol layer $id added successfully")
+        // Symbol layer $id added
         callback(Result.success(Unit))
     }
 
@@ -471,7 +469,7 @@ class MapLibreMapController(
         bytes: ByteArray,
         callback: (Result<Unit>) -> Unit,
     ) {
-        println("Android: addImage called with id: $id, bytes length: ${bytes.size} - THREAD_SAFE_v1")
+        // addImage: $id
 
         // THREAD SAFETY: Decode bitmap on background thread
         backgroundExecutor.execute {
@@ -485,7 +483,7 @@ class MapLibreMapController(
                     return@execute
                 }
 
-                println("Android: Bitmap decoded successfully - width: ${bitmap.width}, height: ${bitmap.height}")
+                // Bitmap decoded: ${bitmap.width}x${bitmap.height}
 
                 // THREAD SAFETY: Add to style on main thread with lock
                 mainHandler.post {
@@ -510,7 +508,7 @@ class MapLibreMapController(
                         // Verify the image was added
                         val verifyImage = currentStyle.getImage(id)
                         if (verifyImage != null) {
-                            println("Android: ✅ Image '$id' added to style successfully - verified")
+                            // Image '$id' added to style
                         } else {
                             println("Android: ⚠️ WARNING - Image '$id' was set but cannot be retrieved from style")
                         }
@@ -534,7 +532,7 @@ class MapLibreMapController(
         images: List<ByteArray>,
         callback: (Result<Unit>) -> Unit,
     ) {
-        println("Android: addImages called with ${ids.size} images - THREAD_SAFE_v1")
+        // addImages: ${ids.size} images
         val startTime = System.currentTimeMillis()
 
         // THREAD SAFETY: Decode all bitmaps on background thread
@@ -579,7 +577,7 @@ class MapLibreMapController(
                         }
 
                         val elapsed = System.currentTimeMillis() - startTime
-                        println("Android: ✅ Bulk addImages complete - ${decodedImages.size} success, $failCount failed in ${elapsed}ms")
+                        // Bulk addImages: ${decodedImages.size} success, $failCount failed
                         callback(Result.success(Unit))
                     } finally {
                         styleLock.unlock()
@@ -599,7 +597,7 @@ class MapLibreMapController(
         spriteImage: ByteArray,
         callback: (Result<Unit>) -> Unit,
     ) {
-        println("Android: addSprite called - native sprite extraction")
+        // addSprite called
         val startTime = System.currentTimeMillis()
 
         try {
@@ -649,7 +647,7 @@ class MapLibreMapController(
             spriteBitmap.recycle()
 
             val elapsed = System.currentTimeMillis() - startTime
-            println("Android: ✅ Native sprite loading complete - $successCount icons in ${elapsed}ms")
+            // Sprite loading: $successCount icons
             callback(Result.success(Unit))
         } catch (e: Exception) {
             println("Android: Error in addSprite: ${e.message}")
@@ -663,10 +661,11 @@ class MapLibreMapController(
         clustered: Boolean,
         clusterRadius: Double,
         clusterMaxZoom: Double,
+        clusterPropertiesJson: String?,
         callback: (Result<Unit>) -> Unit,
     ) {
         try {
-            println("Android: addClusteredGeoJsonSource called with id: $id, clustered: $clustered")
+            // addClusteredGeoJsonSource: $id
             val style = mapLibreMap.style
             if (style == null) {
                 println("Android: Error - Style not available")
@@ -679,22 +678,22 @@ class MapLibreMapController(
                 options.withCluster(true)
                 options.withClusterRadius(clusterRadius.toInt())
                 options.withClusterMaxZoom(clusterMaxZoom.toInt())
-                println("Android: Clustering enabled with radius: $clusterRadius, maxZoom: $clusterMaxZoom")
+                // Clustering enabled
             }
 
             val source = if (data.startsWith("http://") || data.startsWith("https://")) {
-                println("Android: Creating URL source")
+                // Creating URL source
                 org.maplibre.android.style.sources.GeoJsonSource(id, data, options)
             } else {
-                println("Android: Creating GeoJSON data source with ${data.length} characters")
+                // Creating GeoJSON data source
                 org.maplibre.android.style.sources.GeoJsonSource(id, data, options)
             }
             style.addSource(source)
-            println("Android: Successfully added clustered source with ID: $id")
+            // Clustered source added: $id
 
             // Add visualization layers for clusters if clustering is enabled
             if (clustered) {
-                println("Android: Adding visualization layers for clusters")
+                // Adding cluster visualization layers
 
                 // Add layer for unclustered points (individual points)
                 val unclusteredLayer = CircleLayer("$id-unclustered", id)
@@ -709,7 +708,7 @@ class MapLibreMapController(
                     org.maplibre.android.style.expressions.Expression.has("point_count")
                 ))
                 style.addLayer(unclusteredLayer)
-                println("Android: Added unclustered points layer")
+                // Added unclustered points layer
 
                 // Add layer for clusters (colored circles)
                 val clustersLayer = CircleLayer("$id-clusters", id)
@@ -722,7 +721,7 @@ class MapLibreMapController(
                 )
                 clustersLayer.setFilter(org.maplibre.android.style.expressions.Expression.has("point_count"))
                 style.addLayer(clustersLayer)
-                println("Android: Added clusters layer")
+                // Added clusters layer
 
                 // Add layer for cluster count labels
                 val clusterCountLayer = SymbolLayer("$id-cluster-count", id)
@@ -735,7 +734,7 @@ class MapLibreMapController(
                 )
                 clusterCountLayer.setFilter(org.maplibre.android.style.expressions.Expression.has("point_count"))
                 style.addLayer(clusterCountLayer)
-                println("Android: Added cluster count labels layer")
+                // Added cluster count labels layer
             }
 
             callback(Result.success(Unit))
@@ -753,7 +752,7 @@ class MapLibreMapController(
         callback: (Result<Unit>) -> Unit,
     ) {
         try {
-            println("Android: addVectorSource called with id: $id, tiles: $tiles")
+            // addVectorSource: $id
             val style = mapLibreMap.style
             if (style == null) {
                 println("Android: Error - Style not available")
@@ -763,18 +762,18 @@ class MapLibreMapController(
 
             // Create VectorSource with TileSet
             // MapLibre Android VectorSource requires a TileSet with tile URLs
-            println("Android: Creating TileSet with tiles: ${tiles.joinToString()}")
+            // Creating TileSet
             val tileSet = org.maplibre.android.style.sources.TileSet("2.2.0", *tiles.toTypedArray())
-            println("Android: Setting min/max zoom: $minZoom - $maxZoom")
+            // Setting min/max zoom
             tileSet.minZoom = minZoom.toFloat()
             tileSet.maxZoom = maxZoom.toFloat()
 
-            println("Android: Creating VectorSource")
+            // Creating VectorSource
             val source = org.maplibre.android.style.sources.VectorSource(id, tileSet)
 
-            println("Android: Adding source to style")
+            // Adding source to style
             style.addSource(source)
-            println("Android: Successfully added vector source with ID: $id, tiles: $tiles")
+            // Vector source added: $id
 
             callback(Result.success(Unit))
         } catch (e: Exception) {
@@ -788,7 +787,7 @@ class MapLibreMapController(
         value: String,
         callback: (Result<Unit>) -> Unit,
     ) {
-        println("Android: testMethod called with value: $value")
+        // testMethod: $value
         callback(Result.success(Unit))
     }
 
@@ -1010,21 +1009,14 @@ class MapLibreMapController(
                             }
                         }
 
-                        // DEBUG: Print the properties for the first feature
-                        if (results.isEmpty()) {
-                            println("Android: First feature layerId='${properties["layerId"]}'")
-                            println("Android: First feature sourceId='${properties["sourceId"]}'")
-                            println("Android: First feature sourceLayer='${properties["sourceLayer"]}'")
-                            println("Android: First feature coordinates: lat=${properties["latitude"]}, lon=${properties["longitude"]}")
-                            println("Android: First feature all properties: $properties")
-                        }
+                        // First feature debug removed for cleaner logs
 
                         results.add(properties)
                     }
                 }
             }
 
-            println("Android: queryLayers found ${results.size} features at ($x, $y)")
+            // queryLayers: ${results.size} features
             callback(Result.success(results))
         } catch (e: Exception) {
             println("Android: Error querying layers: ${e.message}")
@@ -1085,7 +1077,7 @@ class MapLibreMapController(
                         // Extract all feature properties
                         val featureProperties = feature.properties()
                         if (featureProperties != null) {
-                            println("Android: queryLayersInRect - Feature in layer '${layer.id}' has ${featureProperties.size()} properties")
+                            // Feature in layer ${layer.id}
                             for (key in featureProperties.keySet()) {
                                 val value = featureProperties.get(key)
                                 // Strip quotes from string values (JsonElement.toString() keeps quotes)
@@ -1094,12 +1086,10 @@ class MapLibreMapController(
                                     strValue = strValue.substring(1, strValue.length - 1)
                                 }
                                 properties[key] = strValue
-                                if (key == "name" || key == "name:en") {
-                                    println("Android: queryLayersInRect - Found POI name: $key=$strValue")
-                                }
+                                // POI name tracking removed for cleaner logs
                             }
                         } else {
-                            println("Android: queryLayersInRect - WARNING: No properties for feature in layer '${layer.id}'")
+                            // No properties for feature in layer
                         }
 
                         results.add(properties)
@@ -1107,11 +1097,7 @@ class MapLibreMapController(
                 }
             }
 
-            println("Android: queryLayersInRect found ${results.size} features in rect ($left,$top,$right,$bottom)")
-            // Print first few features for debugging
-            results.take(3).forEachIndexed { index, feature ->
-                println("Android: queryLayersInRect - Feature #$index: layerId=${feature["layerId"]}, name=${feature["name"] ?: "NO_NAME"}")
-            }
+            // queryLayersInRect: ${results.size} features
             callback(Result.success(results))
         } catch (e: Exception) {
             println("Android: Error querying layers in rect: ${e.message}")
@@ -1141,7 +1127,7 @@ class MapLibreMapController(
                 } else {
                     locationComponent.isLocationComponentEnabled = false
                 }
-                println("Android: showUserLocationPuck set to $show")
+                // showUserLocationPuck: $show
             }
             callback(Result.success(Unit))
         } catch (e: Exception) {
@@ -1173,5 +1159,19 @@ class MapLibreMapController(
     ) {
         // Android implementation - you can use your existing JNI code
         callback(Result.success(Unit))
+    }
+
+    override fun setStyleUri(styleUri: String, callback: (Result<Unit>) -> Unit) {
+        if (!isMapReady) {
+            callback(Result.failure(Exception("Map not ready")))
+            return
+        }
+        style = null
+        val newStyle = Style.Builder().fromUri(styleUri)
+        mapLibreMap.setStyle(newStyle) { loadedStyle ->
+            style = loadedStyle
+            flutterApi.onStyleLoaded { }
+            callback(Result.success(Unit))
+        }
     }
 }

@@ -156,6 +156,7 @@ abstract class MapLibreHostApi {
     required bool clustered,
     required double clusterRadius,
     required double clusterMaxZoom,
+    String? clusterPropertiesJson,
   });
 
   /// Add a vector source to the map style.
@@ -264,6 +265,12 @@ abstract class MapLibreHostApi {
   @async
   List<Map<String, String>> queryLayers(double x, double y);
 
+  /// Query rendered layers within a bounding box (more efficient for hit detection).
+  /// [left], [top], [right], [bottom] define the screen-space bounding box.
+  /// Returns list of maps (Object? used for platform compatibility).
+  @async
+  List<Map<Object?, Object?>> queryLayersInRect(double left, double top, double right, double bottom);
+
   /// Enable/disable location tracking with bearing mode.
   @async
   void trackLocation(bool track, int bearingMode);
@@ -280,6 +287,12 @@ abstract class MapLibreHostApi {
 
   @async
   void updateGeoJsonSource(String id, String data);
+
+  /// Switch the map style in-place without destroying the map.
+  /// This avoids the native SIGSEGV that occurs when the map widget is
+  /// destroyed while GeoJSON messages are still queued on the Looper.
+  @async
+  void setStyleUri(String styleUri);
 
 }
 

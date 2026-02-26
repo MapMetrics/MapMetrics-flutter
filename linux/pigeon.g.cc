@@ -2144,6 +2144,45 @@ static MapmetricsMapLibreHostApiQueryLayersResponse* mapmetrics_map_libre_host_a
   return self;
 }
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiQueryLayersInRectResponse, mapmetrics_map_libre_host_api_query_layers_in_rect_response, MAPMETRICS, MAP_LIBRE_HOST_API_QUERY_LAYERS_IN_RECT_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiQueryLayersInRectResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiQueryLayersInRectResponse, mapmetrics_map_libre_host_api_query_layers_in_rect_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_query_layers_in_rect_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiQueryLayersInRectResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_QUERY_LAYERS_IN_RECT_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_query_layers_in_rect_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_query_layers_in_rect_response_init(MapmetricsMapLibreHostApiQueryLayersInRectResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_query_layers_in_rect_response_class_init(MapmetricsMapLibreHostApiQueryLayersInRectResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_query_layers_in_rect_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiQueryLayersInRectResponse* mapmetrics_map_libre_host_api_query_layers_in_rect_response_new(FlValue* return_value) {
+  MapmetricsMapLibreHostApiQueryLayersInRectResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_QUERY_LAYERS_IN_RECT_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_query_layers_in_rect_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_ref(return_value));
+  return self;
+}
+
+static MapmetricsMapLibreHostApiQueryLayersInRectResponse* mapmetrics_map_libre_host_api_query_layers_in_rect_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiQueryLayersInRectResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_QUERY_LAYERS_IN_RECT_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_query_layers_in_rect_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiTrackLocationResponse, mapmetrics_map_libre_host_api_track_location_response, MAPMETRICS, MAP_LIBRE_HOST_API_TRACK_LOCATION_RESPONSE, GObject)
 
 struct _MapmetricsMapLibreHostApiTrackLocationResponse {
@@ -2953,6 +2992,25 @@ static void mapmetrics_map_libre_host_api_query_layers_cb(FlBasicMessageChannel*
   self->vtable->query_layers(x, y, handle, self->user_data);
 }
 
+static void mapmetrics_map_libre_host_api_query_layers_in_rect_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->query_layers_in_rect == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double left = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double top = fl_value_get_float(value1);
+  FlValue* value2 = fl_value_get_list_value(message_, 2);
+  double right = fl_value_get_float(value2);
+  FlValue* value3 = fl_value_get_list_value(message_, 3);
+  double bottom = fl_value_get_float(value3);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->query_layers_in_rect(left, top, right, bottom, handle, self->user_data);
+}
+
 static void mapmetrics_map_libre_host_api_track_location_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
   MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
 
@@ -3117,6 +3175,9 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* query_layers_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayers%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) query_layers_channel = fl_basic_message_channel_new(messenger, query_layers_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(query_layers_channel, mapmetrics_map_libre_host_api_query_layers_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* query_layers_in_rect_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayersInRect%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) query_layers_in_rect_channel = fl_basic_message_channel_new(messenger, query_layers_in_rect_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(query_layers_in_rect_channel, mapmetrics_map_libre_host_api_query_layers_in_rect_cb, g_object_ref(api_data), g_object_unref);
   g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(track_location_channel, mapmetrics_map_libre_host_api_track_location_cb, g_object_ref(api_data), g_object_unref);
@@ -3228,6 +3289,9 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* query_layers_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayers%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) query_layers_channel = fl_basic_message_channel_new(messenger, query_layers_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(query_layers_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* query_layers_in_rect_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayersInRect%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) query_layers_in_rect_channel = fl_basic_message_channel_new(messenger, query_layers_in_rect_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(query_layers_in_rect_channel, nullptr, nullptr, nullptr);
   g_autofree gchar* track_location_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) track_location_channel = fl_basic_message_channel_new(messenger, track_location_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(track_location_channel, nullptr, nullptr, nullptr);
@@ -3658,6 +3722,22 @@ void mapmetrics_map_libre_host_api_respond_error_query_layers(MapmetricsMapLibre
   g_autoptr(GError) error = nullptr;
   if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
     g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "queryLayers", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_query_layers_in_rect(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value) {
+  g_autoptr(MapmetricsMapLibreHostApiQueryLayersInRectResponse) response = mapmetrics_map_libre_host_api_query_layers_in_rect_response_new(return_value);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "queryLayersInRect", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_query_layers_in_rect(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiQueryLayersInRectResponse) response = mapmetrics_map_libre_host_api_query_layers_in_rect_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "queryLayersInRect", error->message);
   }
 }
 

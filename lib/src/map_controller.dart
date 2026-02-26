@@ -179,6 +179,21 @@ abstract interface class MapController {
   /// The [onStyleLoaded] callback on [MapLibreMap] will fire when the
   /// new style has finished loading.
   Future<void> setStyleUri(String styleUri);
+
+  /// Atomic navigation frame update: moves camera AND updates a GeoJSON source
+  /// in a single synchronous call. On Android, both JNI operations execute
+  /// before returning to Dart, guaranteeing they appear in the same render
+  /// frame. On other platforms, falls back to sequential calls.
+  ///
+  /// Use this in the navigation ticker to eliminate camera-marker desync.
+  void navigateFrame({
+    required Position center,
+    required double zoom,
+    required double bearing,
+    required double pitch,
+    required String sourceId,
+    required String geoJsonData,
+  });
 }
 
 /// The mode how the bearing should get tracked on the map.

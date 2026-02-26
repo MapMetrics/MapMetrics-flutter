@@ -746,6 +746,7 @@ typedef struct {
   void (*to_lng_lat)(double x, double y, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*to_screen_location)(double lng, double lat, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*query_layers)(double x, double y, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*query_layers_in_rect)(double left, double top, double right, double bottom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*track_location)(gboolean track, int64_t bearing_mode, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*show_user_location_puck)(gboolean show, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*remove_layer)(const gchar* id, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
@@ -1276,6 +1277,26 @@ void mapmetrics_map_libre_host_api_respond_query_layers(MapmetricsMapLibreHostAp
  * Responds with an error to MapLibreHostApi.queryLayers. 
  */
 void mapmetrics_map_libre_host_api_respond_error_query_layers(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_query_layers_in_rect:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @return_value: location to write the value returned by this method.
+ *
+ * Responds to MapLibreHostApi.queryLayersInRect. 
+ */
+void mapmetrics_map_libre_host_api_respond_query_layers_in_rect(MapmetricsMapLibreHostApiResponseHandle* response_handle, FlValue* return_value);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_query_layers_in_rect:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.queryLayersInRect. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_query_layers_in_rect(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 /**
  * mapmetrics_map_libre_host_api_respond_track_location:

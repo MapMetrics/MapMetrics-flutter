@@ -1,4 +1,0 @@
-module mapmetrics {
-    header "/Volumes/Data/Flutter/MapMetrics-flutter/ios/mapmetrics/.index-build/arm64-apple-macosx/debug/mapmetrics.build/mapmetrics-Swift.h"
-    requires objc
-}

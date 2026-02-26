@@ -840,14 +840,14 @@ class MapLibreHostApi {
   }
 
   /// Add a GeoJSON source with clustering to the map style.
-  Future<void> addClusteredGeoJsonSource({required String id, required String data, required bool clustered, required double clusterRadius, required double clusterMaxZoom, }) async {
+  Future<void> addClusteredGeoJsonSource({required String id, required String data, required bool clustered, required double clusterRadius, required double clusterMaxZoom, String? clusterPropertiesJson, }) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addClusteredGeoJsonSource$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id, data, clustered, clusterRadius, clusterMaxZoom]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id, data, clustered, clusterRadius, clusterMaxZoom, clusterPropertiesJson]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1264,14 +1264,38 @@ class MapLibreHostApi {
         message: 'Host platform returned null value for non-null return value.',
       );
     } else {
-      final rawList = pigeonVar_replyList[0] as List<Object?>?;
-      return rawList?.map((item) {
-        final rawMap = item as Map<Object?, Object?>;
-        return rawMap.map((key, value) => MapEntry(
-          key?.toString() ?? '',
-          value?.toString() ?? '',
-        ));
-      }).toList() ?? [];
+      return (pigeonVar_replyList[0] as List<Object?>?)!.cast<Map<String, String>>();
+    }
+  }
+
+  /// Query rendered layers within a bounding box (more efficient for hit detection).
+  /// [left], [top], [right], [bottom] define the screen-space bounding box.
+  /// Returns list of maps (Object? used for platform compatibility).
+  Future<List<Map<Object?, Object?>>> queryLayersInRect(double left, double top, double right, double bottom) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayersInRect$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[left, top, right, bottom]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as List<Object?>?)!.cast<Map<Object?, Object?>>();
     }
   }
 
@@ -1377,6 +1401,29 @@ class MapLibreHostApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id, data]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> setStyleUri(String styleUri) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[styleUri]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {

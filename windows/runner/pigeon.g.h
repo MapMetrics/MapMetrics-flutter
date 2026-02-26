@@ -730,6 +730,15 @@ class MapLibreHostApi {
     double x,
     double y,
     std::function<void(ErrorOr<flutter::EncodableList> reply)> result) = 0;
+  // Query rendered layers within a bounding box (more efficient for hit detection).
+  // [left], [top], [right], [bottom] define the screen-space bounding box.
+  // Returns list of maps (Object? used for platform compatibility).
+  virtual void QueryLayersInRect(
+    double left,
+    double top,
+    double right,
+    double bottom,
+    std::function<void(ErrorOr<flutter::EncodableList> reply)> result) = 0;
   // Enable/disable location tracking with bearing mode.
   virtual void TrackLocation(
     bool track,

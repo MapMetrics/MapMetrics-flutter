@@ -2166,6 +2166,53 @@ void MapLibreHostApi::SetUp(
     }
   }
   {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.queryLayersInRect" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_left_arg = args.at(0);
+          if (encodable_left_arg.IsNull()) {
+            reply(WrapError("left_arg unexpectedly null."));
+            return;
+          }
+          const auto& left_arg = std::get<double>(encodable_left_arg);
+          const auto& encodable_top_arg = args.at(1);
+          if (encodable_top_arg.IsNull()) {
+            reply(WrapError("top_arg unexpectedly null."));
+            return;
+          }
+          const auto& top_arg = std::get<double>(encodable_top_arg);
+          const auto& encodable_right_arg = args.at(2);
+          if (encodable_right_arg.IsNull()) {
+            reply(WrapError("right_arg unexpectedly null."));
+            return;
+          }
+          const auto& right_arg = std::get<double>(encodable_right_arg);
+          const auto& encodable_bottom_arg = args.at(3);
+          if (encodable_bottom_arg.IsNull()) {
+            reply(WrapError("bottom_arg unexpectedly null."));
+            return;
+          }
+          const auto& bottom_arg = std::get<double>(encodable_bottom_arg);
+          api->QueryLayersInRect(left_arg, top_arg, right_arg, bottom_arg, [reply](ErrorOr<EncodableList>&& output) {
+            if (output.has_error()) {
+              reply(WrapError(output.error()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue(std::move(output).TakeValue()));
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
     BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.trackLocation" + prepended_suffix, &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {

@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 import 'package:mapmetrics/src/map_state.dart';
 import 'package:mapmetrics/src/platform/android/extensions.dart';
@@ -11,9 +12,15 @@ abstract class MapLibreMapStateNative extends MapLibreMapState
   void onMapReady() {
     widget.onEvent?.call(MapEventMapCreated(mapController: this));
     widget.onMapCreated?.call(this);
-    setState(() {
-      camera = getCamera();
-      isInitialized = true;
+    // Defer setState to after the current frame to prevent RenderBox "not laid out"
+    // crash when scheduleWarmUpFrame triggers _setOffset before layout completes.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          camera = getCamera();
+          isInitialized = true;
+        });
+      }
     });
   }
 

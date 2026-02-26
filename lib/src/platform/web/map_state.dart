@@ -266,6 +266,20 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
   }
 
   @override
+  void navigateFrame({
+    required Position center,
+    required double zoom,
+    required double bearing,
+    required double pitch,
+    required String sourceId,
+    required String geoJsonData,
+  }) {
+    // Web: sequential fallback
+    moveCameraSync(center: center, zoom: zoom, bearing: bearing, pitch: pitch);
+    style?.updateGeoJsonSourceSync(id: sourceId, data: geoJsonData);
+  }
+
+  @override
   Future<void> animateCamera({
     Position? center,
     double? zoom,

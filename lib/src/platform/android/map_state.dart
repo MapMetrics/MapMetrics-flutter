@@ -264,6 +264,44 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   }
 
   @override
+  void navigateFrame({
+    required Position center,
+    required double zoom,
+    required double bearing,
+    required double pitch,
+    required String sourceId,
+    required String geoJsonData,
+  }) {
+    // ATOMIC: Both JNI calls execute synchronously before returning to Dart.
+    // MapLibre's GL thread picks up both changes in the same render frame.
+
+    // 1. Move camera
+    final cameraPositionBuilder = jni.CameraPosition$Builder();
+    cameraPositionBuilder.target(center.toLatLng());
+    cameraPositionBuilder.zoom(zoom);
+    cameraPositionBuilder.tilt(pitch);
+    cameraPositionBuilder.bearing(bearing);
+    final cameraPosition = cameraPositionBuilder.build();
+    cameraPositionBuilder.release();
+    final cameraUpdate = jni.CameraUpdateFactory.newCameraPosition(cameraPosition);
+    _jniMapLibreMap?.moveCamera(cameraUpdate);
+    cameraUpdate.release();
+
+    // 2. Update GeoJSON source (same synchronous JNI frame)
+    if (style != null) {
+      try {
+        final source = style!._jniStyle.getSourceAs(
+          sourceId.toJString(),
+          T: jni.GeoJsonSource.type,
+        )!;
+        source.setGeoJson$3(geoJsonData.toJString());
+      } catch (_) {
+        // Source might not exist yet — skip silently
+      }
+    }
+  }
+
+  @override
   Future<void> animateCamera({
     Position? center,
     double? zoom,

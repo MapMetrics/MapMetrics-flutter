@@ -277,6 +277,21 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     moveCamera(center: center, zoom: zoom, bearing: bearing, pitch: pitch);
   }
 
+  @override
+  void navigateFrame({
+    required Position center,
+    required double zoom,
+    required double bearing,
+    required double pitch,
+    required String sourceId,
+    required String geoJsonData,
+  }) {
+    // iOS: fallback to sequential calls (iOS uses WidgetLayer for nav marker,
+    // so this method is not used in the hot path)
+    moveCameraSync(center: center, zoom: zoom, bearing: bearing, pitch: pitch);
+    style?.updateGeoJsonSourceSync(id: sourceId, data: geoJsonData);
+  }
+
   Future<void> _updateCameraCache() async {
     final hostApi = _hostApi;
     if (hostApi == null) return;

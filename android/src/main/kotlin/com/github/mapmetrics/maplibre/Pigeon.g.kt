@@ -537,7 +537,7 @@ interface MapLibreHostApi {
    */
   fun addSprite(spriteJson: String, spriteImage: ByteArray, callback: (Result<Unit>) -> Unit)
   /** Add a GeoJSON source with clustering to the map style. */
-  fun addClusteredGeoJsonSource(id: String, data: String, clustered: Boolean, clusterRadius: Double, clusterMaxZoom: Double, callback: (Result<Unit>) -> Unit)
+  fun addClusteredGeoJsonSource(id: String, data: String, clustered: Boolean, clusterRadius: Double, clusterMaxZoom: Double, clusterPropertiesJson: String?, callback: (Result<Unit>) -> Unit)
   /** Add a vector source to the map style. */
   fun addVectorSource(id: String, tiles: List<String>, minZoom: Double, maxZoom: Double, callback: (Result<Unit>) -> Unit)
   /** Minimal test method to debug Pigeon generation. */
@@ -596,6 +596,7 @@ interface MapLibreHostApi {
   fun removeLayer(id: String, callback: (Result<Unit>) -> Unit)
   fun removeSource(id: String, callback: (Result<Unit>) -> Unit)
   fun updateGeoJsonSource(id: String, data: String, callback: (Result<Unit>) -> Unit)
+  fun setStyleUri(styleUri: String, callback: (Result<Unit>) -> Unit)
 
   companion object {
     /** The codec used by MapLibreHostApi. */
@@ -918,7 +919,8 @@ interface MapLibreHostApi {
             val clusteredArg = args[2] as Boolean
             val clusterRadiusArg = args[3] as Double
             val clusterMaxZoomArg = args[4] as Double
-            api.addClusteredGeoJsonSource(idArg, dataArg, clusteredArg, clusterRadiusArg, clusterMaxZoomArg) { result: Result<Unit> ->
+            val clusterPropertiesJsonArg = args[5] as String?
+            api.addClusteredGeoJsonSource(idArg, dataArg, clusteredArg, clusterRadiusArg, clusterMaxZoomArg, clusterPropertiesJsonArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))
@@ -1356,6 +1358,25 @@ interface MapLibreHostApi {
             val idArg = args[0] as String
             val dataArg = args[1] as String
             api.updateGeoJsonSource(idArg, dataArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val styleUriArg = args[0] as String
+            api.setStyleUri(styleUriArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))
