@@ -136,6 +136,13 @@ class StyleControllerAndroid implements StyleController {
       jLayer.releasedBy(arena);
       jLayer.setProperties(props);
 
+      // Safety: remove existing layer with same ID to prevent native SIGSEGV
+      try {
+        _jniStyle.removeLayer(layer.id.toJString());
+      } catch (_) {
+        // Layer didn't exist — safe to add
+      }
+
       // add to style
       if (belowLayerId == null) {
         _jniStyle.addLayer(jLayer);
@@ -276,6 +283,12 @@ class StyleControllerAndroid implements StyleController {
         throw UnimplementedError(
           'The Source is not supported: ${source.runtimeType}',
         );
+    }
+    // Safety: remove existing source with same ID to prevent native SIGSEGV
+    try {
+      _jniStyle.removeSource(source.id.toJString());
+    } catch (_) {
+      // Source didn't exist — safe to add
     }
     _jniStyle.addSource(jniSource);
     jniSource.release();

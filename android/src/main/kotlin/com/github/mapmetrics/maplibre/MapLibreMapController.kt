@@ -225,6 +225,40 @@ class MapLibreMapController(
                 }
             }.toTypedArray()
 
+    /**
+     * Safely remove an existing layer before adding a new one.
+     * Prevents SIGSEGV from duplicate layer IDs in native MapLibre.
+     */
+    private fun safeRemoveExistingLayer(layerId: String) {
+        try {
+            val currentStyle = mapLibreMap.style ?: return
+            val existing = currentStyle.getLayer(layerId)
+            if (existing != null) {
+                currentStyle.removeLayer(layerId)
+            }
+        } catch (e: Exception) {
+            // Ignore — layer may not exist or style may be in transition
+        }
+    }
+
+    /**
+     * Safely add a layer, removing any duplicate first.
+     * Wraps native addLayer/addLayerBelow in try/catch to prevent SIGSEGV.
+     */
+    private fun safeAddLayer(layer: org.maplibre.android.style.layers.Layer, belowLayerId: String?) {
+        safeRemoveExistingLayer(layer.id)
+        val currentStyle = mapLibreMap.style ?: return
+        try {
+            if (belowLayerId == null) {
+                currentStyle.addLayer(layer)
+            } else {
+                currentStyle.addLayerBelow(layer, belowLayerId)
+            }
+        } catch (e: Exception) {
+            println("MapLibre: safeAddLayer failed for '${layer.id}': ${e.message}")
+        }
+    }
+
     override fun addFillLayer(
         id: String,
         sourceId: String,
@@ -235,11 +269,7 @@ class MapLibreMapController(
     ) {
         val layer = FillLayer(id, sourceId)
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -283,11 +313,7 @@ class MapLibreMapController(
         val filteredLayout = layout.filterKeys { it != "source-layer" && it != "__filter__" && it != "__minZoom__" && it != "__maxZoom__" }
 
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -300,11 +326,7 @@ class MapLibreMapController(
     ) {
         val layer = BackgroundLayer(id)
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -318,11 +340,7 @@ class MapLibreMapController(
     ) {
         val layer = FillExtrusionLayer(id, sourceId)
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -336,11 +354,7 @@ class MapLibreMapController(
     ) {
         val layer = HeatmapLayer(id, sourceId)
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -354,11 +368,7 @@ class MapLibreMapController(
     ) {
         val layer = HillshadeLayer(id, sourceId)
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -372,11 +382,7 @@ class MapLibreMapController(
     ) {
         val layer = LineLayer(id, sourceId)
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -390,11 +396,7 @@ class MapLibreMapController(
     ) {
         val layer = RasterLayer(id, sourceId)
 //        layer.setProperties(*parseProperties(paint), *parseProperties(layout))
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
 
@@ -443,11 +445,7 @@ class MapLibreMapController(
         // Use parseLayoutProperties and parsePaintProperties to handle complex expressions
         layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
 
-        if (belowLayerId == null) {
-            mapLibreMap.style?.addLayer(layer)
-        } else {
-            mapLibreMap.style?.addLayerBelow(layer, belowLayerId)
-        }
+        safeAddLayer(layer, belowLayerId)
         // Symbol layer $id added
         callback(Result.success(Unit))
     }
