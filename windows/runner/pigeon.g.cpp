@@ -1498,7 +1498,9 @@ void MapLibreHostApi::SetUp(
             return;
           }
           const auto& cluster_max_zoom_arg = std::get<double>(encodable_cluster_max_zoom_arg);
-          api->AddClusteredGeoJsonSource(id_arg, data_arg, clustered_arg, cluster_radius_arg, cluster_max_zoom_arg, [reply](std::optional<FlutterError>&& output) {
+          const auto& encodable_cluster_properties_json_arg = args.at(5);
+          const auto* cluster_properties_json_arg = std::get_if<std::string>(&encodable_cluster_properties_json_arg);
+          api->AddClusteredGeoJsonSource(id_arg, data_arg, clustered_arg, cluster_radius_arg, cluster_max_zoom_arg, cluster_properties_json_arg, [reply](std::optional<FlutterError>&& output) {
             if (output.has_value()) {
               reply(WrapError(output.value()));
               return;
@@ -2010,6 +2012,53 @@ void MapLibreHostApi::SetUp(
     }
   }
   {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setContentInset" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_left_arg = args.at(0);
+          if (encodable_left_arg.IsNull()) {
+            reply(WrapError("left_arg unexpectedly null."));
+            return;
+          }
+          const auto& left_arg = std::get<double>(encodable_left_arg);
+          const auto& encodable_top_arg = args.at(1);
+          if (encodable_top_arg.IsNull()) {
+            reply(WrapError("top_arg unexpectedly null."));
+            return;
+          }
+          const auto& top_arg = std::get<double>(encodable_top_arg);
+          const auto& encodable_right_arg = args.at(2);
+          if (encodable_right_arg.IsNull()) {
+            reply(WrapError("right_arg unexpectedly null."));
+            return;
+          }
+          const auto& right_arg = std::get<double>(encodable_right_arg);
+          const auto& encodable_bottom_arg = args.at(3);
+          if (encodable_bottom_arg.IsNull()) {
+            reply(WrapError("bottom_arg unexpectedly null."));
+            return;
+          }
+          const auto& bottom_arg = std::get<double>(encodable_bottom_arg);
+          api->SetContentInset(left_arg, top_arg, right_arg, bottom_arg, [reply](std::optional<FlutterError>&& output) {
+            if (output.has_value()) {
+              reply(WrapError(output.value()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue());
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
     BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude" + prepended_suffix, &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
@@ -2353,6 +2402,35 @@ void MapLibreHostApi::SetUp(
           }
           const auto& data_arg = std::get<std::string>(encodable_data_arg);
           api->UpdateGeoJsonSource(id_arg, data_arg, [reply](std::optional<FlutterError>&& output) {
+            if (output.has_value()) {
+              reply(WrapError(output.value()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue());
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_style_uri_arg = args.at(0);
+          if (encodable_style_uri_arg.IsNull()) {
+            reply(WrapError("style_uri_arg unexpectedly null."));
+            return;
+          }
+          const auto& style_uri_arg = std::get<std::string>(encodable_style_uri_arg);
+          api->SetStyleUri(style_uri_arg, [reply](std::optional<FlutterError>&& output) {
             if (output.has_value()) {
               reply(WrapError(output.value()));
               return;

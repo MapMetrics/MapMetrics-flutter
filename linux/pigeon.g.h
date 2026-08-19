@@ -730,7 +730,7 @@ typedef struct {
   void (*add_image)(const gchar* id, const uint8_t* bytes, size_t bytes_length, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_images)(FlValue* ids, FlValue* images, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_sprite)(const gchar* sprite_json, const uint8_t* sprite_image, size_t sprite_image_length, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
-  void (*add_clustered_geo_json_source)(const gchar* id, const gchar* data, gboolean clustered, double cluster_radius, double cluster_max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*add_clustered_geo_json_source)(const gchar* id, const gchar* data, gboolean clustered, double cluster_radius, double cluster_max_zoom, const gchar* cluster_properties_json, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_vector_source)(const gchar* id, FlValue* tiles, double min_zoom, double max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*test_method)(const gchar* value, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*animate_camera)(double latitude, double longitude, double zoom, double bearing, double pitch, int64_t duration, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
@@ -741,6 +741,7 @@ typedef struct {
   void (*update_map_options)(double min_zoom, double max_zoom, double min_pitch, double max_pitch, double bounds_west, double bounds_south, double bounds_east, double bounds_north, gboolean rotate_enabled, gboolean pan_enabled, gboolean zoom_enabled, gboolean pitch_enabled, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*enable_location)(int64_t fastest_interval, int64_t max_wait_time, gboolean pulse_fade, gboolean accuracy_animation, gboolean compass_animation, gboolean pulse, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*fit_bounds)(double west, double south, double east, double north, double bearing, double pitch, int64_t duration, double padding_left, double padding_top, double padding_right, double padding_bottom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*set_content_inset)(double left, double top, double right, double bottom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*get_meters_per_pixel_at_latitude)(double latitude, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*get_visible_region)(MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*to_lng_lat)(double x, double y, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
@@ -752,6 +753,7 @@ typedef struct {
   void (*remove_layer)(const gchar* id, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*remove_source)(const gchar* id, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*update_geo_json_source)(const gchar* id, const gchar* data, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*set_style_uri)(const gchar* style_uri, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
 } MapmetricsMapLibreHostApiVTable;
 
 /**
@@ -1179,6 +1181,25 @@ void mapmetrics_map_libre_host_api_respond_fit_bounds(MapmetricsMapLibreHostApiR
 void mapmetrics_map_libre_host_api_respond_error_fit_bounds(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 /**
+ * mapmetrics_map_libre_host_api_respond_set_content_inset:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.setContentInset. 
+ */
+void mapmetrics_map_libre_host_api_respond_set_content_inset(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_set_content_inset:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.setContentInset. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_set_content_inset(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
  * mapmetrics_map_libre_host_api_respond_get_meters_per_pixel_at_latitude:
  * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
  * @return_value: location to write the value returned by this method.
@@ -1392,6 +1413,25 @@ void mapmetrics_map_libre_host_api_respond_update_geo_json_source(MapmetricsMapL
  * Responds with an error to MapLibreHostApi.updateGeoJsonSource. 
  */
 void mapmetrics_map_libre_host_api_respond_error_update_geo_json_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_set_style_uri:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.setStyleUri. 
+ */
+void mapmetrics_map_libre_host_api_respond_set_style_uri(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_set_style_uri:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.setStyleUri. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_set_style_uri(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 G_DECLARE_FINAL_TYPE(MapmetricsMapLibreFlutterApiGetOptionsResponse, mapmetrics_map_libre_flutter_api_get_options_response, MAPMETRICS, MAP_LIBRE_FLUTTER_API_GET_OPTIONS_RESPONSE, GObject)
 

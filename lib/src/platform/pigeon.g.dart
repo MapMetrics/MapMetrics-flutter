@@ -1120,6 +1120,35 @@ class MapLibreHostApi {
     }
   }
 
+  /// Set the persistent viewport content inset (in logical pixels). After this
+  /// call, ALL subsequent camera operations (moveCamera, animateCamera, etc.)
+  /// treat the inset rectangle as the effective viewport — the camera `center`
+  /// lat/lng projects to the geometric center of that rectangle, and bearing
+  /// pivots around it. Used for navigation to keep the user puck low on screen
+  /// while ensuring rotation pivots through the puck.
+  Future<void> setContentInset(double left, double top, double right, double bottom) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setContentInset$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[left, top, right, bottom]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
   /// Get the meters per pixel at the specified latitude.
   Future<double> getMetersPerPixelAtLatitude(double latitude) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude$pigeonVar_messageChannelSuffix';
@@ -1416,6 +1445,9 @@ class MapLibreHostApi {
     }
   }
 
+  /// Switch the map style in-place without destroying the map.
+  /// This avoids the native SIGSEGV that occurs when the map widget is
+  /// destroyed while GeoJSON messages are still queued on the Looper.
   Future<void> setStyleUri(String styleUri) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(

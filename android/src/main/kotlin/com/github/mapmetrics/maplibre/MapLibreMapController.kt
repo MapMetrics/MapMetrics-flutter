@@ -906,6 +906,17 @@ class MapLibreMapController(
         callback(Result.success(Unit))
     }
 
+    override fun setContentInset(
+        left: Double,
+        top: Double,
+        right: Double,
+        bottom: Double,
+        callback: (Result<Unit>) -> Unit
+    ) {
+        // Android uses JNI directly via MapLibreMap.setPadding from Dart side.
+        callback(Result.success(Unit))
+    }
+
     override fun getMetersPerPixelAtLatitude(
         latitude: Double,
         callback: (Result<Double>) -> Unit

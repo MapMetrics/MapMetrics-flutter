@@ -391,6 +391,21 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   }
 
   @override
+  Future<void> setContentInset(EdgeInsets inset) async {
+    // Android: convert logical pixels → device pixels and call MapLibreMap.setPadding via JNI.
+    final jniMap = _jniMapLibreMap;
+    if (jniMap == null) return;
+    final ratio =
+        WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
+    jniMap.setPadding(
+      (inset.left * ratio).round(),
+      (inset.top * ratio).round(),
+      (inset.right * ratio).round(),
+      (inset.bottom * ratio).round(),
+    );
+  }
+
+  @override
   void onStyleLoaded() {
     // We need to refresh the cached style for when the style reloads.
     style?.dispose();

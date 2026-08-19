@@ -1143,6 +1143,15 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       print("iOS: Creating line layer with source: \(sourceId)")
       let lineLayer = MLNLineStyleLayer(identifier: id, source: source)
 
+      // Handle source-layer property for vector tile sources.
+      // Without this, an MLNLineStyleLayer backed by an MLNVectorTileSource
+      // never names a layer inside the MVT, so MapLibre renders nothing.
+      // (Mirror of the Circle/Symbol layer handling in this file.)
+      if let sourceLayer = layout["source-layer"] as? String {
+        lineLayer.sourceLayerIdentifier = sourceLayer
+        print("iOS: Set line-layer source-layer to: \(sourceLayer)")
+      }
+
       // Apply paint properties
       for (key, value) in paint {
         print("iOS: Processing paint property \(key) = \(value) (type: \(type(of: value)))")
@@ -1162,8 +1171,15 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
 
         case "line-color":
           var color: UIColor? = nil
-          if let colorArray = value as? [Any], colorArray.count >= 3 {
-            // Handle RGBA array format [r, g, b, a]
+          if let expressionArray = value as? [Any],
+             let operatorName = expressionArray.first as? String {
+            lineLayer.lineColor = createExpression(from: expressionArray)
+            print("iOS: Set line-color from expression: \(operatorName)")
+            continue
+          } else if let colorArray = value as? [Any], colorArray.count >= 3 {
+            // Handle RGBA array format [r, g, b, a]. Expression arrays are
+            // handled above; treating ['get', 'color'] as RGBA makes iOS
+            // fall back to black for data-driven MVT line colors.
             if let r = colorArray[0] as? Double,
                let g = colorArray[1] as? Double,
                let b = colorArray[2] as? Double {
@@ -2260,6 +2276,37 @@ func addSymbolLayer(
 
             CATransaction.commit()
 
+            completion(.success(()))
+        }
+    }
+
+    // Set persistent viewport content inset. After this call, the camera
+    // `center` lat/lng projects to the geometric center of the rectangle
+    // defined by (top, left, screenH - bottom, screenW - right) — bearing
+    // pivots there too. Used to keep the user puck low on screen during nav
+    // while ensuring rotation pivots through the puck.
+    func setContentInset(
+        left: Double,
+        top: Double,
+        right: Double,
+        bottom: Double,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        DispatchQueue.main.async {
+            guard self._mapView != nil else {
+                completion(.success(()))
+                return
+            }
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            CATransaction.setAnimationDuration(0)
+            self._mapView.contentInset = UIEdgeInsets(
+                top: CGFloat(top),
+                left: CGFloat(left),
+                bottom: CGFloat(bottom),
+                right: CGFloat(right)
+            )
+            CATransaction.commit()
             completion(.success(()))
         }
     }

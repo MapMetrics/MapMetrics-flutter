@@ -200,6 +200,18 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   }
 
   @override
+  Future<void> setContentInset(EdgeInsets inset) async {
+    final hostApi = _hostApi;
+    if (hostApi == null) return;
+    await hostApi.setContentInset(
+      inset.left.toDouble(),
+      inset.top.toDouble(),
+      inset.right.toDouble(),
+      inset.bottom.toDouble(),
+    );
+  }
+
+  @override
   MapCamera getCamera() {
     // Use the camera from the base class which is updated via onMoveCamera callback
     // This ensures we always get the latest camera state including user gestures

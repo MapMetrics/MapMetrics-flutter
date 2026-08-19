@@ -102,6 +102,13 @@ abstract interface class MapController {
   /// Get the current camera position on the map.
   MapCamera? get camera;
 
+  /// Set the persistent viewport content inset. After this call, all subsequent
+  /// camera operations treat the rectangle `(left, top, viewportW - right,
+  /// viewportH - bottom)` as the effective viewport: the camera `center` lat/
+  /// lng projects to the geometric center of that rectangle, and bearing
+  /// pivots around it. Pass [EdgeInsets.zero] to clear.
+  Future<void> setContentInset(EdgeInsets inset);
+
   /// Returns the distance spanned by one pixel at the specified latitude and
   /// current zoom level.
   ///

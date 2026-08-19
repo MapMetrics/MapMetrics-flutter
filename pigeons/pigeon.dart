@@ -242,6 +242,20 @@ abstract class MapLibreHostApi {
       double paddingBottom
       );
 
+  /// Set the persistent viewport content inset (in logical pixels). After this
+  /// call, ALL subsequent camera operations (moveCamera, animateCamera, etc.)
+  /// treat the inset rectangle as the effective viewport — the camera `center`
+  /// lat/lng projects to the geometric center of that rectangle, and bearing
+  /// pivots around it. Used for navigation to keep the user puck low on screen
+  /// while ensuring rotation pivots through the puck.
+  @async
+  void setContentInset(
+      double left,
+      double top,
+      double right,
+      double bottom
+      );
+
   /// Get the meters per pixel at the specified latitude.
   @async
   double getMetersPerPixelAtLatitude(double latitude);

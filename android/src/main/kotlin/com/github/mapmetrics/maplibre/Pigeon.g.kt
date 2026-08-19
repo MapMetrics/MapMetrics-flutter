@@ -564,6 +564,15 @@ interface MapLibreHostApi {
   fun enableLocation(fastestInterval: Long, maxWaitTime: Long, pulseFade: Boolean, accuracyAnimation: Boolean, compassAnimation: Boolean, pulse: Boolean, callback: (Result<Unit>) -> Unit)
   /** Fit the map camera to show the specified bounds. */
   fun fitBounds(west: Double, south: Double, east: Double, north: Double, bearing: Double, pitch: Double, duration: Long, paddingLeft: Double, paddingTop: Double, paddingRight: Double, paddingBottom: Double, callback: (Result<Unit>) -> Unit)
+  /**
+   * Set the persistent viewport content inset (in logical pixels). After this
+   * call, ALL subsequent camera operations (moveCamera, animateCamera, etc.)
+   * treat the inset rectangle as the effective viewport — the camera `center`
+   * lat/lng projects to the geometric center of that rectangle, and bearing
+   * pivots around it. Used for navigation to keep the user puck low on screen
+   * while ensuring rotation pivots through the puck.
+   */
+  fun setContentInset(left: Double, top: Double, right: Double, bottom: Double, callback: (Result<Unit>) -> Unit)
   /** Get the meters per pixel at the specified latitude. */
   fun getMetersPerPixelAtLatitude(latitude: Double, callback: (Result<Double>) -> Unit)
   /**
@@ -596,6 +605,11 @@ interface MapLibreHostApi {
   fun removeLayer(id: String, callback: (Result<Unit>) -> Unit)
   fun removeSource(id: String, callback: (Result<Unit>) -> Unit)
   fun updateGeoJsonSource(id: String, data: String, callback: (Result<Unit>) -> Unit)
+  /**
+   * Switch the map style in-place without destroying the map.
+   * This avoids the native SIGSEGV that occurs when the map widget is
+   * destroyed while GeoJSON messages are still queued on the Looper.
+   */
   fun setStyleUri(styleUri: String, callback: (Result<Unit>) -> Unit)
 
   companion object {
@@ -1137,6 +1151,28 @@ interface MapLibreHostApi {
             val paddingRightArg = args[9] as Double
             val paddingBottomArg = args[10] as Double
             api.fitBounds(westArg, southArg, eastArg, northArg, bearingArg, pitchArg, durationArg, paddingLeftArg, paddingTopArg, paddingRightArg, paddingBottomArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setContentInset$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val leftArg = args[0] as Double
+            val topArg = args[1] as Double
+            val rightArg = args[2] as Double
+            val bottomArg = args[3] as Double
+            api.setContentInset(leftArg, topArg, rightArg, bottomArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

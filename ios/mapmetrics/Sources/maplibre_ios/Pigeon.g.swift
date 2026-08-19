@@ -571,6 +571,13 @@ protocol MapLibreHostApi {
   func enableLocation(fastestInterval: Int64, maxWaitTime: Int64, pulseFade: Bool, accuracyAnimation: Bool, compassAnimation: Bool, pulse: Bool, completion: @escaping (Result<Void, Error>) -> Void)
   /// Fit the map camera to show the specified bounds.
   func fitBounds(west: Double, south: Double, east: Double, north: Double, bearing: Double, pitch: Double, duration: Int64, paddingLeft: Double, paddingTop: Double, paddingRight: Double, paddingBottom: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Set the persistent viewport content inset (in logical pixels). After this
+  /// call, ALL subsequent camera operations (moveCamera, animateCamera, etc.)
+  /// treat the inset rectangle as the effective viewport — the camera `center`
+  /// lat/lng projects to the geometric center of that rectangle, and bearing
+  /// pivots around it. Used for navigation to keep the user puck low on screen
+  /// while ensuring rotation pivots through the puck.
+  func setContentInset(left: Double, top: Double, right: Double, bottom: Double, completion: @escaping (Result<Void, Error>) -> Void)
   /// Get the meters per pixel at the specified latitude.
   func getMetersPerPixelAtLatitude(latitude: Double, completion: @escaping (Result<Double, Error>) -> Void)
   /// Get the visible region bounds.
@@ -595,6 +602,9 @@ protocol MapLibreHostApi {
   func removeLayer(id: String, completion: @escaping (Result<Void, Error>) -> Void)
   func removeSource(id: String, completion: @escaping (Result<Void, Error>) -> Void)
   func updateGeoJsonSource(id: String, data: String, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Switch the map style in-place without destroying the map.
+  /// This avoids the native SIGSEGV that occurs when the map widget is
+  /// destroyed while GeoJSON messages are still queued on the Looper.
   func setStyleUri(styleUri: String, completion: @escaping (Result<Void, Error>) -> Void)
 }
 
@@ -1125,6 +1135,32 @@ class MapLibreHostApiSetup {
     } else {
       fitBoundsChannel.setMessageHandler(nil)
     }
+    /// Set the persistent viewport content inset (in logical pixels). After this
+    /// call, ALL subsequent camera operations (moveCamera, animateCamera, etc.)
+    /// treat the inset rectangle as the effective viewport — the camera `center`
+    /// lat/lng projects to the geometric center of that rectangle, and bearing
+    /// pivots around it. Used for navigation to keep the user puck low on screen
+    /// while ensuring rotation pivots through the puck.
+    let setContentInsetChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setContentInset\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setContentInsetChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let leftArg = args[0] as! Double
+        let topArg = args[1] as! Double
+        let rightArg = args[2] as! Double
+        let bottomArg = args[3] as! Double
+        api.setContentInset(left: leftArg, top: topArg, right: rightArg, bottom: bottomArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      setContentInsetChannel.setMessageHandler(nil)
+    }
     /// Get the meters per pixel at the specified latitude.
     let getMetersPerPixelAtLatitudeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
@@ -1331,6 +1367,9 @@ class MapLibreHostApiSetup {
     } else {
       updateGeoJsonSourceChannel.setMessageHandler(nil)
     }
+    /// Switch the map style in-place without destroying the map.
+    /// This avoids the native SIGSEGV that occurs when the map widget is
+    /// destroyed while GeoJSON messages are still queued on the Looper.
     let setStyleUriChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       setStyleUriChannel.setMessageHandler { message, reply in

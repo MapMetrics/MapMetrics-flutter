@@ -631,6 +631,7 @@ class MapLibreHostApi {
     bool clustered,
     double cluster_radius,
     double cluster_max_zoom,
+    const std::string* cluster_properties_json,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
   // Add a vector source to the map style.
   virtual void AddVectorSource(
@@ -706,6 +707,18 @@ class MapLibreHostApi {
     double padding_right,
     double padding_bottom,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Set the persistent viewport content inset (in logical pixels). After this
+  // call, ALL subsequent camera operations (moveCamera, animateCamera, etc.)
+  // treat the inset rectangle as the effective viewport — the camera `center`
+  // lat/lng projects to the geometric center of that rectangle, and bearing
+  // pivots around it. Used for navigation to keep the user puck low on screen
+  // while ensuring rotation pivots through the puck.
+  virtual void SetContentInset(
+    double left,
+    double top,
+    double right,
+    double bottom,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
   // Get the meters per pixel at the specified latitude.
   virtual void GetMetersPerPixelAtLatitude(
     double latitude,
@@ -757,6 +770,12 @@ class MapLibreHostApi {
   virtual void UpdateGeoJsonSource(
     const std::string& id,
     const std::string& data,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Switch the map style in-place without destroying the map.
+  // This avoids the native SIGSEGV that occurs when the map widget is
+  // destroyed while GeoJSON messages are still queued on the Looper.
+  virtual void SetStyleUri(
+    const std::string& style_uri,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
 
   // The codec used by MapLibreHostApi.

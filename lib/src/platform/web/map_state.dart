@@ -358,6 +358,12 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
   }
 
   @override
+  Future<void> setContentInset(EdgeInsets inset) async {
+    // Web: not yet implemented — MapLibre GL JS has map.setPadding() but
+    // wiring it here would require a JS interop binding.
+  }
+
+  @override
   MapCamera getCamera() => MapCamera(
     center: _map.getCenter().toPosition(),
     zoom: _map.getZoom().toDouble(),

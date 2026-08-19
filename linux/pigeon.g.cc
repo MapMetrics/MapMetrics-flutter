@@ -1949,6 +1949,45 @@ static MapmetricsMapLibreHostApiFitBoundsResponse* mapmetrics_map_libre_host_api
   return self;
 }
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiSetContentInsetResponse, mapmetrics_map_libre_host_api_set_content_inset_response, MAPMETRICS, MAP_LIBRE_HOST_API_SET_CONTENT_INSET_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiSetContentInsetResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiSetContentInsetResponse, mapmetrics_map_libre_host_api_set_content_inset_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_set_content_inset_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiSetContentInsetResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SET_CONTENT_INSET_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_set_content_inset_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_set_content_inset_response_init(MapmetricsMapLibreHostApiSetContentInsetResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_set_content_inset_response_class_init(MapmetricsMapLibreHostApiSetContentInsetResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_set_content_inset_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiSetContentInsetResponse* mapmetrics_map_libre_host_api_set_content_inset_response_new() {
+  MapmetricsMapLibreHostApiSetContentInsetResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SET_CONTENT_INSET_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_set_content_inset_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiSetContentInsetResponse* mapmetrics_map_libre_host_api_set_content_inset_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiSetContentInsetResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SET_CONTENT_INSET_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_set_content_inset_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse, mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response, MAPMETRICS, MAP_LIBRE_HOST_API_GET_METERS_PER_PIXEL_AT_LATITUDE_RESPONSE, GObject)
 
 struct _MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse {
@@ -2378,6 +2417,45 @@ static MapmetricsMapLibreHostApiUpdateGeoJsonSourceResponse* mapmetrics_map_libr
   return self;
 }
 
+G_DECLARE_FINAL_TYPE(MapmetricsMapLibreHostApiSetStyleUriResponse, mapmetrics_map_libre_host_api_set_style_uri_response, MAPMETRICS, MAP_LIBRE_HOST_API_SET_STYLE_URI_RESPONSE, GObject)
+
+struct _MapmetricsMapLibreHostApiSetStyleUriResponse {
+  GObject parent_instance;
+
+  FlValue* value;
+};
+
+G_DEFINE_TYPE(MapmetricsMapLibreHostApiSetStyleUriResponse, mapmetrics_map_libre_host_api_set_style_uri_response, G_TYPE_OBJECT)
+
+static void mapmetrics_map_libre_host_api_set_style_uri_response_dispose(GObject* object) {
+  MapmetricsMapLibreHostApiSetStyleUriResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SET_STYLE_URI_RESPONSE(object);
+  g_clear_pointer(&self->value, fl_value_unref);
+  G_OBJECT_CLASS(mapmetrics_map_libre_host_api_set_style_uri_response_parent_class)->dispose(object);
+}
+
+static void mapmetrics_map_libre_host_api_set_style_uri_response_init(MapmetricsMapLibreHostApiSetStyleUriResponse* self) {
+}
+
+static void mapmetrics_map_libre_host_api_set_style_uri_response_class_init(MapmetricsMapLibreHostApiSetStyleUriResponseClass* klass) {
+  G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_libre_host_api_set_style_uri_response_dispose;
+}
+
+static MapmetricsMapLibreHostApiSetStyleUriResponse* mapmetrics_map_libre_host_api_set_style_uri_response_new() {
+  MapmetricsMapLibreHostApiSetStyleUriResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SET_STYLE_URI_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_set_style_uri_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_null());
+  return self;
+}
+
+static MapmetricsMapLibreHostApiSetStyleUriResponse* mapmetrics_map_libre_host_api_set_style_uri_response_new_error(const gchar* code, const gchar* message, FlValue* details) {
+  MapmetricsMapLibreHostApiSetStyleUriResponse* self = MAPMETRICS_MAP_LIBRE_HOST_API_SET_STYLE_URI_RESPONSE(g_object_new(mapmetrics_map_libre_host_api_set_style_uri_response_get_type(), nullptr));
+  self->value = fl_value_new_list();
+  fl_value_append_take(self->value, fl_value_new_string(code));
+  fl_value_append_take(self->value, fl_value_new_string(message != nullptr ? message : ""));
+  fl_value_append_take(self->value, details != nullptr ? fl_value_ref(details) : fl_value_new_null());
+  return self;
+}
+
 struct _MapmetricsMapLibreHostApi {
   GObject parent_instance;
 
@@ -2695,8 +2773,10 @@ static void mapmetrics_map_libre_host_api_add_clustered_geo_json_source_cb(FlBas
   double cluster_radius = fl_value_get_float(value3);
   FlValue* value4 = fl_value_get_list_value(message_, 4);
   double cluster_max_zoom = fl_value_get_float(value4);
+  FlValue* value5 = fl_value_get_list_value(message_, 5);
+  const gchar* cluster_properties_json = fl_value_get_string(value5);
   g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
-  self->vtable->add_clustered_geo_json_source(id, data, clustered, cluster_radius, cluster_max_zoom, handle, self->user_data);
+  self->vtable->add_clustered_geo_json_source(id, data, clustered, cluster_radius, cluster_max_zoom, cluster_properties_json, handle, self->user_data);
 }
 
 static void mapmetrics_map_libre_host_api_add_vector_source_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
@@ -2923,6 +3003,25 @@ static void mapmetrics_map_libre_host_api_fit_bounds_cb(FlBasicMessageChannel* c
   self->vtable->fit_bounds(west, south, east, north, bearing, pitch, duration, padding_left, padding_top, padding_right, padding_bottom, handle, self->user_data);
 }
 
+static void mapmetrics_map_libre_host_api_set_content_inset_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->set_content_inset == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  double left = fl_value_get_float(value0);
+  FlValue* value1 = fl_value_get_list_value(message_, 1);
+  double top = fl_value_get_float(value1);
+  FlValue* value2 = fl_value_get_list_value(message_, 2);
+  double right = fl_value_get_float(value2);
+  FlValue* value3 = fl_value_get_list_value(message_, 3);
+  double bottom = fl_value_get_float(value3);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->set_content_inset(left, top, right, bottom, handle, self->user_data);
+}
+
 static void mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
   MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
 
@@ -3080,6 +3179,19 @@ static void mapmetrics_map_libre_host_api_update_geo_json_source_cb(FlBasicMessa
   self->vtable->update_geo_json_source(id, data, handle, self->user_data);
 }
 
+static void mapmetrics_map_libre_host_api_set_style_uri_cb(FlBasicMessageChannel* channel, FlValue* message_, FlBasicMessageChannelResponseHandle* response_handle, gpointer user_data) {
+  MapmetricsMapLibreHostApi* self = MAPMETRICS_MAP_LIBRE_HOST_API(user_data);
+
+  if (self->vtable == nullptr || self->vtable->set_style_uri == nullptr) {
+    return;
+  }
+
+  FlValue* value0 = fl_value_get_list_value(message_, 0);
+  const gchar* style_uri = fl_value_get_string(value0);
+  g_autoptr(MapmetricsMapLibreHostApiResponseHandle) handle = mapmetrics_map_libre_host_api_response_handle_new(channel, response_handle);
+  self->vtable->set_style_uri(style_uri, handle, self->user_data);
+}
+
 void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix, const MapmetricsMapLibreHostApiVTable* vtable, gpointer user_data, GDestroyNotify user_data_free_func) {
   g_autofree gchar* dot_suffix = suffix != nullptr ? g_strdup_printf(".%s", suffix) : g_strdup("");
   g_autoptr(MapmetricsMapLibreHostApi) api_data = mapmetrics_map_libre_host_api_new(vtable, user_data, user_data_free_func);
@@ -3160,6 +3272,9 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* fit_bounds_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.fitBounds%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) fit_bounds_channel = fl_basic_message_channel_new(messenger, fit_bounds_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(fit_bounds_channel, mapmetrics_map_libre_host_api_fit_bounds_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* set_content_inset_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setContentInset%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) set_content_inset_channel = fl_basic_message_channel_new(messenger, set_content_inset_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(set_content_inset_channel, mapmetrics_map_libre_host_api_set_content_inset_cb, g_object_ref(api_data), g_object_unref);
   g_autofree gchar* get_meters_per_pixel_at_latitude_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) get_meters_per_pixel_at_latitude_channel = fl_basic_message_channel_new(messenger, get_meters_per_pixel_at_latitude_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(get_meters_per_pixel_at_latitude_channel, mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_cb, g_object_ref(api_data), g_object_unref);
@@ -3193,6 +3308,9 @@ void mapmetrics_map_libre_host_api_set_method_handlers(FlBinaryMessenger* messen
   g_autofree gchar* update_geo_json_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateGeoJsonSource%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) update_geo_json_source_channel = fl_basic_message_channel_new(messenger, update_geo_json_source_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(update_geo_json_source_channel, mapmetrics_map_libre_host_api_update_geo_json_source_cb, g_object_ref(api_data), g_object_unref);
+  g_autofree gchar* set_style_uri_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) set_style_uri_channel = fl_basic_message_channel_new(messenger, set_style_uri_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(set_style_uri_channel, mapmetrics_map_libre_host_api_set_style_uri_cb, g_object_ref(api_data), g_object_unref);
 }
 
 void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* messenger, const gchar* suffix) {
@@ -3274,6 +3392,9 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* fit_bounds_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.fitBounds%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) fit_bounds_channel = fl_basic_message_channel_new(messenger, fit_bounds_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(fit_bounds_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* set_content_inset_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setContentInset%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) set_content_inset_channel = fl_basic_message_channel_new(messenger, set_content_inset_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(set_content_inset_channel, nullptr, nullptr, nullptr);
   g_autofree gchar* get_meters_per_pixel_at_latitude_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.getMetersPerPixelAtLatitude%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) get_meters_per_pixel_at_latitude_channel = fl_basic_message_channel_new(messenger, get_meters_per_pixel_at_latitude_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(get_meters_per_pixel_at_latitude_channel, nullptr, nullptr, nullptr);
@@ -3307,6 +3428,9 @@ void mapmetrics_map_libre_host_api_clear_method_handlers(FlBinaryMessenger* mess
   g_autofree gchar* update_geo_json_source_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.updateGeoJsonSource%s", dot_suffix);
   g_autoptr(FlBasicMessageChannel) update_geo_json_source_channel = fl_basic_message_channel_new(messenger, update_geo_json_source_channel_name, FL_MESSAGE_CODEC(codec));
   fl_basic_message_channel_set_message_handler(update_geo_json_source_channel, nullptr, nullptr, nullptr);
+  g_autofree gchar* set_style_uri_channel_name = g_strdup_printf("dev.flutter.pigeon.mapmetrics.MapLibreHostApi.setStyleUri%s", dot_suffix);
+  g_autoptr(FlBasicMessageChannel) set_style_uri_channel = fl_basic_message_channel_new(messenger, set_style_uri_channel_name, FL_MESSAGE_CODEC(codec));
+  fl_basic_message_channel_set_message_handler(set_style_uri_channel, nullptr, nullptr, nullptr);
 }
 
 void mapmetrics_map_libre_host_api_respond_add_fill_layer(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
@@ -3645,6 +3769,22 @@ void mapmetrics_map_libre_host_api_respond_error_fit_bounds(MapmetricsMapLibreHo
   }
 }
 
+void mapmetrics_map_libre_host_api_respond_set_content_inset(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiSetContentInsetResponse) response = mapmetrics_map_libre_host_api_set_content_inset_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "setContentInset", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_set_content_inset(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiSetContentInsetResponse) response = mapmetrics_map_libre_host_api_set_content_inset_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "setContentInset", error->message);
+  }
+}
+
 void mapmetrics_map_libre_host_api_respond_get_meters_per_pixel_at_latitude(MapmetricsMapLibreHostApiResponseHandle* response_handle, double return_value) {
   g_autoptr(MapmetricsMapLibreHostApiGetMetersPerPixelAtLatitudeResponse) response = mapmetrics_map_libre_host_api_get_meters_per_pixel_at_latitude_response_new(return_value);
   g_autoptr(GError) error = nullptr;
@@ -3818,6 +3958,22 @@ void mapmetrics_map_libre_host_api_respond_error_update_geo_json_source(Mapmetri
   g_autoptr(GError) error = nullptr;
   if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
     g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "updateGeoJsonSource", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_set_style_uri(MapmetricsMapLibreHostApiResponseHandle* response_handle) {
+  g_autoptr(MapmetricsMapLibreHostApiSetStyleUriResponse) response = mapmetrics_map_libre_host_api_set_style_uri_response_new();
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "setStyleUri", error->message);
+  }
+}
+
+void mapmetrics_map_libre_host_api_respond_error_set_style_uri(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details) {
+  g_autoptr(MapmetricsMapLibreHostApiSetStyleUriResponse) response = mapmetrics_map_libre_host_api_set_style_uri_response_new_error(code, message, details);
+  g_autoptr(GError) error = nullptr;
+  if (!fl_basic_message_channel_respond(response_handle->channel, response_handle->response_handle, response->value, &error)) {
+    g_warning("Failed to send response to %s.%s: %s", "MapLibreHostApi", "setStyleUri", error->message);
   }
 }
 
