@@ -93,10 +93,19 @@ class StyleControllerAndroid implements StyleController {
           layer.id.toJString(),
           layer.sourceId.toJString(),
         ),
-        LineStyleLayer() => jni.LineLayer(
-          layer.id.toJString(),
-          layer.sourceId.toJString(),
-        ),
+        LineStyleLayer() => (() {
+          final jLayer = jni.LineLayer(
+            layer.id.toJString(),
+            layer.sourceId.toJString(),
+          );
+          // Set source-layer if it exists in layout. Without this, a line
+          // layer backed by a VectorSource never names a layer inside the
+          // MVT and renders nothing.
+          if (layer.layout['source-layer'] case final String sourceLayer) {
+            jLayer.withSourceLayer(sourceLayer.toJString());
+          }
+          return jLayer;
+        })(),
         RasterStyleLayer() => jni.RasterLayer(
           layer.id.toJString(),
           layer.sourceId.toJString(),
