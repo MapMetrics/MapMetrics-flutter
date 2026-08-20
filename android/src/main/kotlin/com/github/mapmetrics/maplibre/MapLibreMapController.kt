@@ -17,6 +17,7 @@ import com.google.gson.Gson
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.platform.PlatformView
 import org.maplibre.android.MapLibre
+import org.maplibre.android.WellKnownTileServer
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
@@ -109,14 +110,20 @@ class MapLibreMapController(
                     .tiltGesturesEnabled(mapOptions.gestures.tilt)
                     .camera(cameraBuilder.build())
 
-            MapLibre.getInstance(context) // needs to be called before MapView gets created
+            // needs to be called before MapView gets created.
+            // The 3-arg overload caches the maps-scoped api key, which the v2
+            // MMMapSessionInterceptor (installed from getInstance) needs in order to
+            // establish a session. The 1-arg overload caches a null key: the session
+            // POST then sends an empty token, fails silently, and every tile falls
+            // back to v1 billing with no crash and no log.
+            MapLibre.getInstance(context, mapOptions.apiKey, WellKnownTileServer.MapLibre)
             mapView = MapView(context, options)
             lifecycleProvider.getLifecycle()?.addObserver(this)
-            MapLibre.initializeSessionWithToken(context, "") {
-                mapView.getMapAsync(this)
-                mapViewContainer.addView(mapView)
-            }
-
+            // v2 replaced the `initializeSessionWithToken` cookie handshake with
+            // MMMapSessionInterceptor, installed by MapLibre.getInstance above.
+            // These two calls used to be gated inside its callback; they now run directly.
+            mapView.getMapAsync(this)
+            mapViewContainer.addView(mapView)
         }
     }
 

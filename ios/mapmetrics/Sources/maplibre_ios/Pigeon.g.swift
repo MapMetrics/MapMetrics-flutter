@@ -132,6 +132,10 @@ struct LngLat {
 struct MapOptions {
   /// The URL of the used map style.
   var style: String
+  /// The MapMetrics maps-scoped API key. Passed to the native SDK so that the
+  /// v2 map session can be established. `null` keeps the legacy behaviour
+  /// (auth via the JWT embedded in the style URL).
+  var apiKey: String? = nil
   /// The initial zoom level of the map.
   var zoom: Double
   /// The initial pitch / tilt of the map.
@@ -159,20 +163,22 @@ struct MapOptions {
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> MapOptions? {
     let style = pigeonVar_list[0] as! String
-    let zoom = pigeonVar_list[1] as! Double
-    let pitch = pigeonVar_list[2] as! Double
-    let bearing = pigeonVar_list[3] as! Double
-    let center: LngLat? = nilOrValue(pigeonVar_list[4])
-    let maxBounds: LngLatBounds? = nilOrValue(pigeonVar_list[5])
-    let minZoom = pigeonVar_list[6] as! Double
-    let maxZoom = pigeonVar_list[7] as! Double
-    let minPitch = pigeonVar_list[8] as! Double
-    let maxPitch = pigeonVar_list[9] as! Double
-    let gestures = pigeonVar_list[10] as! MapGestures
-    let androidTextureMode = pigeonVar_list[11] as! Bool
+    let apiKey: String? = nilOrValue(pigeonVar_list[1])
+    let zoom = pigeonVar_list[2] as! Double
+    let pitch = pigeonVar_list[3] as! Double
+    let bearing = pigeonVar_list[4] as! Double
+    let center: LngLat? = nilOrValue(pigeonVar_list[5])
+    let maxBounds: LngLatBounds? = nilOrValue(pigeonVar_list[6])
+    let minZoom = pigeonVar_list[7] as! Double
+    let maxZoom = pigeonVar_list[8] as! Double
+    let minPitch = pigeonVar_list[9] as! Double
+    let maxPitch = pigeonVar_list[10] as! Double
+    let gestures = pigeonVar_list[11] as! MapGestures
+    let androidTextureMode = pigeonVar_list[12] as! Bool
 
     return MapOptions(
       style: style,
+      apiKey: apiKey,
       zoom: zoom,
       pitch: pitch,
       bearing: bearing,
@@ -189,6 +195,7 @@ struct MapOptions {
   func toList() -> [Any?] {
     return [
       style,
+      apiKey,
       zoom,
       pitch,
       bearing,

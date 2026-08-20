@@ -1,5 +1,11 @@
 allprojects {
     repositories {
+        // TODO(dev-only): TEMPORARY — resolves the locally-built
+        // org.mapmetrics.android-sdk:mapmetrics-native-sdk from ~/.m2.
+        // The transitive dep is resolved on :app's classpath, so it must be
+        // declared here as well as in the plugin's android/build.gradle.
+        // MUST be removed before release; builds are not reproducible with it.
+        mavenLocal()
         google()
         mavenCentral()
     }

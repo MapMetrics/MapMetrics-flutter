@@ -88,6 +88,7 @@ class LngLat {
 class MapOptions {
   MapOptions({
     required this.style,
+    this.apiKey,
     required this.zoom,
     required this.pitch,
     required this.bearing,
@@ -103,6 +104,11 @@ class MapOptions {
 
   /// The URL of the used map style.
   String style;
+
+  /// The MapMetrics maps-scoped API key. Passed to the native SDK so that the
+  /// v2 map session can be established. `null` keeps the legacy behaviour
+  /// (auth via the JWT embedded in the style URL).
+  String? apiKey;
 
   /// The initial zoom level of the map.
   double zoom;
@@ -140,6 +146,7 @@ class MapOptions {
   Object encode() {
     return <Object?>[
       style,
+      apiKey,
       zoom,
       pitch,
       bearing,
@@ -158,17 +165,18 @@ class MapOptions {
     result as List<Object?>;
     return MapOptions(
       style: result[0]! as String,
-      zoom: result[1]! as double,
-      pitch: result[2]! as double,
-      bearing: result[3]! as double,
-      center: result[4] as LngLat?,
-      maxBounds: result[5] as LngLatBounds?,
-      minZoom: result[6]! as double,
-      maxZoom: result[7]! as double,
-      minPitch: result[8]! as double,
-      maxPitch: result[9]! as double,
-      gestures: result[10]! as MapGestures,
-      androidTextureMode: result[11]! as bool,
+      apiKey: result[1] as String?,
+      zoom: result[2]! as double,
+      pitch: result[3]! as double,
+      bearing: result[4]! as double,
+      center: result[5] as LngLat?,
+      maxBounds: result[6] as LngLatBounds?,
+      minZoom: result[7]! as double,
+      maxZoom: result[8]! as double,
+      minPitch: result[9]! as double,
+      maxPitch: result[10]! as double,
+      gestures: result[11]! as MapGestures,
+      androidTextureMode: result[12]! as bool,
     );
   }
 }

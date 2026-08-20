@@ -60,6 +60,7 @@ struct _MapmetricsMapOptions {
   GObject parent_instance;
 
   gchar* style;
+  gchar* api_key;
   double zoom;
   double pitch;
   double bearing;
@@ -78,6 +79,7 @@ G_DEFINE_TYPE(MapmetricsMapOptions, mapmetrics_map_options, G_TYPE_OBJECT)
 static void mapmetrics_map_options_dispose(GObject* object) {
   MapmetricsMapOptions* self = MAPMETRICS_MAP_OPTIONS(object);
   g_clear_pointer(&self->style, g_free);
+  g_clear_pointer(&self->api_key, g_free);
   g_clear_object(&self->center);
   g_clear_object(&self->max_bounds);
   g_clear_object(&self->gestures);
@@ -91,9 +93,15 @@ static void mapmetrics_map_options_class_init(MapmetricsMapOptionsClass* klass) 
   G_OBJECT_CLASS(klass)->dispose = mapmetrics_map_options_dispose;
 }
 
-MapmetricsMapOptions* mapmetrics_map_options_new(const gchar* style, double zoom, double pitch, double bearing, MapmetricsLngLat* center, MapmetricsLngLatBounds* max_bounds, double min_zoom, double max_zoom, double min_pitch, double max_pitch, MapmetricsMapGestures* gestures, gboolean android_texture_mode) {
+MapmetricsMapOptions* mapmetrics_map_options_new(const gchar* style, const gchar* api_key, double zoom, double pitch, double bearing, MapmetricsLngLat* center, MapmetricsLngLatBounds* max_bounds, double min_zoom, double max_zoom, double min_pitch, double max_pitch, MapmetricsMapGestures* gestures, gboolean android_texture_mode) {
   MapmetricsMapOptions* self = MAPMETRICS_MAP_OPTIONS(g_object_new(mapmetrics_map_options_get_type(), nullptr));
   self->style = g_strdup(style);
+  if (api_key != nullptr) {
+    self->api_key = g_strdup(api_key);
+  }
+  else {
+    self->api_key = nullptr;
+  }
   self->zoom = zoom;
   self->pitch = pitch;
   self->bearing = bearing;
@@ -121,6 +129,11 @@ MapmetricsMapOptions* mapmetrics_map_options_new(const gchar* style, double zoom
 const gchar* mapmetrics_map_options_get_style(MapmetricsMapOptions* self) {
   g_return_val_if_fail(MAPMETRICS_IS_MAP_OPTIONS(self), nullptr);
   return self->style;
+}
+
+const gchar* mapmetrics_map_options_get_api_key(MapmetricsMapOptions* self) {
+  g_return_val_if_fail(MAPMETRICS_IS_MAP_OPTIONS(self), nullptr);
+  return self->api_key;
 }
 
 double mapmetrics_map_options_get_zoom(MapmetricsMapOptions* self) {
@@ -181,6 +194,7 @@ gboolean mapmetrics_map_options_get_android_texture_mode(MapmetricsMapOptions* s
 static FlValue* mapmetrics_map_options_to_list(MapmetricsMapOptions* self) {
   FlValue* values = fl_value_new_list();
   fl_value_append_take(values, fl_value_new_string(self->style));
+  fl_value_append_take(values, self->api_key != nullptr ? fl_value_new_string(self->api_key) : fl_value_new_null());
   fl_value_append_take(values, fl_value_new_float(self->zoom));
   fl_value_append_take(values, fl_value_new_float(self->pitch));
   fl_value_append_take(values, fl_value_new_float(self->bearing));
@@ -199,34 +213,39 @@ static MapmetricsMapOptions* mapmetrics_map_options_new_from_list(FlValue* value
   FlValue* value0 = fl_value_get_list_value(values, 0);
   const gchar* style = fl_value_get_string(value0);
   FlValue* value1 = fl_value_get_list_value(values, 1);
-  double zoom = fl_value_get_float(value1);
-  FlValue* value2 = fl_value_get_list_value(values, 2);
-  double pitch = fl_value_get_float(value2);
-  FlValue* value3 = fl_value_get_list_value(values, 3);
-  double bearing = fl_value_get_float(value3);
-  FlValue* value4 = fl_value_get_list_value(values, 4);
-  MapmetricsLngLat* center = nullptr;
-  if (fl_value_get_type(value4) != FL_VALUE_TYPE_NULL) {
-    center = MAPMETRICS_LNG_LAT(fl_value_get_custom_value_object(value4));
+  const gchar* api_key = nullptr;
+  if (fl_value_get_type(value1) != FL_VALUE_TYPE_NULL) {
+    api_key = fl_value_get_string(value1);
   }
+  FlValue* value2 = fl_value_get_list_value(values, 2);
+  double zoom = fl_value_get_float(value2);
+  FlValue* value3 = fl_value_get_list_value(values, 3);
+  double pitch = fl_value_get_float(value3);
+  FlValue* value4 = fl_value_get_list_value(values, 4);
+  double bearing = fl_value_get_float(value4);
   FlValue* value5 = fl_value_get_list_value(values, 5);
-  MapmetricsLngLatBounds* max_bounds = nullptr;
+  MapmetricsLngLat* center = nullptr;
   if (fl_value_get_type(value5) != FL_VALUE_TYPE_NULL) {
-    max_bounds = MAPMETRICS_LNG_LAT_BOUNDS(fl_value_get_custom_value_object(value5));
+    center = MAPMETRICS_LNG_LAT(fl_value_get_custom_value_object(value5));
   }
   FlValue* value6 = fl_value_get_list_value(values, 6);
-  double min_zoom = fl_value_get_float(value6);
+  MapmetricsLngLatBounds* max_bounds = nullptr;
+  if (fl_value_get_type(value6) != FL_VALUE_TYPE_NULL) {
+    max_bounds = MAPMETRICS_LNG_LAT_BOUNDS(fl_value_get_custom_value_object(value6));
+  }
   FlValue* value7 = fl_value_get_list_value(values, 7);
-  double max_zoom = fl_value_get_float(value7);
+  double min_zoom = fl_value_get_float(value7);
   FlValue* value8 = fl_value_get_list_value(values, 8);
-  double min_pitch = fl_value_get_float(value8);
+  double max_zoom = fl_value_get_float(value8);
   FlValue* value9 = fl_value_get_list_value(values, 9);
-  double max_pitch = fl_value_get_float(value9);
+  double min_pitch = fl_value_get_float(value9);
   FlValue* value10 = fl_value_get_list_value(values, 10);
-  MapmetricsMapGestures* gestures = MAPMETRICS_MAP_GESTURES(fl_value_get_custom_value_object(value10));
+  double max_pitch = fl_value_get_float(value10);
   FlValue* value11 = fl_value_get_list_value(values, 11);
-  gboolean android_texture_mode = fl_value_get_bool(value11);
-  return mapmetrics_map_options_new(style, zoom, pitch, bearing, center, max_bounds, min_zoom, max_zoom, min_pitch, max_pitch, gestures, android_texture_mode);
+  MapmetricsMapGestures* gestures = MAPMETRICS_MAP_GESTURES(fl_value_get_custom_value_object(value11));
+  FlValue* value12 = fl_value_get_list_value(values, 12);
+  gboolean android_texture_mode = fl_value_get_bool(value12);
+  return mapmetrics_map_options_new(style, api_key, zoom, pitch, bearing, center, max_bounds, min_zoom, max_zoom, min_pitch, max_pitch, gestures, android_texture_mode);
 }
 
 struct _MapmetricsMapGestures {

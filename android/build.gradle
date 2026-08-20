@@ -21,6 +21,10 @@ buildscript {
 
 allprojects {
     repositories {
+        // TODO(dev-only): TEMPORARY — resolves the locally-built mapmetrics-native-sdk
+        // from ~/.m2. MUST be removed before any release; it makes builds
+        // machine-dependent and is not reproducible on CI.
+        mavenLocal()
         google()
         mavenCentral()
     }
@@ -74,7 +78,7 @@ android {
 // JNIGEN        implementation 'org.maplibre.gl:android-sdk-turf:6.0.1'
 // JNIGEN        implementation 'com.jakewharton.timber:timber:5.0.1'
 // JNIGEN        implementation 'androidx.annotation:annotation:1.9.0'
-       implementation 'org.mapmetrics.android-sdk:mapmetrics-native-sdk:1.0.2' // JNIGEN
+       implementation 'org.mapmetrics.android-sdk:mapmetrics-native-sdk:2.0.0' // JNIGEN
 //        implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
 // JNIGEN        implementation 'com.squareup.okhttp3:okhttp:4.12.0'
         testImplementation("org.jetbrains.kotlin:kotlin-test")

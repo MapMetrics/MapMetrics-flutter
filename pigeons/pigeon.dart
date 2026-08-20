@@ -400,10 +400,16 @@ class MapOptions {
     required this.maxPitch,
     required this.gestures,
     required this.androidTextureMode,
+    required this.apiKey,
   });
 
   /// The URL of the used map style.
   final String style;
+
+  /// The MapMetrics maps-scoped API key. Passed to the native SDK so that the
+  /// v2 map session can be established. `null` keeps the legacy behaviour
+  /// (auth via the JWT embedded in the style URL).
+  final String? apiKey;
 
   /// The initial zoom level of the map.
   final double zoom;

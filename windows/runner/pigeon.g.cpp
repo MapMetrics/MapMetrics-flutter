@@ -96,6 +96,7 @@ MapOptions::MapOptions(
 
 MapOptions::MapOptions(
   const std::string& style,
+  const std::string* api_key,
   double zoom,
   double pitch,
   double bearing,
@@ -108,6 +109,7 @@ MapOptions::MapOptions(
   const MapGestures& gestures,
   bool android_texture_mode)
  : style_(style),
+    api_key_(api_key ? std::optional<std::string>(*api_key) : std::nullopt),
     zoom_(zoom),
     pitch_(pitch),
     bearing_(bearing),
@@ -122,6 +124,7 @@ MapOptions::MapOptions(
 
 MapOptions::MapOptions(const MapOptions& other)
  : style_(other.style_),
+    api_key_(other.api_key_ ? std::optional<std::string>(*other.api_key_) : std::nullopt),
     zoom_(other.zoom_),
     pitch_(other.pitch_),
     bearing_(other.bearing_),
@@ -136,6 +139,7 @@ MapOptions::MapOptions(const MapOptions& other)
 
 MapOptions& MapOptions::operator=(const MapOptions& other) {
   style_ = other.style_;
+  api_key_ = other.api_key_;
   zoom_ = other.zoom_;
   pitch_ = other.pitch_;
   bearing_ = other.bearing_;
@@ -156,6 +160,19 @@ const std::string& MapOptions::style() const {
 
 void MapOptions::set_style(std::string_view value_arg) {
   style_ = value_arg;
+}
+
+
+const std::string* MapOptions::api_key() const {
+  return api_key_ ? &(*api_key_) : nullptr;
+}
+
+void MapOptions::set_api_key(const std::string_view* value_arg) {
+  api_key_ = value_arg ? std::optional<std::string>(*value_arg) : std::nullopt;
+}
+
+void MapOptions::set_api_key(std::string_view value_arg) {
+  api_key_ = value_arg;
 }
 
 
@@ -268,8 +285,9 @@ void MapOptions::set_android_texture_mode(bool value_arg) {
 
 EncodableList MapOptions::ToEncodableList() const {
   EncodableList list;
-  list.reserve(12);
+  list.reserve(13);
   list.push_back(EncodableValue(style_));
+  list.push_back(api_key_ ? EncodableValue(*api_key_) : EncodableValue());
   list.push_back(EncodableValue(zoom_));
   list.push_back(EncodableValue(pitch_));
   list.push_back(EncodableValue(bearing_));
@@ -287,20 +305,24 @@ EncodableList MapOptions::ToEncodableList() const {
 MapOptions MapOptions::FromEncodableList(const EncodableList& list) {
   MapOptions decoded(
     std::get<std::string>(list[0]),
-    std::get<double>(list[1]),
     std::get<double>(list[2]),
     std::get<double>(list[3]),
-    std::get<double>(list[6]),
+    std::get<double>(list[4]),
     std::get<double>(list[7]),
     std::get<double>(list[8]),
     std::get<double>(list[9]),
-    std::any_cast<const MapGestures&>(std::get<CustomEncodableValue>(list[10])),
-    std::get<bool>(list[11]));
-  auto& encodable_center = list[4];
+    std::get<double>(list[10]),
+    std::any_cast<const MapGestures&>(std::get<CustomEncodableValue>(list[11])),
+    std::get<bool>(list[12]));
+  auto& encodable_api_key = list[1];
+  if (!encodable_api_key.IsNull()) {
+    decoded.set_api_key(std::get<std::string>(encodable_api_key));
+  }
+  auto& encodable_center = list[5];
   if (!encodable_center.IsNull()) {
     decoded.set_center(std::any_cast<const LngLat&>(std::get<CustomEncodableValue>(encodable_center)));
   }
-  auto& encodable_max_bounds = list[5];
+  auto& encodable_max_bounds = list[6];
   if (!encodable_max_bounds.IsNull()) {
     decoded.set_max_bounds(std::any_cast<const LngLatBounds&>(std::get<CustomEncodableValue>(encodable_max_bounds)));
   }

@@ -108,6 +108,7 @@ G_DECLARE_FINAL_TYPE(MapmetricsMapOptions, mapmetrics_map_options, MAPMETRICS, M
 /**
  * mapmetrics_map_options_new:
  * style: field in this object.
+ * api_key: field in this object.
  * zoom: field in this object.
  * pitch: field in this object.
  * bearing: field in this object.
@@ -124,7 +125,7 @@ G_DECLARE_FINAL_TYPE(MapmetricsMapOptions, mapmetrics_map_options, MAPMETRICS, M
  *
  * Returns: a new #MapmetricsMapOptions
  */
-MapmetricsMapOptions* mapmetrics_map_options_new(const gchar* style, double zoom, double pitch, double bearing, MapmetricsLngLat* center, MapmetricsLngLatBounds* max_bounds, double min_zoom, double max_zoom, double min_pitch, double max_pitch, MapmetricsMapGestures* gestures, gboolean android_texture_mode);
+MapmetricsMapOptions* mapmetrics_map_options_new(const gchar* style, const gchar* api_key, double zoom, double pitch, double bearing, MapmetricsLngLat* center, MapmetricsLngLatBounds* max_bounds, double min_zoom, double max_zoom, double min_pitch, double max_pitch, MapmetricsMapGestures* gestures, gboolean android_texture_mode);
 
 /**
  * mapmetrics_map_options_get_style
@@ -135,6 +136,18 @@ MapmetricsMapOptions* mapmetrics_map_options_new(const gchar* style, double zoom
  * Returns: the field value.
  */
 const gchar* mapmetrics_map_options_get_style(MapmetricsMapOptions* object);
+
+/**
+ * mapmetrics_map_options_get_api_key
+ * @object: a #MapmetricsMapOptions.
+ *
+ * The MapMetrics maps-scoped API key. Passed to the native SDK so that the
+ * v2 map session can be established. `null` keeps the legacy behaviour
+ * (auth via the JWT embedded in the style URL).
+ *
+ * Returns: the field value.
+ */
+const gchar* mapmetrics_map_options_get_api_key(MapmetricsMapOptions* object);
 
 /**
  * mapmetrics_map_options_get_zoom

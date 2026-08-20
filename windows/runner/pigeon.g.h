@@ -146,6 +146,7 @@ class MapOptions {
   // Constructs an object setting all fields.
   explicit MapOptions(
     const std::string& style,
+    const std::string* api_key,
     double zoom,
     double pitch,
     double bearing,
@@ -166,6 +167,13 @@ class MapOptions {
   // The URL of the used map style.
   const std::string& style() const;
   void set_style(std::string_view value_arg);
+
+  // The MapMetrics maps-scoped API key. Passed to the native SDK so that the
+  // v2 map session can be established. `null` keeps the legacy behaviour
+  // (auth via the JWT embedded in the style URL).
+  const std::string* api_key() const;
+  void set_api_key(const std::string_view* value_arg);
+  void set_api_key(std::string_view value_arg);
 
   // The initial zoom level of the map.
   double zoom() const;
@@ -223,6 +231,7 @@ class MapOptions {
   friend class OfflineManagerHostApi;
   friend class PigeonInternalCodecSerializer;
   std::string style_;
+  std::optional<std::string> api_key_;
   double zoom_;
   double pitch_;
   double bearing_;

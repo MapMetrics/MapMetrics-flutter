@@ -55,6 +55,7 @@ abstract class MapLibreMapStateNative extends MapLibreMapState
       tilt: options.gestures.pitch,
     ),
     androidTextureMode: options.androidTextureMode,
+    apiKey: options.apiKey,
   );
 
   @override

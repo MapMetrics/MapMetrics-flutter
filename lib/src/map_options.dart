@@ -24,6 +24,7 @@ class MapOptions {
     this.gestures = const MapGestures.all(),
     this.androidTextureMode = true,
     this.androidMode = AndroidPlatformViewMode.tlhc_vd,
+    this.apiKey,
   }) : initPitch = pitch ?? initPitch;
 
   /// Find the [MapOptions] of the closest [MapLibreMap] in the widget tree.
@@ -82,6 +83,16 @@ class MapOptions {
   ///
   /// https://docs.flutter.dev/platform-integration/android/platform-views
   final AndroidPlatformViewMode androidMode;
+
+  /// The MapMetrics maps-scoped API key.
+  ///
+  /// Required on Android for the v2 map session to be established. Without it
+  /// the native SDK caches a null key, the session POST sends an empty token
+  /// and every tile silently falls back to v1 billing.
+  ///
+  /// Unused on other platforms, where auth still comes from the JWT embedded
+  /// in the style URL.
+  final String? apiKey;
 
   /// Toggle the texture mode on Android.
   ///

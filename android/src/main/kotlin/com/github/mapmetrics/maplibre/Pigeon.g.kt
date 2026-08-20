@@ -133,6 +133,12 @@ data class LngLat (
 data class MapOptions (
   /** The URL of the used map style. */
   val style: String,
+  /**
+   * The MapMetrics maps-scoped API key. Passed to the native SDK so that the
+   * v2 map session can be established. `null` keeps the legacy behaviour
+   * (auth via the JWT embedded in the style URL).
+   */
+  val apiKey: String? = null,
   /** The initial zoom level of the map. */
   val zoom: Double,
   /** The initial pitch / tilt of the map. */
@@ -160,23 +166,25 @@ data class MapOptions (
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): MapOptions {
       val style = pigeonVar_list[0] as String
-      val zoom = pigeonVar_list[1] as Double
-      val pitch = pigeonVar_list[2] as Double
-      val bearing = pigeonVar_list[3] as Double
-      val center = pigeonVar_list[4] as LngLat?
-      val maxBounds = pigeonVar_list[5] as LngLatBounds?
-      val minZoom = pigeonVar_list[6] as Double
-      val maxZoom = pigeonVar_list[7] as Double
-      val minPitch = pigeonVar_list[8] as Double
-      val maxPitch = pigeonVar_list[9] as Double
-      val gestures = pigeonVar_list[10] as MapGestures
-      val androidTextureMode = pigeonVar_list[11] as Boolean
-      return MapOptions(style, zoom, pitch, bearing, center, maxBounds, minZoom, maxZoom, minPitch, maxPitch, gestures, androidTextureMode)
+      val apiKey = pigeonVar_list[1] as String?
+      val zoom = pigeonVar_list[2] as Double
+      val pitch = pigeonVar_list[3] as Double
+      val bearing = pigeonVar_list[4] as Double
+      val center = pigeonVar_list[5] as LngLat?
+      val maxBounds = pigeonVar_list[6] as LngLatBounds?
+      val minZoom = pigeonVar_list[7] as Double
+      val maxZoom = pigeonVar_list[8] as Double
+      val minPitch = pigeonVar_list[9] as Double
+      val maxPitch = pigeonVar_list[10] as Double
+      val gestures = pigeonVar_list[11] as MapGestures
+      val androidTextureMode = pigeonVar_list[12] as Boolean
+      return MapOptions(style, apiKey, zoom, pitch, bearing, center, maxBounds, minZoom, maxZoom, minPitch, maxPitch, gestures, androidTextureMode)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
       style,
+      apiKey,
       zoom,
       pitch,
       bearing,
