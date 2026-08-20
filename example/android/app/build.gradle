@@ -35,8 +35,10 @@ android {
 
     defaultConfig {
         applicationId = "com.github.mapmetrics.maplibre_example"
-        // minSdk 21 required by maplibre
-        minSdkVersion = flutter.minSdkVersion // flutter.minSdkVersion
+        // Pinned, not flutter.minSdkVersion: mapmetrics-native-sdk 2.0.0
+        // defaults to Vulkan, which needs API 24. Inheriting Flutter's floor
+        // silently breaks the manifest merge whenever it sits below that.
+        minSdkVersion = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName

@@ -331,7 +331,7 @@ class POIService {
 ```gradle
 android {
     defaultConfig {
-        minSdkVersion 21  // MapLibre requires API 21+
+        minSdkVersion 24  // Vulkan renderer requires API 24+
     }
 }
 ```

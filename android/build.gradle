@@ -66,7 +66,9 @@ android {
     }
 
     defaultConfig {
-        minSdk = 21
+        // mapmetrics-native-sdk 2.0.0 defaults to the Vulkan renderer, which
+        // needs Android 7.0. Anything lower fails the manifest merge.
+        minSdk = 24
     }
 
     dependencies {
