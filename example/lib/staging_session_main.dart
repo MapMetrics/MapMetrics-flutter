@@ -25,15 +25,13 @@
 // visible symptom at all -- which is exactly why the meter, not the screen, is
 // the oracle here.
 //
-// ROOT CAUSE NOT ESTABLISHED. The suspect is ordering: the key is applied in
-// MapLibreView's getOptions callback, milliseconds before the first request.
-// The MM_DELAY_MS probe below CANNOT test that -- delaying the map widget also
-// delays the getOptions callback that sets the key, so both move together and
-// the race window never changes. Do not read its result as evidence.
-//
-// Testing it properly needs the key set from Dart BEFORE any map view exists,
-// for which the plugin exposes no API today. That, or having MMMapSession hold
-// gateway requests until the session resolves, is the next step.
+// ROOT CAUSE, now established and FIXED. Assigning styleURL is what starts
+// network traffic, and it happened microseconds after MLNSettings.apiKey was
+// set -- so the opening style-and-tile wave left before MMMapSession's async
+// create could land, and every request went out on the style's `?token=` only.
+// MapLibreView now holds styleURL back until a credential exists (bounded, and
+// failing open); see -setStyleWhenSessionReady. After the fix, same app and
+// same seven tiles, meter delta 1 instead of 8.
 //
 // A throwaway entrypoint that exists to answer two questions about iOS Flutter:
 //
@@ -162,29 +160,15 @@ class _StagingSessionApp extends StatelessWidget {
     }
     return MaterialApp(
       home: Scaffold(
-        // RACE PROBE: hold the map back so the session create can finish first.
-        body: _delayed(MapLibreMap(
+        body: MapLibreMap(
           options: MapOptions(
             apiKey: _apiKey,
             initStyle: styleUri,
             initCenter: Position(_lng, _lat),
             initZoom: 12,
           ),
-        )),
+        ),
       ),
-    );
-  }
-
-  /// Renders `child` only after MM_DELAY_MS, so the eager session create has
-  /// time to land before the first style/tile request goes out.
-  Widget _delayed(Widget child) {
-    const ms = int.fromEnvironment('MM_DELAY_MS', defaultValue: 0);
-    if (ms == 0) return child;
-    return FutureBuilder<void>(
-      future: Future<void>.delayed(const Duration(milliseconds: ms)),
-      builder: (c, snap) => snap.connectionState == ConnectionState.done
-          ? child
-          : const Center(child: Text('waiting for session...')),
     );
   }
 }

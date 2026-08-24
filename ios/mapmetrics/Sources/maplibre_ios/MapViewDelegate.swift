@@ -15,6 +15,76 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     private var _isMapInitialized = false
     private var _pendingOperations: [(MLNMapView) -> Void] = []
 
+    /// Assigns `styleURL` once a v2 map session credential exists, or after a
+    /// short timeout if one never arrives.
+    ///
+    /// WHY THIS DEFERS AT ALL. Assigning styleURL is what makes the map start
+    /// fetching. The SDK signs an outgoing request only if it is holding a
+    /// credential at that instant; MMMapSession's create is an async POST
+    /// kicked off when MLNSettings.apiKey is set, a few milliseconds earlier in
+    /// this same callback. The opening style-and-tile wave therefore leaves
+    /// before the credential lands, and every one of those requests goes out
+    /// carrying only the style's `?token=`.
+    ///
+    /// That is not a visible failure, which is what makes it dangerous. The
+    /// universal tile endpoint accepts `?token=` as valid v1 auth and returns
+    /// 200, so the map renders correctly and bills ONE CHARGE PER TILE instead
+    /// of one per session. Measured on staging: identical app, identical seven
+    /// tiles, meter delta 8 without this wait and 1 with it.
+    ///
+    /// The SDK's own eager-create covers the case where the STYLE is served by
+    /// the gateway -- that request precedes the tiles and buys the window. It
+    /// cannot help when the style is a local file, a bundled asset, or a CDN,
+    /// because then the gateway's first sight of this client IS the opening
+    /// tile wave. Flutter apps routinely do exactly that.
+    ///
+    /// FAILS OPEN, DELIBERATELY. If the credential never arrives -- offline,
+    /// gateway down, no apiKey passed at all -- the style loads anyway once the
+    /// timeout elapses. A map that bills on the v1 path is a bad outcome; a
+    /// permanently blank view is a worse one, and blocking forever would make
+    /// the map's appearance depend on a billing subsystem being reachable.
+    private func setStyleWhenSessionReady(_ url: URL?) {
+        guard let url else { return }
+
+        // Nothing to wait for when the host never passed a key: no session can
+        // be created, so waiting would only add latency to a v1 load.
+        guard let key = MLNSettings.apiKey, !key.isEmpty else {
+            self._mapView.styleURL = url
+            return
+        }
+
+        // Already holding a credential -- the common case for the SECOND and
+        // subsequent maps in an app, and for any app that sets MLNApiKey in
+        // Info.plist. Assign synchronously so nothing regresses for them.
+        if MMMapSession.shared.secondsUntilExpiry > 0 {
+            self._mapView.styleURL = url
+            return
+        }
+
+        // Poll rather than observe: MMMapSession publishes no readiness signal,
+        // and a KVO-able one would be a change to a published SDK. The wait is
+        // bounded and the interval short, so the cost is a handful of property
+        // reads on a background queue.
+        let deadline = Date().addingTimeInterval(Self.sessionWaitTimeout)
+        styleOperationQueue.async { [weak self] in
+            while Date() < deadline {
+                if MMMapSession.shared.secondsUntilExpiry > 0 { break }
+                Thread.sleep(forTimeInterval: Self.sessionPollInterval)
+            }
+            DispatchQueue.main.async {
+                guard let self, self._mapView != nil else { return }
+                self._mapView.styleURL = url
+            }
+        }
+    }
+
+    /// How long to wait for the v2 session credential before loading the style
+    /// anyway. Chosen to cover a normal session POST (~80ms against staging)
+    /// with a wide margin, while staying short enough that a user on a bad
+    /// connection is not left looking at an empty view.
+    private static let sessionWaitTimeout: TimeInterval = 2.0
+    private static let sessionPollInterval: TimeInterval = 0.02
+
     // THREAD SAFETY: Serial queue for all style operations to prevent race conditions
     private let styleOperationQueue = DispatchQueue(label: "com.mapmetrics.styleOperations", qos: .userInitiated)
     private var _isProcessingStyleOperation = false
@@ -105,7 +175,10 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
                 self._mapView.minimumPitch = mapOptions.minPitch
                 self._mapView.maximumPitch = mapOptions.maxPitch
 
-                self._mapView.styleURL = URL(string: mapOptions.style)
+                // Assigning styleURL is what starts network traffic, so it is
+                // held back until the v2 session credential is in hand. See
+                // -setStyleWhenSessionReady.
+                self.setStyleWhenSessionReady(URL(string: mapOptions.style))
 
                 self._mapView.allowsRotating = mapOptions.gestures.rotate
                 self._mapView.allowsScrolling = mapOptions.gestures.pan
