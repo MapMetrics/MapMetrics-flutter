@@ -30,7 +30,12 @@ Helper package for maplibre that provides iOS FFI bindings
   # at maplibre-gl-native-distribution: we publish no Swift Package Manager
   # artefact yet, so the SPM path silently gets upstream MapLibre instead.
   # See the comment there.
-  s.dependency 'MapMetrics-SDK', '~> 2.0'
+  # 2.0.1 IS A FLOOR, NOT A PREFERENCE. 2.0.0 sends the opening style-and-tile
+  # wave before its session create lands, so those requests carry only the
+  # style's `?token=` and bill once PER TILE -- 8 charges for one map load,
+  # measured against staging. Nothing is visibly wrong when that happens: the
+  # map renders correctly and the cost is silent. Do not relax this to '~> 2.0'.
+  s.dependency 'MapMetrics-SDK', '~> 2.0.1'
   s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice.
