@@ -16,8 +16,21 @@ Helper package for maplibre that provides iOS FFI bindings
   s.source_files = 'mapmetrics/Sources/maplibre_ios/**/*'
   s.public_header_files = 'mapmetrics/Sources/maplibre_ios/**/*.h'
   s.dependency 'Flutter'
-  # Needs to be the same version as in maplibre_ios/Package.swift
-  s.dependency 'MapLibre', '~> 6.11'
+  # MapMetrics-SDK is our own build of the map core: MapLibre 6.28.0 plus v2
+  # HMAC map sessions, gateway pinning, MapMetrics branding, and Mapbox
+  # telemetry removed. Upstream `MapLibre` has none of that, so this must not
+  # be swapped back without also giving up billing on iOS.
+  #
+  # It still vendors a framework NAMED MapLibre.xcframework, exporting module
+  # `MapLibre` -- which is why every `import MapLibre` in Sources/ still
+  # resolves and this swap needed no source changes. If that framework is ever
+  # renamed, those imports change with it.
+  #
+  # NOT the same dependency as maplibre_ios/Package.swift, which still points
+  # at maplibre-gl-native-distribution: we publish no Swift Package Manager
+  # artefact yet, so the SPM path silently gets upstream MapLibre instead.
+  # See the comment there.
+  s.dependency 'MapMetrics-SDK', '~> 2.0'
   s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice.
