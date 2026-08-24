@@ -51,5 +51,12 @@
 	<string>This app requires access to your location..</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app requires access to your location.</string>
+	<!-- Pins the gateway origin for MMMapSession. Without this the SDK has no
+	     origin, createIfConfigured is a no-op, and no session is ever opened no
+	     matter what apiKey is passed. Pointed at STAGING so example runs are
+	     metered against the staging account, never a customer's.
+	     Production apps set this to https://gateway.mapmetrics-atlas.net . -->
+	<key>MLNTileServerBaseURL</key>
+	<string>https://gateway-mapatlas-staging.jim9710.workers.dev</string>
 </dict>
 </plist>

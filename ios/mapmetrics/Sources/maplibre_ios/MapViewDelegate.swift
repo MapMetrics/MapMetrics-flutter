@@ -42,6 +42,31 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             switch result {
             case let .success(mapOptions):
                 self._mapOptions = mapOptions
+
+                // Hand the API key to the SDK BEFORE the first MLNMapView exists.
+                //
+                // This is what turns on v2 billing. MMMapSession opens a session
+                // only once it holds both halves of its config: the gateway origin
+                // (pinned from Info.plist's MLNTileServerBaseURL) and this key,
+                // which it watches by KVO on MLNSettings.apiKey. Without this line
+                // the key crosses the Pigeon bridge and is read by nobody, no
+                // session is ever created, and every request falls through to the
+                // v1 path -- which bills once per request on a cold load instead
+                // of once per session.
+                //
+                // ORDER MATTERS. The KVO fires synchronously, so setting the key
+                // here means the session is requested before any map view can ask
+                // for a style or a tile. Setting it after MLNMapView(frame:) would
+                // race the opening style request, and a style request that beats
+                // the session goes out unsigned and bills on the v1 path anyway.
+                //
+                // Guarded on non-empty because MLNSettings.apiKey is a GLOBAL, and
+                // every MapLibreView created in this app writes it. A second map
+                // built without a key must not blank out the key a first map set.
+                if let apiKey = mapOptions.apiKey, !apiKey.isEmpty {
+                    MLNSettings.apiKey = apiKey
+                }
+
                 // init map view
                 self._mapView = MLNMapView(frame: self._view.bounds)
                 

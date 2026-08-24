@@ -86,12 +86,16 @@ class MapOptions {
 
   /// The MapMetrics maps-scoped API key.
   ///
-  /// Required on Android for the v2 map session to be established. Without it
-  /// the native SDK caches a null key, the session POST sends an empty token
-  /// and every tile silently falls back to v1 billing.
+  /// Required on Android AND iOS for the v2 map session to be established.
+  /// Without it the native SDK holds no key, no session is created, and every
+  /// tile silently falls back to v1 billing -- which charges per request on a
+  /// cold load rather than once per session.
   ///
-  /// Unused on other platforms, where auth still comes from the JWT embedded
-  /// in the style URL.
+  /// On iOS this is applied to `MLNSettings.apiKey`, which the SDK watches. A
+  /// session also needs the gateway origin, pinned via the `MLNTileServerBaseURL`
+  /// key in the app's Info.plist; the key alone is not enough.
+  ///
+  /// Unused on web, where auth comes from the JWT embedded in the style URL.
   final String? apiKey;
 
   /// Toggle the texture mode on Android.
