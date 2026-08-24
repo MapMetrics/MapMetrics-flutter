@@ -1,30 +1,39 @@
 // FINDINGS (measured on staging, iPhone 17 Pro simulator, 2026-08-24)
 //
-// Tile signing through Flutter iOS WORKS -- but only when the API key is
-// present at app LAUNCH, via Info.plist's MLNApiKey:
+// Measured on the UNIVERSAL (v1-shaped) tile endpoint, which is what every
+// shipped style and SDK actually uses. Same app, same 7 tiles, same rendered
+// map -- only the source of the API key differs:
 //
-//   key in Info.plist MLNApiKey : 8x200, 0x401, 7 tiles cached, meter delta 1
-//   key via MapOptions.apiKey   : 1x200 (the session create), 18x401,
-//                                 0 tiles cached, meter delta 1
+//   key via MapOptions.apiKey     meter delta 8    7 tiles cached
+//   key via Info.plist MLNApiKey  meter delta 1    7 tiles cached
 //
-// The 200s are genuinely v2-signed, not key-in-URL auth: the gateway answers
-// 401 to /v2/tiles for `?key=<apiKey>` and `?token=<apiKey>` alike, so only a
-// valid session signature can produce a 200. Meter delta stays 1 while 7 tiles
-// are served, which is the v2 property -- tiles ride the session instead of
-// billing per request.
+// Both render. One costs 8x. With the key at launch the SDK merges its session
+// signature onto the tile URL and the tiles are free, because the session was
+// already billed at create. Via MapOptions the tiles go out carrying only the
+// style's `?token=`, which is valid v1 auth -- so they succeed and bill one
+// charge EACH, on top of the session that was also billed.
 //
-// So MapOptions.apiKey opens and bills a session, and then every request goes
-// out unsigned and 401s. The map is blank. This is very likely the long-
-// standing "Flutter renders blank" bug.
+// Confirmed against the endpoint directly:
+//   ?token=<JWT>            -> 200, meter +1   (v1: per request)
+//   ?token=<JWT> &sig=...   -> 200, meter  0   (v2: rides the session)
+//   no credential           -> 401, meter  0
 //
-// ROOT CAUSE NOT ESTABLISHED. The obvious suspect is ordering -- the key is
-// applied inside MapLibreView's getOptions callback, milliseconds before the
-// first style/tile request -- but that is NOT yet proven. The MM_DELAY_MS
-// probe below was written to test it and CANNOT: delaying the map widget also
+// AN EARLIER VERSION OF THIS FILE TESTED /v2/tiles AND CONCLUDED THE MAP WENT
+// BLANK. That was an artefact of the wrong path. /v2/tiles 401s without a
+// signature, so an unsigned client looks broken there; on the real endpoint an
+// unsigned client looks perfectly healthy and just costs more. The bug has no
+// visible symptom at all -- which is exactly why the meter, not the screen, is
+// the oracle here.
+//
+// ROOT CAUSE NOT ESTABLISHED. The suspect is ordering: the key is applied in
+// MapLibreView's getOptions callback, milliseconds before the first request.
+// The MM_DELAY_MS probe below CANNOT test that -- delaying the map widget also
 // delays the getOptions callback that sets the key, so both move together and
-// the race window is unchanged. A valid test needs the key set from Dart
-// BEFORE any map view is constructed, which the plugin currently offers no
-// API for. Do not read the MM_DELAY_MS=4000 result as evidence either way.
+// the race window never changes. Do not read its result as evidence.
+//
+// Testing it properly needs the key set from Dart BEFORE any map view exists,
+// for which the plugin exposes no API today. That, or having MMMapSession hold
+// gateway requests until the session resolves, is the next step.
 //
 // A throwaway entrypoint that exists to answer two questions about iOS Flutter:
 //
@@ -69,6 +78,17 @@ const _gateway = String.fromEnvironment(
   defaultValue: 'https://gateway-mapatlas-staging.jim9710.workers.dev',
 );
 
+/// The UNIVERSAL (v1-shaped) tile endpoint -- the path every shipped style and
+/// SDK actually uses. It accepts either credential format on the same URL:
+/// `?token=<JWT>` bills v1 (one charge per request), and a merged `&sig=...`
+/// bills v2 (zero, because the session was already charged at create).
+///
+/// Testing against /v2/tiles instead was misleading: that path 401s without a
+/// signature, so an unsigned client looks BROKEN. Here an unsigned client looks
+/// FINE and simply costs more -- which is the real-world failure mode, and the
+/// reason the meter is the only honest oracle.
+const _planet = String.fromEnvironment('MM_PLANET', defaultValue: 'planet20251013');
+
 /// Centre on tile z12/2094/1362 -- the same tile the native SDK's staging
 /// tests use, so a 404 here means the tile is missing rather than the
 /// signature being wrong.
@@ -84,7 +104,7 @@ String _styleJson() => jsonEncode({
       'sources': {
         'staging': {
           'type': 'vector',
-          'tiles': ['$_gateway/v2/tiles/{z}/{x}/{y}.mvt'],
+          'tiles': ['$_gateway/$_planet/{z}/{x}/{y}.mvt?token=$_apiKey'],
           'minzoom': 0,
           'maxzoom': 14,
         },
