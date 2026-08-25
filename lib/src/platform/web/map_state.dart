@@ -237,6 +237,20 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
       toScreenLocationsSync(lngLats);
 
   @override
+  Future<void> setStyleUri(String styleUri) async {
+    // This override was missing entirely, which made MapLibreMapState a
+    // non-abstract class that did not implement all of MapController: an
+    // analyzer ERROR (non_abstract_class_inherits_abstract_member), so the
+    // web platform did not compile at all. Android and iOS have had it since
+    // the method was added to the interface.
+    //
+    // maplibre-gl-js reloads the style asynchronously and reports completion
+    // through the map's own events, so there is nothing to await here -- the
+    // same shape as the other web camera/style calls.
+    _map.setStyle(styleUri);
+  }
+
+  @override
   Future<void> moveCamera({
     Position? center,
     double? zoom,

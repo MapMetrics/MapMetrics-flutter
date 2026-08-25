@@ -78,6 +78,11 @@ extension type JsMap._(Camera _) implements Camera {
   /// Update the max zoom level.
   external void setMaxZoom(double? maxZoom);
 
+  /// Replace the map's style with the one at [style].
+  ///
+  /// https://maplibre.org/maplibre-gl-js/docs/API/classes/Map/#setstyle
+  external void setStyle(String style);
+
   /// Update the min camera pitch / tilt.
   external void setMinPitch(double? minPitch);
 
