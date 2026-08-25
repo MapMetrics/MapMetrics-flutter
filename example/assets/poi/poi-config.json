@@ -1,5 +1,5 @@
 {
-  "tileServerUrl": "https://poi-tile-server-development.jim9710.workers.dev/tiles/{z}/{x}/{y}.mvt",
+  "tileServerUrl": "",
   "fallbackSprite": "tourism-m",
   "iconConfig": {
     "sizeStops": [

@@ -263,9 +263,42 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
     }
   }
 
+  /// POI tile server, supplied at build time. NOT COMMITTED, and empty by
+  /// default.
+  ///
+  /// This used to be a hardcoded private hostname --
+  /// poi-tile-server-development.jim9710.workers.dev -- shipped in a public
+  /// example. It is a DEVELOPMENT worker: not ours to hand to customers, not
+  /// guaranteed to exist, and it currently answers 204 with an empty body, so
+  /// the POI layers below have been rendering nothing anyway.
+  ///
+  /// It cannot simply be repointed at the demo endpoint. The demo style caps
+  /// at zoom 12 while this source starts at 16; the demo tiles use the
+  /// Protomaps schema (`kind`) while these layers filter on raw OSM tags such
+  /// as `man_made`; and the icons come from a sprite of ~268 mappings that the
+  /// demo style's sprite does not contain. Repointing would compile cleanly
+  /// and draw nothing, which is worse than not drawing at all.
+  ///
+  /// Run with your own POI tile server:
+  ///
+  ///   flutter run -t lib/main.dart \
+  ///     --dart-define=POI_TILE_SERVER=https://your-host/tiles/{z}/{x}/{y}.mvt
+  ///
+  /// Unset, the page shows the demo basemap and skips the POI overlay.
+  static const _poiTileServer = String.fromEnvironment('POI_TILE_SERVER');
+
   Future<void> _setupPoiLayer() async {
     try {
       print('Setting up POI layer...');
+
+      if (_poiTileServer.isEmpty) {
+        print(
+          'POI_TILE_SERVER is not set - showing the demo basemap without the '
+          'POI overlay. Pass --dart-define=POI_TILE_SERVER=<tile url> to '
+          'enable it.',
+        );
+        return;
+      }
 
       // Load actual icons from the sprite sheet using SDF coordinates
       print('Loading POI icons from sprite sheet...');
@@ -278,11 +311,9 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       // The layer can still render at higher zooms (overzooming)
 
       await _styleController!.addSource(
-        const VectorSource(
+        VectorSource(
           id: 'poi-source',
-          tiles: [
-            'https://poi-tile-server-development.jim9710.workers.dev/tiles/{z}/{x}/{y}.mvt',
-          ],
+          tiles: [_poiTileServer],
           minZoom: 16,
           maxZoom: 16, // Tiles available up to zoom 16, will overzoom beyond
         ),
