@@ -21,10 +21,12 @@ buildscript {
 
 allprojects {
     repositories {
-        // TODO(dev-only): TEMPORARY — resolves the locally-built mapmetrics-native-sdk
-        // from ~/.m2. MUST be removed before any release; it makes builds
-        // machine-dependent and is not reproducible on CI.
-        mavenLocal()
+        // mavenLocal() REMOVED. It was here because the plugin depended on
+        // mapmetrics-native-sdk 2.0.0, which was never published to Maven
+        // Central -- so the build only ever resolved on a machine that had run
+        // publishToMavenLocal. Anyone else got an unresolved-dependency failure.
+        // 2.0.1 is published, so the dependency resolves from mavenCentral like
+        // any other and the build is reproducible on CI again.
         google()
         mavenCentral()
     }
@@ -66,7 +68,7 @@ android {
     }
 
     defaultConfig {
-        // mapmetrics-native-sdk 2.0.0 defaults to the Vulkan renderer, which
+        // mapmetrics-native-sdk 2.x defaults to the Vulkan renderer, which
         // needs Android 7.0. Anything lower fails the manifest merge.
         minSdk = 24
     }
@@ -80,7 +82,16 @@ android {
 // JNIGEN        implementation 'org.maplibre.gl:android-sdk-turf:6.0.1'
 // JNIGEN        implementation 'com.jakewharton.timber:timber:5.0.1'
 // JNIGEN        implementation 'androidx.annotation:annotation:1.9.0'
-       implementation 'org.mapmetrics.android-sdk:mapmetrics-native-sdk:2.0.0' // JNIGEN
+       // 2.0.1 IS A FLOOR, NOT A PREFERENCE. Up to 2.0.0 the SDK sent the
+       // opening style-and-tile wave before its async session create landed, so
+       // those requests carried only the style's `?token=` and billed once PER
+       // TILE. Nothing looks wrong when that happens -- the universal tile
+       // endpoint accepts the token as valid v1 auth and returns 200, so the map
+       // renders correctly and the cost is silent. Do not drop below 2.0.1.
+       //
+       // 2.0.0 was also never published to Maven Central (1.0.0-1.0.3, then
+       // 2.0.1), which is why this used to need mavenLocal().
+       implementation 'org.mapmetrics.android-sdk:mapmetrics-native-sdk:2.0.2' // JNIGEN
 //        implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
 // JNIGEN        implementation 'com.squareup.okhttp3:okhttp:4.12.0'
         testImplementation("org.jetbrains.kotlin:kotlin-test")

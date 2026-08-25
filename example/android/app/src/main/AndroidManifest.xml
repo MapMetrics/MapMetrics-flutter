@@ -3,6 +3,24 @@
         android:label="MapMetrics"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Pins the gateway origin for MMMapSession, which is what lets the
+             SDK open a v2 map session and sign tiles with it. Without an origin
+             createIfConfigured is a no-op and every tile falls back to v1
+             billing: one charge PER TILE on a cold load rather than one per
+             session, with no visible symptom.
+
+             PRODUCTION is pinned here because this example is what a customer
+             copies. gateway.mapmetrics-atlas.net is also on the SDK's built-in
+             allow-list, so an app talking to it can omit this entirely and the
+             origin is learned from the first request. It is spelled out because
+             an example should show the explicit form.
+
+             To run against staging, replace the value with
+             https://gateway-mapatlas-staging.jim9710.workers.dev . Staging is
+             NOT on the allow-list, so pinning is the only way to reach it. -->
+        <meta-data
+            android:name="org.maplibre.android.MapSessionOrigin"
+            android:value="https://gateway.mapmetrics-atlas.net" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
