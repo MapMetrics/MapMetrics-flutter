@@ -32,8 +32,24 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
         options: MapOptions(
           initCenter: Position(4.89, 52.37), // Amsterdam
           initZoom: 14,
-          initStyle: 'https://gateway.mapmetrics-atlas.net/styles/?fileName=dd508822-9502-4ab5-bfe2-5e6ed5809c2d/portal.json&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJkZDUwODgyMi05NTAyLTRhYjUtYmZlMi01ZTZlZDU4MDljMmQiLCJzY29wZSI6WyJtYXBzIiwiYXV0b2NvbXBsZXRlIiwiZ2VvY29kZSIsImRpcmVjdGlvbnMiLCJtYXBfbWF0Y2hpbmciLCJvcHRpbWl6ZSIsIm1hdHJpeCIsImlzb2Nocm9uZSJdLCJpYXQiOjE3NjExNDQ1OTl9.MbfXeBtRpzzaLgcdTE0xzMa-OEemCWNWprEbs1RO2rI',
-              //'https://gateway.mapmetrics-atlas.net/styles/?fileName=7c3625ac-1f52-479e-8e6f-12299aae7e87/moon.json&token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI3YzM2MjVhYy0xZjUyLTQ3OWUtOGU2Zi0xMjI5OWFhZTdlODciLCJzY29wZSI6WyJtYXBzIl0sImlhdCI6MTc2MDM0MTcwOX0.SKiNhdhqkq0FwzM4tn2Txmajw2YAJth6MQfYkAYPp_E',
+          // The unauthenticated demo style. NO CREDENTIAL -- that is the point.
+          //
+          // This line used to carry a production API key inline, and the one
+          // before it a second. Both were non-expiring, and the first granted
+          // the entire routing surface (directions, map_matching, optimize,
+          // matrix, isochrone) to anyone who read the file. This repository is
+          // public, so "anyone" was literal.
+          //
+          // An example has to load a map, and until the demo endpoint existed,
+          // loading a map needed a key -- so a key got pasted in, twice. The
+          // demo style removes the reason: it is rate-limited, capped at zoom
+          // 12, watermarked, and there is nothing here to leak, rotate, or
+          // revoke.
+          //
+          // If you are copying this file for real work, get your own key at
+          // https://mapatlas.eu and pass it via --dart-define rather than
+          // typing it into source.
+          initStyle: 'https://gateway.mapmetrics-atlas.net/demo/style.json',
         ),
         onMapCreated: (controller) {
           _mapController = controller;

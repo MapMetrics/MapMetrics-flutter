@@ -68,8 +68,18 @@ android {
     }
 
     defaultConfig {
-        // mapmetrics-native-sdk 2.x defaults to the Vulkan renderer, which
-        // needs Android 7.0. Anything lower fails the manifest merge.
+        // Matches the floor declared by mapmetrics-native-sdk's own AAR.
+        //
+        // This used to say the reason was Vulkan needing Android 7.0. That was
+        // true up to 2.0.2, whose default artefact was the Vulkan build and
+        // additionally declared `uses-feature android.hardware.vulkan.version
+        // required="true"` -- which Google Play uses to HIDE the app from every
+        // device without Vulkan. 2.0.3 changed the default to OpenGL ES and
+        // that uses-feature is gone, so the Play filtering no longer applies.
+        //
+        // 24 stays regardless: minSdk is declared per module in the SDK, not
+        // per renderer flavour, so every artefact still carries a 24 floor and
+        // anything lower fails the manifest merge here.
         minSdk = 24
     }
 
@@ -91,7 +101,14 @@ android {
        //
        // 2.0.0 was also never published to Maven Central (1.0.0-1.0.3, then
        // 2.0.1), which is why this used to need mavenLocal().
-       implementation 'org.mapmetrics.android-sdk:mapmetrics-native-sdk:2.0.2' // JNIGEN
+       //
+       // 2.0.3 additionally switches the DEFAULT artefact from the Vulkan build
+       // to the OpenGL ES one. Vulkan is not broken -- it renders correctly on
+       // real hardware -- but it fails on emulators, which have no Vulkan driver
+       // behind gfxstream, and its manifest carried a required uses-feature that
+       // made Play hide consuming apps from non-Vulkan devices. Apps that want
+       // Vulkan can depend on ...:mapmetrics-native-sdk-vulkan:2.0.3 instead.
+       implementation 'org.mapmetrics.android-sdk:mapmetrics-native-sdk:2.0.3' // JNIGEN
 //        implementation 'org.maplibre.gl:android-plugin-offline-v9:3.0.2'
 // JNIGEN        implementation 'com.squareup.okhttp3:okhttp:4.12.0'
         testImplementation("org.jetbrains.kotlin:kotlin-test")
