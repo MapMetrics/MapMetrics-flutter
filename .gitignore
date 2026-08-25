@@ -125,3 +125,6 @@ coverage/
 
 # Kotlin files
 /example/android/.kotlin/
+
+# Swift Package Manager build products for the iOS plugin package.
+ios/mapmetrics/.build/

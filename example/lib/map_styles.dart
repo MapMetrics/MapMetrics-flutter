@@ -1,6 +1,19 @@
-/// **Use your own key for your project!**
+/// Style URLs used by the example app.
 ///
-/// This key will be rotated occasionally.
+/// The protomaps and maptiler keys below are UPSTREAM's demo keys, inherited
+/// from the MapLibre Flutter plugin this was forked from, and they get rotated
+/// occasionally. Use your own for your project.
+///
+/// NO MAPMETRICS CREDENTIAL BELONGS IN THIS FILE. It previously held a
+/// `token` constant -- a MapMetrics JWT for one account, scoped maps+search,
+/// with NO `exp` claim, so it never expired -- and a `testMap` URL built from
+/// it. Nothing referenced either one, but this file ships inside the published
+/// package, so the credential went out in every release on pub.dev and sits in
+/// git history. It has been removed; the account's token needs revoking
+/// server-side, which is the only thing that actually closes it.
+///
+/// Pass a MapMetrics API key through `MapOptions.apiKey` instead. That is what
+/// opens a v2 map session, and it never has to be committed.
 abstract class MapStyles {
   static const protomapsLight =
       'https://api.protomaps.com/styles/v2/light.json?key=$_protomapsKey';
@@ -11,9 +24,4 @@ abstract class MapStyles {
 
   static const _maptilerKey = 'OPCgnZ51sHETbEQ4wnkd';
   static const _protomapsKey = 'a6f9aebb3965458c';
-
-  static const token =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4MjQ5NGNjNy04YTUzLTQwNGUtODNlOS1hZjA5OWY1MGE0Y2IiLCJzY29wZSI6WyJtYXBzIiwic2VhcmNoIl0sImlhdCI6MTc0NDY5NTgxOH0.3oDQzbcD72gIvtd4lkKi96aMFF3-d-i7UnIdc9iADeA';
-  static const testMap =
-      'https://gateway.mapmetrics.org/styles/?fileName=82494cc7-8a53-404e-83e9-af099f50a4cb/testMap.json&token=$token';
 }

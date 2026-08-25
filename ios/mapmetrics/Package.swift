@@ -3,6 +3,34 @@
 
 import PackageDescription
 
+// NOW RESOLVES MAPMETRICS-SDK, not upstream MapLibre.
+//
+// This used to depend on maplibre/maplibre-gl-native-distribution while the
+// CocoaPods path (../mapmetrics.podspec) depended on MapMetrics-SDK. The two
+// build systems therefore produced DIFFERENT BINARIES from the same source
+// tree: `flutter config --enable-swift-package-manager` silently gave you
+// upstream MapLibre, with no v2 map sessions, MapLibre branding, and Mapbox
+// telemetry present -- and no build error to say so. The only symptom was
+// billing: every tile on the v1 path instead of one session per map load.
+//
+// A separate distribution repo is NOT needed for this. SPM can consume a
+// remote binary directly, and the iOS release already publishes exactly the
+// artefact it wants: MapLibre.dynamic.xcframework.zip, with the .xcframework
+// at the root of the archive.
+//
+// KEEPING THIS IN STEP WITH THE PODSPEC IS MANUAL. The podspec resolves
+// `MapMetrics-SDK ~> 2.0.1` through CocoaPods, so a new patch release reaches
+// it automatically; a binaryTarget is pinned to one URL and one checksum and
+// does not. On every iOS release, update BOTH the url and the checksum here.
+// Get the checksum with:
+//
+//     swift package compute-checksum MapLibre.dynamic.xcframework.zip
+//
+// A stale url/checksum pair fails loudly at resolve time, which is the right
+// failure -- unlike the silent divergence this replaced.
+let mapMetricsSDKVersion = "2.0.1"
+let mapMetricsSDKChecksum = "0d64504ad38b54055a6e2294fbc63e13ea646bcfdb88e377ce04e41a7bb382a8"
+
 let package = Package(
   name: "mapmetrics",
   platforms: [
@@ -11,31 +39,20 @@ let package = Package(
   products: [
     .library(name: "mapmetrics", targets: ["mapmetrics"]),
   ],
-  dependencies: [
-    // WARNING: this NO LONGER matches ../mapmetrics.podspec, and the mismatch
-    // is not cosmetic.
-    //
-    // The CocoaPods path depends on `MapMetrics-SDK` -- our own map core, with
-    // v2 HMAC map sessions, gateway pinning, MapMetrics branding, and Mapbox
-    // telemetry removed. This SPM path still resolves UPSTREAM MapLibre, which
-    // has none of it. An app built with Swift Package Manager therefore gets a
-    // map that renders but never opens a billed session and carries MapLibre
-    // branding -- with no build error to say so.
-    //
-    // It cannot be fixed here. SPM resolves binary targets from a distribution
-    // repo (the way maplibre-gl-native-distribution serves upstream), and we
-    // publish no such repo for MapMetrics-SDK 2.0.0. Closing this gap means
-    // creating one and publishing a Package.swift that vends our xcframework.
-    //
-    // Until then, iOS builds must go through CocoaPods. Do not enable
-    // `flutter config --enable-swift-package-manager` for this plugin.
-    .package(url: "https://github.com/maplibre/maplibre-gl-native-distribution", .upToNextMinor(from: "6.11.0")),
-  ],
   targets: [
+    // The module is still called `MapLibre` because the framework inside the
+    // xcframework is still named MapLibre.framework -- which is why every
+    // `import MapLibre` in Sources/ keeps working. Renaming the framework is a
+    // 3.0.0 change; the pod is already called MapMetrics-SDK.
+    .binaryTarget(
+      name: "MapLibre",
+      url: "https://github.com/MapMetrics/mapmetrics-native-sdk/releases/download/ios-v\(mapMetricsSDKVersion)/MapLibre.dynamic.xcframework.zip",
+      checksum: mapMetricsSDKChecksum
+    ),
     .target(
       name: "mapmetrics",
       dependencies: [
-        .product(name: "MapLibre", package: "maplibre-gl-native-distribution"),
+        .target(name: "MapLibre"),
       ],
       sources: [
         "Sources/maplibre_ios",
