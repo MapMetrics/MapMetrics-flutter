@@ -53,10 +53,28 @@
 	<string>This app requires access to your location.</string>
 	<!-- Pins the gateway origin for MMMapSession. Without this the SDK has no
 	     origin, createIfConfigured is a no-op, and no session is ever opened no
-	     matter what apiKey is passed. Pointed at STAGING so example runs are
-	     metered against the staging account, never a customer's.
-	     Production apps set this to https://gateway.mapmetrics-atlas.net . -->
+	     matter what apiKey is passed.
+
+	     PRODUCTION, matching the Android example's MapSessionOrigin. This used
+	     to point at gateway-mapatlas-staging.jim9710.workers.dev, on the
+	     reasoning that example runs should be metered against the staging
+	     account rather than a customer's. Two things retired that:
+
+	       1. The examples now load the credential-free demo style, so they
+	          pass no apiKey. createIfConfigured needs a cached key, so it is
+	          a no-op and NOTHING IS METERED against any account either way --
+	          which was the entire benefit of pointing at staging.
+	       2. The two platforms disagreed. Android pinned production, iOS
+	          pinned staging, so the same example measured different things
+	          depending on the device you ran it on, and a customer copying
+	          the iOS example got a private staging hostname that will not
+	          resolve for them.
+
+	     Staging is deliberately NOT on the SDK's built-in allow-list, so to
+	     run against it, replace this value -- pinning is the only way to
+	     reach it -- and pass a staging key via --dart-define. See
+	     example/lib/staging_session_main.dart. -->
 	<key>MLNTileServerBaseURL</key>
-	<string>https://gateway-mapatlas-staging.jim9710.workers.dev</string>
+	<string>https://gateway.mapmetrics-atlas.net</string>
 </dict>
 </plist>
