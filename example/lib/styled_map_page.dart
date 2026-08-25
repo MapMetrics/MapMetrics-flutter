@@ -21,7 +21,7 @@ class _StyledMapPageState extends State<StyledMapPage> {
         options: MapOptions(
           initCenter: Position(9.17, 47.68),
           initZoom: 2,
-          initStyle: MapStyles.maptilerStreets,
+          initStyle: MapStyles.demo,
         ),
         mapChildren: [
           const MapScalebar(

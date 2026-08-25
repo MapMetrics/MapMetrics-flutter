@@ -15,6 +15,22 @@
 /// Pass a MapMetrics API key through `MapOptions.apiKey` instead. That is what
 /// opens a v2 map session, and it never has to be committed.
 abstract class MapStyles {
+  /// The MapMetrics demo style. No credential, and none needed.
+  ///
+  /// This is what the example pages use by default, and what
+  /// `MapOptions.initStyle` falls back to. It is rate-limited, capped at zoom
+  /// 12 and watermarked -- deliberately fine for "does my setup work" and
+  /// deliberately useless as a product.
+  ///
+  /// NOT SUITABLE FOR OFFLINE DOWNLOADS. A region download asks for thousands
+  /// of tiles as fast as it can; the per-IP burst limit throttles that, and
+  /// anything above zoom 12 does not exist. See offline_page.dart, which
+  /// stays on a third-party style for exactly this reason.
+  ///
+  /// For real work, get a key at https://mapatlas.eu and pass it via
+  /// `MapOptions.apiKey` with your own style.
+  static const demo = 'https://gateway.mapmetrics-atlas.net/demo/style.json';
+
   static const protomapsLight =
       'https://api.protomaps.com/styles/v2/light.json?key=$_protomapsKey';
   static const protomapsDark =

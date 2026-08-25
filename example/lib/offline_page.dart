@@ -347,6 +347,16 @@ class _OfflineMapPage extends StatelessWidget {
       appBar: AppBar(title: Text('Offline Map "$title"')),
       body: MapMetricsView(
         options: MapOptions(
+          // DELIBERATELY NOT MapStyles.demo, unlike the other example pages.
+          //
+          // This page downloads whole regions -- thousands of tiles as fast as
+          // the device can ask for them, at zoom 10-14. The demo endpoint is
+          // built to refuse exactly that: a per-IP burst limit throttles bulk
+          // requests, and its sources stop at zoom 12, so 13 and 14 do not
+          // exist to download. Pointing this page at the demo would make it
+          // look broken while working precisely as designed.
+          //
+          // Offline is a paid-key feature. Use your own style here.
           initStyle: MapStyles.protomapsLight,
           maxBounds: bounds,
           initCenter: center,

@@ -10,7 +10,21 @@ import 'package:mapmetrics/src/inherited_model.dart';
 class MapOptions {
   /// Default constructor for the [MapOptions].
   const MapOptions({
-    this.initStyle = 'https://demotiles.maplibre.org/style.json',
+    // Defaults to OUR demo style, not MapLibre's demotiles server.
+    //
+    // This used to be https://demotiles.maplibre.org/style.json, which meant
+    // every consumer who did not pass a style rendered MapLibre's tiles, from
+    // MapLibre's infrastructure, with MapLibre's branding -- traffic we do not
+    // serve, cannot meter, and should not be sending to a third party.
+    //
+    // The replacement needs no credential: it is rate-limited, capped at zoom
+    // 12 and watermarked. That makes it correct as a DEFAULT specifically --
+    // a default must work with no configuration at all, which is why a real
+    // style behind an API key cannot go here.
+    //
+    // It is deliberately not good enough to ship. Pass your own style (and an
+    // apiKey) for anything real; get one at https://mapatlas.eu .
+    this.initStyle = 'https://gateway.mapmetrics-atlas.net/demo/style.json',
     this.initZoom = 0,
     this.initCenter,
     @Deprecated('Renamed to initPitch') double? pitch,
@@ -38,8 +52,15 @@ class MapOptions {
       maybeOf(context) ??
       (throw StateError('Unable to find an instance of MapOptions'));
 
-  /// The style URL that should get used. If not set, the default MapLibre style
-  /// is used (https://demotiles.maplibre.org/style.json).
+  /// The style URL that should get used.
+  ///
+  /// If not set, the MapMetrics demo style is used
+  /// (https://gateway.mapmetrics-atlas.net/demo/style.json): no credential
+  /// required, but rate-limited, capped at zoom 12 and watermarked. It exists
+  /// so a map renders with zero configuration, not so it can be shipped.
+  ///
+  /// For anything real, pass your own style and set [apiKey]. Get a key at
+  /// https://mapatlas.eu .
   final String initStyle;
 
   /// The initial zoom level.

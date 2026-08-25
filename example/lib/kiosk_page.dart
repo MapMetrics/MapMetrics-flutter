@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:maplibre_example/map_styles.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 
 @immutable
@@ -14,13 +15,16 @@ class KioskPage extends StatefulWidget {
 }
 
 class _KioskPageState extends State<KioskPage> {
-  /// **Use your own key for your project!**
-  /// This key will be rotated occasionally.
-  /// Protomaps offers free usage for non commercial projects and affordable
-  /// pricing for commercial projects. Alternatively, you can host a tile
-  /// server yourself. https://protomaps.com/
-  static const _styleUrl =
-      'https://api.protomaps.com/styles/v2/light.json?key=a6f9aebb3965458c';
+  /// The MapMetrics demo style -- no key, so nothing here to rotate or leak.
+  ///
+  /// This used to be a Protomaps demo URL with their key inline, inherited
+  /// from the upstream MapLibre plugin. It worked, but it sent an example of
+  /// OUR SDK to a third party's tile server, and the key was theirs to rotate
+  /// out from under us.
+  ///
+  /// **Use your own key and style for your project** -- get one at
+  /// https://mapatlas.eu and pass it via `MapOptions.apiKey`.
+  static const _styleUrl = MapStyles.demo;
 
   late final MapController _controller;
   final _locations = <_Location>[

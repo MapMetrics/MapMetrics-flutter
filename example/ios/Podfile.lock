@@ -4,8 +4,8 @@ PODS:
     - Flutter
   - mapmetrics (0.0.1):
     - Flutter
-    - MapMetrics-SDK (~> 2.0)
-  - MapMetrics-SDK (2.0.0)
+    - MapMetrics-SDK (~> 2.0.1)
+  - MapMetrics-SDK (2.0.1)
   - objective_c (0.0.1):
     - Flutter
   - pointer_interceptor_ios (0.0.1):
@@ -42,8 +42,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  mapmetrics: ed4a5eac4510fa8971ceb065516bf53ec39ffeb3
-  MapMetrics-SDK: c1bbade41c06dc8f337c27e08e6f06428bc884c2
+  mapmetrics: b743a197bc914df5f7919c613fb584b4f7ff9c08
+  MapMetrics-SDK: 1e5477628eeeb04afa82709292bfd58b00ea02fd
   objective_c: 89e720c30d716b036faf9c9684022048eee1eee2
   pointer_interceptor_ios: ec847ef8b0915778bed2b2cef636f4d177fa8eed
   url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
