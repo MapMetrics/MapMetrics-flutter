@@ -386,17 +386,15 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             return
         }
 
-        // Check if this is a clustered source by looking for existing cluster layers
-        let hasClusterLayers = style.layer(withIdentifier: "\(sourceId)-clusters") != nil ||
-                              style.layer(withIdentifier: "\(sourceId)-unclustered") != nil
-
-        if hasClusterLayers {
-            print("iOS: Skipping addCircleLayer for clustered source: \(sourceId) - cluster visualization already exists")
-            completion(.success(()))
-            return
-        }
-
-        print("iOS: Adding circle layer for non-clustered source: \(sourceId)")
+        // NOTE: this used to bail out here when the source already had the
+        // auto-created cluster layers ("<id>-clusters" / "<id>-unclustered"),
+        // reporting .success while adding nothing. That silently discarded
+        // every circle layer an app added to a clustered source, so cluster
+        // styling supplied from Dart was impossible on iOS -- the app got the
+        // plugin's hardcoded defaults and no error. Android has never had this
+        // guard: it auto-creates the same layers AND honours the app's, which
+        // then draw on top. Match Android.
+        print("iOS: Adding circle layer for source: \(sourceId)")
         let layer = MLNCircleStyleLayer(identifier: id, source: source)
 
         // Handle source-layer property for vector tile sources
@@ -1915,7 +1913,13 @@ func addSymbolLayer(
                     // Add layer for clusters only
                     let clustersLayer = MLNCircleStyleLayer(identifier: "\(id)-clusters", source: source)
                     clustersLayer.circleRadius = NSExpression(forConstantValue: 20)
-                    clustersLayer.circleColor = NSExpression(forConstantValue: UIColor.systemOrange)
+                    // NOT UIColor.systemOrange. That is a dynamic, trait-dependent
+                    // catalog colour; as an NSExpression constant it does not
+                    // resolve to an RGBA the renderer can use, so this layer drew
+                    // nothing at all while the unclustered layer beside it -- built
+                    // from a static hex -- drew fine. #f1f075 is the colour Android
+                    // uses for the same auto-created layer.
+                    clustersLayer.circleColor = NSExpression(forConstantValue: UIColor(hexString: "#f1f075") ?? UIColor.blue)
                     clustersLayer.circleOpacity = NSExpression(forConstantValue: 0.8)
                     clustersLayer.circleStrokeWidth = NSExpression(forConstantValue: 2)
                     clustersLayer.circleStrokeColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
@@ -1929,6 +1933,13 @@ func addSymbolLayer(
                     let clusterCountLayer = MLNSymbolStyleLayer(identifier: "\(id)-cluster-count", source: source)
                     clusterCountLayer.text = NSExpression(forKeyPath: "point_count_abbreviated")
                     clusterCountLayer.textFontSize = NSExpression(forConstantValue: 12)
+                    // Without an explicit fontstack the layer inherits a default the
+                    // glyph endpoint does not serve (every Open Sans weight 404s),
+                    // and a missing fontstack renders no text and raises no error --
+                    // so clusters drew as circles with no count inside them.
+                    // Noto Sans Medium is verified 200 and is used by the demo
+                    // style's own layers, so it cannot be pruned server-side.
+                    clusterCountLayer.textFontNames = NSExpression(forConstantValue: ["Noto Sans Medium"])
                     clusterCountLayer.textColor = NSExpression(forConstantValue: UIColor(hexString: "#ffffff") ?? UIColor.white)
 
                     // Same predicate as clusters
