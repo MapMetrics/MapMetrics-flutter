@@ -224,7 +224,19 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
 
       // iOS renders the sprite noticeably larger than Android at the same
       // icon-size, so the two need different numbers to look alike.
-      final iconSize = Platform.isAndroid ? 1.0 : 0.4;
+      //
+      // SCALED FOR THIS REPO'S SPRITE, not copied from flutter-mapmetrics.
+      // Its numbers are 1.0/0.4 against a sheet whose icons are 58x58; the
+      // sheet here draws them at 31x31. Reusing 0.4 verbatim rendered icons
+      // at ~12px next to 11px labels, which is what "icons seem small
+      // compared to the text" was. 58/31 = 1.87, so:
+      //
+      //     Android  1.0 * 1.87 = 1.87
+      //     iOS      0.4 * 1.87 = 0.75
+      //
+      // A size constant is only meaningful next to the sprite it was tuned
+      // against; carrying one across sheets is how it silently drifts.
+      final iconSize = Platform.isAndroid ? 1.87 : 0.75;
 
       await _styleController!.addLayer(
         SymbolStyleLayer(
@@ -256,9 +268,21 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
             // ONE entry. A multi-font stack is requested as a single
             // comma-joined path that the glyph endpoint does not serve.
             'text-font': ['Noto Sans Regular'],
-            'text-size': 11,
+            // Zoom-interpolated, as in flutter-mapmetrics. A flat 11 was
+            // oversized at the zoom this page opens at: the reference clamps
+            // to 9 below z16, and 11px labels beside 12px icons is what made
+            // the icons look like an afterthought.
+            'text-size': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              16, 9,
+              18, 11,
+              20, 13,
+              22, 14,
+            ],
             'text-anchor': 'top',
-            'text-offset': [0, 1],
+            'text-offset': [0, 1.2],
             'text-optional': true,
           },
           paint: {
