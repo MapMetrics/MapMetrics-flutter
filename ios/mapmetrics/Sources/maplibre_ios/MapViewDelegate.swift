@@ -279,8 +279,15 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
             lng: mlnCamera.centerCoordinate.longitude,
             lat: mlnCamera.centerCoordinate.latitude
         )
+        // NOT mlnCamera.altitude. MLNMapCamera has no zoom property; altitude is
+        // metres above the ground, so every camera update shipped a number in the
+        // millions to Dart as "zoom" (measured: 8871981.1 at a European overview).
+        // getCamera().zoom was therefore garbage for every caller, which is what
+        // the zoom buttons were working around by keeping their own counter.
+        // getMetersPerPixelAtLatitude/zoomLevel elsewhere in this file already
+        // read _mapView.zoomLevel, which is the real zoom.
         var pigeonCamera = MapCamera(
-            center: center, zoom: mlnCamera.altitude, pitch: mlnCamera.pitch,
+            center: center, zoom: _mapView.zoomLevel, pitch: mlnCamera.pitch,
             bearing: mlnCamera.heading
         )
         _flutterApi.onMoveCamera(camera: pigeonCamera) { _ in }  // Remove asterisks

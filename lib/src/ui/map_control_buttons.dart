@@ -54,8 +54,27 @@ class _MapControlButtonsState extends State<MapControlButtons> {
   _TrackLocationState _trackState = _TrackLocationState.gpsNotFixed;
   late bool _trackLocationButtonInitialized = false;
 
-  // Track current zoom level manually since getCamera().zoom returns 0.0
-  double _currentZoom = 10.0; // Default zoom level
+  /// The zoom the buttons should step from.
+  ///
+  /// This used to be a private field seeded at 10.0 and incremented on every
+  /// press, on the premise -- recorded in a comment here -- that
+  /// getCamera().zoom returns 0.0. It does not: getCamera() returns the base
+  /// class camera, which is kept current by the onMoveCamera callback and so
+  /// already reflects pinch gestures. The manual counter meant a pinch moved
+  /// the map without moving the counter, and the next button press animated
+  /// back to whatever the counter believed -- so the buttons and the gesture
+  /// fought each other.
+  ///
+  /// getCamera() does report 0.0 in one case: before the first camera event,
+  /// when it falls back to a zero camera. Zooming from that would jump to the
+  /// world view, so fall back to the configured initial zoom instead.
+  double _stepFromZoom(MapController controller) {
+    final zoom = controller.getCamera().zoom;
+    if (zoom == 0 && controller.options.initZoom != 0) {
+      return controller.options.initZoom;
+    }
+    return zoom;
+  }
 
   @override
   void initState() {
@@ -102,13 +121,15 @@ class _MapControlButtonsState extends State<MapControlButtons> {
                 FloatingActionButton(
                   heroTag: 'MapLibreZoomInButton',
                   onPressed: () {
-                    print('MapControlButtons: Zoom in button pressed');
-                    _currentZoom += 1.0;
-                    print(
-                      'MapControlButtons: Current zoom: ${_currentZoom - 1}, new zoom: $_currentZoom',
+                    // Clamped to the map's own limits, not a hardcoded range:
+                    // zoom-in previously had no upper clamp at all, so it could
+                    // animate past maxZoom and stall against the native cap.
+                    final zoom = (_stepFromZoom(controller) + 1.0).clamp(
+                      controller.options.minZoom,
+                      controller.options.maxZoom,
                     );
                     controller.animateCamera(
-                      zoom: _currentZoom,
+                      zoom: zoom,
                       nativeDuration: const Duration(milliseconds: 200),
                     );
                   },
@@ -117,16 +138,14 @@ class _MapControlButtonsState extends State<MapControlButtons> {
                 FloatingActionButton(
                   heroTag: 'MapLibreZoomOutButton',
                   onPressed: () {
-                    print('MapControlButtons: Zoom out button pressed');
-                    _currentZoom = (_currentZoom - 1.0).clamp(
-                      0.0,
-                      22.0,
-                    ); // Clamp to valid zoom range
-                    print(
-                      'MapControlButtons: Current zoom: ${_currentZoom + 1}, new zoom: $_currentZoom',
+                    // Was clamped to a hardcoded 0..22, which ignored a map
+                    // configured with a narrower range.
+                    final zoom = (_stepFromZoom(controller) - 1.0).clamp(
+                      controller.options.minZoom,
+                      controller.options.maxZoom,
                     );
                     controller.animateCamera(
-                      zoom: _currentZoom,
+                      zoom: zoom,
                       nativeDuration: const Duration(milliseconds: 200),
                     );
                   },
