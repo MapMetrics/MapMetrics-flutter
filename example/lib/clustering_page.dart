@@ -30,7 +30,13 @@ class _ClusteringPageState extends State<ClusteringPage> {
             10.0,
             50.0,
           ), // Europe - where our test points are
-          initZoom: 4,
+          // Opens at 3, not 4. The 15 test points span Europe; at zoom 4 they
+          // are far enough apart that none of them merge, so the page showed
+          // loose individual dots and no cluster bubbles at all -- a
+          // clustering example demonstrating no clustering. At 3 they group
+          // and the counts are visible on open. Zooming in still shows
+          // clusters splitting apart, which is the other half of the point.
+          initZoom: 3,
           minZoom: 1, // Allow zooming out to level 1
           maxZoom: 20, // Allow zooming in to level 20
         ),
@@ -138,14 +144,19 @@ class _ClusteringPageState extends State<ClusteringPage> {
       filter: ['has', 'point_count'], // Only show labels for clusters
       layout: {
         'text-field': '{point_count_abbreviated}',
-        'text-font': ['Montserrat Bold'],
+        'text-font': ['Noto Sans Medium'],
         // NOT 'Open Sans Semibold'. The comment here used to say "use
         // available font" while naming one the glyph endpoint does not
         // serve: .../fonts/Open%20Sans%20Semibold/0-255.pbf returns 404.
         // A missing fontstack means the text simply never renders, with no
         // error -- so the clusters drew as circles with no counts in them.
-        // Available on the MapMetrics glyph CDN: Montserrat Bold,
-        // Noto Sans Regular, Noto Sans Medium, Noto Sans Italic.
+        // Verified against the glyph CDN, per fontstack, ranges 0-255 and
+        // 256-511: Noto Sans Regular/Medium/Italic and Montserrat Bold
+        // return 200; every Open Sans weight, Noto Sans Bold/SemiBold/Light,
+        // Montserrat Regular/SemiBold, Roboto and Inter return 404.
+        // Noto Sans Medium is chosen over Montserrat Bold because the demo
+        // style's own layers use it, so it cannot be pruned without
+        // breaking the basemap.
         'text-size': 12,
       },
     );

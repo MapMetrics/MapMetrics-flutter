@@ -21,15 +21,40 @@ class MarkerLayer extends Layer<Point> {
     // MUST BE A FONTSTACK THE GLYPH ENDPOINT ACTUALLY SERVES.
     //
     // This defaulted to ['Open Sans Regular', 'Arial Unicode MS Regular'],
-    // inherited from upstream. Neither exists on the MapMetrics glyph CDN --
-    // .../fonts/Open%20Sans%20Regular/0-255.pbf returns 404 -- so every
-    // MarkerLayer's label silently failed to render for every consumer. A
-    // missing fontstack produces no error and no text; the markers simply had
-    // no labels and nobody could see why.
+    // inherited from upstream. BOTH entries 404 on the MapMetrics glyph CDN --
+    // including the fallback, so the fallback chain could not rescue it. A
+    // missing fontstack produces no error and no text, so every MarkerLayer
+    // label silently failed to render, for every consumer, and there was
+    // nothing on screen to explain why.
     //
-    // Served today: Noto Sans Regular, Noto Sans Medium, Noto Sans Italic,
-    // Montserrat Bold.
-    this.textFont = const ['Noto Sans Regular'],
+    // Verified by requesting each fontstack individually against
+    // https://cdn.mapmetrics-atlas.net/basemaps-assets/fonts/<stack>/<range>.pbf
+    // for ranges 0-255 and 256-511:
+    //
+    //     Noto Sans Regular          200   <- default, and used by the style
+    //     Noto Sans Medium           200   <- used by the style
+    //     Noto Sans Italic           200   <- used by the style
+    //     Montserrat Bold            200
+    //     Noto Sans Bold             404
+    //     Noto Sans SemiBold         404
+    //     Noto Sans Light            404
+    //     Montserrat Regular         404
+    //     Montserrat SemiBold        404
+    //     Open Sans Regular          404
+    //     Open Sans Semibold         404
+    //     Open Sans Bold             404
+    //     Arial Unicode MS Regular   404
+    //     Roboto Regular             404
+    //     Inter Regular              404
+    //
+    // The three Noto Sans faces are the ones the demo style's own layers
+    // reference, so they are the safest choice: a font the basemap itself
+    // needs cannot be pruned from the CDN without breaking the basemap.
+    // Montserrat Bold resolves today but nothing else depends on it.
+    //
+    // The second entry is a genuine fallback -- also verified present -- so a
+    // glyph missing from Regular can still be composed.
+    this.textFont = const ['Noto Sans Regular', 'Noto Sans Medium'],
     this.textSize = 16,
     this.textMaxWidth = 10,
     this.textLineHeight = 1.2,
