@@ -302,15 +302,58 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
         'tourism-m', // default
       ];
 
-      // Popular POIs win icon collisions: lowest sort key is placed first and
-      // kept when icons overlap, so negating the score puts the best first.
-      // richness_score is absent from the tiles decoded above, so coalesce
-      // holds every feature at 0 today -- harmless, and it starts working the
-      // moment the field ships.
-      const popularitySortKey = <Object>[
-        '-',
-        0,
-        ['coalesce', ['get', 'richness_score'], 0],
+      // WHICH ICON WINS A COLLISION, BY CATEGORY.
+      //
+      // icon-allow-overlap is false, so where two icons would overlap only one
+      // is drawn. symbol-sort-key decides which: the LOWEST key is placed
+      // first and keeps its spot. Without it MapLibre falls back to
+      // symbol-z-order: auto, which orders point symbols by their position on
+      // screen -- so panning reshuffles them and icons pop in and out.
+      //
+      // Ranked so the things people look for outrank infrastructure: a
+      // supermarket beats a car park, a restaurant beats a car wash. Ties
+      // inside a rank fall back to feature order, which is stable per tile.
+      //
+      // This replaces a key of ['-', 0, ['coalesce', ['get','richness_score'], 0]].
+      // richness_score is not in these tiles -- decoded and checked -- so that
+      // key was 0 for every feature and ordered nothing at all.
+      //
+      // Same flat `match` shape as icon-image above, deliberately. A nested
+      // match would express finer rules but iOS converts expressions
+      // defensively: anything it cannot parse becomes a nil constant, and a
+      // nil sort key takes the whole layer down silently.
+      //
+      // For finer control the tiles also carry `category` (parking,
+      // bicycle_parking, car_wash...) and `popularity`. Ranking on those is
+      // the next step if category-level ordering is not enough.
+      const categorySortKey = <Object>[
+        'match',
+        ['get', 'category_group'],
+        'eat_and_drink', 10,
+        'retail', 20,
+        'accommodation', 30,
+        'health_and_medical', 40,
+        'attractions_and_activities', 50,
+        'arts_and_entertainment', 60,
+        'financial_service', 70,
+        'education', 80,
+        'public_service_and_government', 90,
+        'active_life', 100,
+        'beauty_and_spa', 110,
+        'religious_organization', 120,
+        'travel', 130,
+        'pets', 140,
+        'mass_media', 150,
+        'professional_services', 160,
+        'real_estate', 170,
+        'business_to_business', 180,
+        'private_establishments_and_corporates', 190,
+        'home_service', 200,
+        // Infrastructure last: this is the rank that holds parking, car
+        // washes and charging stations below anything a person searches for.
+        'automotive', 210,
+        'structure_and_geography', 220,
+        999, // anything unmapped loses to everything mapped
       ];
 
       // iOS renders the sprite noticeably larger than Android at the same
@@ -343,7 +386,7 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
             'icon-size': iconSize,
             'icon-allow-overlap': false,
             'icon-ignore-placement': false,
-            'symbol-sort-key': popularitySortKey,
+            'symbol-sort-key': categorySortKey,
             // Wider padding at low zoom keeps the map readable on open and
             // tightens as the user zooms in and wants density.
             'icon-padding': [

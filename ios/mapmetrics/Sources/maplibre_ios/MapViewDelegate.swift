@@ -1633,8 +1633,44 @@ func addSymbolLayer(
                     layer.textLetterSpacing = self.createExpression(from: value)
                 case "text-rotate":
                     layer.textRotation = self.createExpression(from: value)
+                // COLLISION ORDER. Without a sort key MapLibre falls back to
+                // symbol-z-order: auto, which orders point symbols by their
+                // position on screen -- so panning reorders them, a different
+                // symbol wins each collision, and icons appear and disappear
+                // as the map moves. With a key the order is stable across
+                // pans. Android has always applied this: its layer path is
+                // generic (LayoutPropertyValue for every entry), so every
+                // property written in Dart reaches the renderer. Dropping it
+                // here is what made the two platforms behave differently.
+                case "symbol-sort-key":
+                    layer.symbolSortKey = self.createExpression(from: value)
+                case "symbol-z-order":
+                    layer.symbolZOrder = self.createExpression(from: value)
+                case "symbol-placement":
+                    layer.symbolPlacement = self.createExpression(from: value)
+                case "symbol-spacing":
+                    layer.symbolSpacing = self.createExpression(from: value)
+                case "symbol-avoid-edges":
+                    if let boolValue = value as? Bool {
+                        layer.symbolAvoidsEdges = NSExpression(forConstantValue: boolValue)
+                    }
+                case "icon-optional":
+                    if let boolValue = value as? Bool {
+                        layer.iconOptional = NSExpression(forConstantValue: boolValue)
+                    }
                 default:
-                    print("iOS: Unknown symbol layout property: \(key)")
+                    // __filter__, __minZoom__ and __maxZoom__ are this
+                    // bridge's own sentinels, consumed before this loop runs.
+                    // They are not style properties and warning about them
+                    // would bury the ones that matter.
+                    if key.hasPrefix("__") { break }
+                    // NSLog, not print: Swift print() reaches neither `flutter
+                    // run` nor the device log, so an unhandled property was
+                    // invisible from both sides. This whitelist is the reason
+                    // iOS and Android can disagree at all -- anything missing
+                    // from it is silently dropped on one platform only, so it
+                    // needs to be findable.
+                    NSLog("iOS: UNHANDLED symbol layout property '%@' -- dropped (Android applies it)", key)
                 }
             }
             if !success {
