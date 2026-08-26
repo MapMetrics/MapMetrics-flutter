@@ -289,17 +289,36 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
   ///     --dart-define=POI_TILE_SERVER=https://your-host/tiles/{z}/{x}/{y}.mvt
   ///
   /// Unset, the page shows the demo basemap and skips the POI overlay.
-  static const _poiTileServer = String.fromEnvironment('POI_TILE_SERVER');
+  static const _poiTileServer = String.fromEnvironment(
+    'POI_TILE_SERVER',
+    defaultValue:
+        'https://gateway.mapmetrics-atlas.net/v2/poi-tiles/{z}/{x}/{y}.mvt',
+  );
+
+  /// API key for the POI overlay, supplied at build time. NOT COMMITTED.
+  ///
+  /// /v2/poi-tiles authorises against a real key -- KV active check, per-scope
+  /// revocation, origin lock, signature -- and then bills nothing. Authorised
+  /// but free: the key is what makes traffic attributable and revocable, not
+  /// what makes it chargeable, so POI tiles do not touch the customer's quota.
+  ///
+  ///   flutter run -t lib/main.dart --dart-define=MAPMETRICS_API_KEY=<jwt>
+  ///
+  /// Unset, the page shows the demo basemap and skips the POI overlay, exactly
+  /// as it did when the tile server itself was unset. A key belongs on the
+  /// command line or in a secret store, never in this file -- two were pasted
+  /// into this repository before, and both are in a revocation queue now.
+  static const _apiKey = String.fromEnvironment('MAPMETRICS_API_KEY');
 
   Future<void> _setupPoiLayer() async {
     try {
       print('Setting up POI layer...');
 
-      if (_poiTileServer.isEmpty) {
+      if (_poiTileServer.isEmpty || _apiKey.isEmpty) {
         print(
-          'POI_TILE_SERVER is not set - showing the demo basemap without the '
-          'POI overlay. Pass --dart-define=POI_TILE_SERVER=<tile url> to '
-          'enable it.',
+          'MAPMETRICS_API_KEY is not set - showing the demo basemap without '
+          'the POI overlay. Pass --dart-define=MAPMETRICS_API_KEY=<jwt> to '
+          'enable it. POI tiles are authorised but never billed.',
         );
         return;
       }
@@ -314,12 +333,18 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       // maxZoom: 16 because tiles are only available up to zoom 16
       // The layer can still render at higher zooms (overzooming)
 
+      // ZOOM 10..14, NOT 16. The source claimed minZoom/maxZoom 16, which is
+      // not what pois-v2-tileserver serves: its ROOT_ZOOM is 10 and MAX_ZOOM is
+      // 14, and it answers 404 outside that. Asking for z16 fetched nothing but
+      // 404s, so the overlay could not have drawn even with a valid key and a
+      // reachable server. Below 14 the renderer overzooms z14 tiles, which is
+      // what the page already relied on at higher zooms.
       await _styleController!.addSource(
         VectorSource(
           id: 'poi-source',
-          tiles: [_poiTileServer],
-          minZoom: 16,
-          maxZoom: 16, // Tiles available up to zoom 16, will overzoom beyond
+          tiles: ['$_poiTileServer?token=$_apiKey'],
+          minZoom: 10,
+          maxZoom: 14,
         ),
       );
 
