@@ -44,7 +44,13 @@ const _circleStyleLayer = CircleStyleLayer(
   id: _layerId,
   sourceId: _sourceId,
   paint: {
-    // Size circle radius by earthquake magnitude and zoom level
+    // Size circle radius by earthquake magnitude and zoom level.
+    //
+    // `interpolate` REQUIRES AT LEAST TWO STOPS. This had exactly one (zoom
+    // 7), which is not a valid expression, so the layer failed validation and
+    // was never added -- the example rendered a bare map with no circles on
+    // it. The canonical MapLibre earthquake example interpolates between zoom
+    // 7 and zoom 16; the second stop was lost when this was copied.
     'circle-radius': [
       'interpolate',
       ['linear'],
@@ -56,6 +62,16 @@ const _circleStyleLayer = CircleStyleLayer(
         ['get', 'mag'],
         1,
         1,
+        6,
+        4,
+      ],
+      16,
+      [
+        'interpolate',
+        ['linear'],
+        ['get', 'mag'],
+        1,
+        5,
         6,
         50,
       ],

@@ -138,7 +138,14 @@ class _ClusteringPageState extends State<ClusteringPage> {
       filter: ['has', 'point_count'], // Only show labels for clusters
       layout: {
         'text-field': '{point_count_abbreviated}',
-        'text-font': ['Open Sans Semibold'], // Use available font
+        'text-font': ['Montserrat Bold'],
+        // NOT 'Open Sans Semibold'. The comment here used to say "use
+        // available font" while naming one the glyph endpoint does not
+        // serve: .../fonts/Open%20Sans%20Semibold/0-255.pbf returns 404.
+        // A missing fontstack means the text simply never renders, with no
+        // error -- so the clusters drew as circles with no counts in them.
+        // Available on the MapMetrics glyph CDN: Montserrat Bold,
+        // Noto Sans Regular, Noto Sans Medium, Noto Sans Italic.
         'text-size': 12,
       },
     );

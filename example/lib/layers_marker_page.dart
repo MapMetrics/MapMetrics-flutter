@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:maplibre_example/style_layers_symbol_page.dart';
 import 'package:mapmetrics/mapmetrics.dart';
 
 @immutable
@@ -21,7 +20,14 @@ class _LayersMarkerPageState extends State<LayersMarkerPage> {
     Point(coordinates: Position(9.5, 48)),
   ];
 
-  bool _imageLoaded = false;
+  // `_imageLoaded` was declared false and never set true -- nothing in this
+  // page ever registered a 'marker' image -- so iconImage below was always
+  // null. With the label font also 404ing on the glyph CDN, this example
+  // rendered nothing at all: no icon, no text, just a bare map.
+  //
+  // The flag is gone rather than wired up: MarkerLayer draws its textField
+  // without an icon, which is enough to demonstrate the layer. Registering a
+  // custom sprite is what layers_custom_marker_page is for.
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +47,6 @@ class _LayersMarkerPageState extends State<LayersMarkerPage> {
             points: _points,
             textField: 'Marker',
             textAllowOverlap: true,
-            iconImage: _imageLoaded ? 'marker' : null,
-            iconSize: 0.08,
-            iconAnchor: IconAnchor.bottom,
             textOffset: const [0, 1],
           ),
         ],

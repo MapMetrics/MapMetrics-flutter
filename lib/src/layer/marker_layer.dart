@@ -18,7 +18,18 @@ class MarkerLayer extends Layer<Point> {
     this.iconKeepUpright = false,
     this.iconOffset = const [0, 0],
     this.textField = '',
-    this.textFont = const ['Open Sans Regular', 'Arial Unicode MS Regular'],
+    // MUST BE A FONTSTACK THE GLYPH ENDPOINT ACTUALLY SERVES.
+    //
+    // This defaulted to ['Open Sans Regular', 'Arial Unicode MS Regular'],
+    // inherited from upstream. Neither exists on the MapMetrics glyph CDN --
+    // .../fonts/Open%20Sans%20Regular/0-255.pbf returns 404 -- so every
+    // MarkerLayer's label silently failed to render for every consumer. A
+    // missing fontstack produces no error and no text; the markers simply had
+    // no labels and nobody could see why.
+    //
+    // Served today: Noto Sans Regular, Noto Sans Medium, Noto Sans Italic,
+    // Montserrat Bold.
+    this.textFont = const ['Noto Sans Regular'],
     this.textSize = 16,
     this.textMaxWidth = 10,
     this.textLineHeight = 1.2,

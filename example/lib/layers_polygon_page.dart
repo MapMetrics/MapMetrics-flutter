@@ -32,7 +32,7 @@ class _LayersPolygonPageState extends State<LayersPolygonPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Polygon Layer')),
       body: MapMetricsView(
-        options: MapOptions(initCenter: Position(9.17, 47.68), initZoom: 7),
+        options: MapOptions(initCenter: Position(8.9, 48.08), initZoom: 7),
         onEvent: (event) {
           if (event case MapEventClick()) {
             setState(() {

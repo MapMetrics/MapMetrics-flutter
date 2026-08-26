@@ -23,8 +23,21 @@ class _StyleLayersFillExtrusionPageState
       appBar: AppBar(title: const Text('Fill Extrusion Style Layer')),
       body: MapMetricsView(
         options: MapOptions(
+          // The indoor-3d-map data is a single building in Chicago. At zoom 12
+          // it is a few pixels across, and with no pitch a fill-extrusion is
+          // drawn straight down -- you see the footprint and no height at all,
+          // which reads as "the layer does not work".
+          //
+          // A fill-extrusion needs a tilted camera to show anything. 16 puts
+          // the building on screen; 45 degrees of pitch makes the extrusion
+          // visible as extrusion.
+          //
+          // The demo style's sources stop at zoom 12, so the basemap under the
+          // building is overzoomed here. The extruded geometry is GeoJSON and
+          // renders at full detail regardless.
           initCenter: Position(-87.6169, 41.8662),
-          initZoom: 12,
+          initZoom: 16,
+          initPitch: 45,
         ),
         onStyleLoaded: _onStyleLoaded,
       ),
