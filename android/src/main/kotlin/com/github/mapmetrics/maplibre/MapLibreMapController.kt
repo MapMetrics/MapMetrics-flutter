@@ -418,7 +418,24 @@ class MapLibreMapController(
         callback: (Result<Unit>) -> Unit,
     ) {
         val layer = RasterLayer(id, sourceId)
-//        layer.setProperties(*parseProperties(paint), *parseProperties(layout))
+
+        // The setProperties call here was commented out, so every raster
+        // property the app set -- raster-opacity, raster-brightness-min/max,
+        // raster-saturation, raster-contrast, visibility -- was discarded and
+        // the layer drew at its defaults. A bare RasterLayer still shows the
+        // source, so the layer looked like it worked and only the styling went
+        // missing, silently. iOS had the mirror of this: its addRasterLayer was
+        // a stub that ignored every argument and reported success.
+        val minZoom = layout["__minZoom__"] as? Double
+        val maxZoom = layout["__maxZoom__"] as? Double
+        if (minZoom != null) layer.minZoom = minZoom.toFloat()
+        if (maxZoom != null) layer.maxZoom = maxZoom.toFloat()
+
+        val filteredLayout = layout.filterKeys {
+            it != "source-layer" && it != "__filter__" && it != "__minZoom__" && it != "__maxZoom__"
+        }
+        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
+
         safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
