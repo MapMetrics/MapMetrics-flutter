@@ -208,6 +208,22 @@ class MapLibreMapController(
     private fun parseLayoutProperties(entries: Map<String, Any>): Array<PropertyValue<*>> =
         entries
             .map { entry ->
+                // text-font is DATA, not an expression. A font stack is a plain
+                // list of face names, but the generic branch below treats ANY
+                // array whose first element is a String as an expression and
+                // hands it to Expression.Converter -- which reads
+                // "Noto Sans Regular" as an operator name. It does not throw;
+                // it yields an expression the renderer cannot use, and that
+                // takes the whole symbol layer down: no icons and no labels,
+                // silently.
+                //
+                // iOS had the identical bug in createExpression and was fixed
+                // the same way. Any future property whose value is a genuine
+                // array of strings needs the same treatment.
+                if (entry.key == "text-font" && entry.value is ArrayList<*>) {
+                    val fonts = (entry.value as ArrayList<*>).map { it.toString() }.toTypedArray()
+                    return@map LayoutPropertyValue(entry.key, fonts)
+                }
 //                println("${entry.key}; ${entry.value::class.java.typeName}; ${entry.value}")
                 when (entry.value) {
                     is ArrayList<*> -> {
