@@ -21,8 +21,15 @@ class _StyleLayersSymbolPageState extends State<StyleLayersSymbolPage> {
       appBar: AppBar(title: const Text('Symbol Style Layer')),
       body: MapMetricsView(
         options: MapOptions(
-          initCenter: Position(-74.006, 40.7128),
-          initZoom: 9,
+          // The four points below are Zurich, London, Berlin and Rome --
+          // lng -0.11..13.35, lat 41.94..52.57 -- while the camera sat on
+          // (-74.006, 40.7128), New York, so none of them were on screen.
+          //
+          // Zoom 4 to hold all four at once: they span ~13.5 degrees of
+          // longitude, and the viewport is only ~0.55 degrees across at the
+          // zoom 9 this page used to open at.
+          initCenter: Position(6.62, 47.26),
+          initZoom: 4,
         ),
         onStyleLoaded: _onStyleLoaded,
       ),
