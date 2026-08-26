@@ -74,9 +74,11 @@ class LayerManager {
   /// Called when `setState()` gets called and the widget rebuilds. This method
   /// translates the declarative layer definition of [MapLibreMap.layers] to
   /// imperative calls to the maps' [MapController].
-  void updateLayers(List<Layer> layers) {
-    unawaited(_updateLayers(layers));
-  }
+  ///
+  /// Returns the future so callers that need the map to have caught up -- tests,
+  /// mainly -- can await it. The widget callers cannot: `didUpdateWidget` is
+  /// synchronous, so they drop it deliberately.
+  Future<void> updateLayers(List<Layer> layers) => _updateLayers(layers);
 
   /// Apply a changed [MapLibreMap.layers] list, in order.
   ///

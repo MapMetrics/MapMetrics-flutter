@@ -151,7 +151,7 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
   void didUpdateWidget(covariant MapLibreMap oldWidget) {
     if (_isDisposed) return;
     _updateOptions(oldWidget);
-    layerManager?.updateLayers(widget.layers);
+    unawaited(layerManager?.updateLayers(widget.layers) ?? Future.value());
     super.didUpdateWidget(oldWidget);
   }
 

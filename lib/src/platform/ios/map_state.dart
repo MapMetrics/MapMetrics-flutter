@@ -434,7 +434,7 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
   @override
   void didUpdateWidget(covariant MapLibreMap oldWidget) {
     _updateOptions(oldWidget);
-    layerManager?.updateLayers(widget.layers);
+    unawaited(layerManager?.updateLayers(widget.layers) ?? Future.value());
     super.didUpdateWidget(oldWidget);
   }
 

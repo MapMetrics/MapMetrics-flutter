@@ -35,14 +35,14 @@ void main() {
       final manager = LayerManager(style, []);
       final layer1 = CircleLayer(points: [Point(coordinates: Position(0, 0))]);
 
-      manager.updateLayers([layer1]);
+      await manager.updateLayers([layer1]);
       verify(() => style.addSource(any(that: isA<GeoJsonSource>()))).called(1);
       verify(
         () => style.addLayer(any(that: isA<CircleStyleLayer>())),
       ).called(1);
       verifyNoMoreInteractions(style);
 
-      manager.updateLayers([layer1]);
+      await manager.updateLayers([layer1]);
       verify(
         () => style.updateGeoJsonSource(
           id: any(named: 'id'),
@@ -51,7 +51,7 @@ void main() {
       ).called(1);
       verifyNoMoreInteractions(style);
 
-      manager.updateLayers([]);
+      await manager.updateLayers([]);
       verify(() => style.removeLayer(any())).called(1);
       verify(() => style.removeSource(any())).called(1);
       verifyNoMoreInteractions(style);

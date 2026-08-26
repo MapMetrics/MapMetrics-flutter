@@ -198,7 +198,7 @@ final class MapLibreMapStateWeb extends MapLibreMapState {
     if (options.gestures != oldWidget.options.gestures) {
       _updateGestures(options.gestures);
     }
-    _layerManager?.updateLayers(widget.layers);
+    unawaited(_layerManager?.updateLayers(widget.layers) ?? Future.value());
     super.didUpdateWidget(oldWidget);
   }
 
