@@ -531,6 +531,24 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         }
     }
     // The key method - this creates NSExpression from any value type
+    /// Build a CGVector-valued expression from a `[x, y]` pair.
+    ///
+    /// The style spec expresses offsets and translations as two-element arrays,
+    /// but MapLibre iOS models them as CGVector: MLNSymbolStyleLayer.textOffset,
+    /// iconOffset and the *Translation properties all expect an NSValue-wrapped
+    /// CGVector. Passing the raw NSArray that createExpression produces is a
+    /// type mismatch the renderer cannot use, and it takes the whole layer's
+    /// symbol placement down with it -- silently, since nothing throws.
+    ///
+    /// Returns nil when the value is not a 2-number array, so callers can fall
+    /// back to normal expression handling (e.g. a data-driven expression).
+    private func vectorExpression(from value: Any) -> NSExpression? {
+        guard let pair = value as? [Any], pair.count == 2,
+              let x = (pair[0] as? NSNumber)?.doubleValue,
+              let y = (pair[1] as? NSNumber)?.doubleValue else { return nil }
+        return NSExpression(forConstantValue: NSValue(cgVector: CGVector(dx: x, dy: y)))
+    }
+
     private func createExpression(from value: Any) -> NSExpression {
         print("iOS: Creating expression from: \(value) (type: \(type(of: value)))")
 
@@ -1499,7 +1517,8 @@ func addSymbolLayer(
                 case "icon-anchor":
                     layer.iconAnchor = self.createExpression(from: value)
                 case "icon-offset":
-                    layer.iconOffset = self.createExpression(from: value)
+                    layer.iconOffset = self.vectorExpression(from: value)
+                        ?? self.createExpression(from: value)
                 case "icon-rotate", "icon-rotation":
                     layer.iconRotation = self.createExpression(from: value)
                 case "text-field":
@@ -1507,11 +1526,51 @@ func addSymbolLayer(
                 case "text-size":
                     layer.textFontSize = self.createExpression(from: value)
                 case "text-font":
-                    layer.textFontNames = self.createExpression(from: value)
+                    // A font stack is DATA -- a plain list of face names -- not
+                    // an expression. createExpression treats any array whose
+                    // first element is a String as a MapLibre expression array,
+                    // so it tried to parse "Noto Sans Regular" as an operator,
+                    // failed both the native builder and mglJSONObject, and
+                    // returned a nil constant. The layer was left with no
+                    // fontstack, and a missing fontstack renders no text and
+                    // raises no error -- so every MarkerLayer label was blank.
+                    if let fontNames = value as? [String] {
+                        layer.textFontNames = NSExpression(forConstantValue: fontNames)
+                    } else {
+                        layer.textFontNames = self.createExpression(from: value)
+                    }
                 case "text-anchor":
                     layer.textAnchor = self.createExpression(from: value)
                 case "text-offset":
-                    layer.textOffset = self.createExpression(from: value)
+                    layer.textOffset = self.vectorExpression(from: value)
+                        ?? self.createExpression(from: value)
+                // The icon-* placement properties were handled and their text-*
+                // counterparts were not, so these fell through to `default` and
+                // were discarded. text-allow-overlap in particular then stayed
+                // at its false default, and a symbol that collides with one
+                // already placed -- including the basemap's own labels, which
+                // are placed first -- is simply not drawn. MarkerLayer asking
+                // for textAllowOverlap: true had no effect on iOS.
+                case "text-allow-overlap":
+                    if let boolValue = value as? Bool {
+                        layer.textAllowsOverlap = NSExpression(forConstantValue: boolValue)
+                    }
+                case "text-ignore-placement":
+                    if let boolValue = value as? Bool {
+                        layer.textIgnoresPlacement = NSExpression(forConstantValue: boolValue)
+                    }
+                case "text-optional":
+                    if let boolValue = value as? Bool {
+                        layer.textOptional = NSExpression(forConstantValue: boolValue)
+                    }
+                case "text-padding":
+                    layer.textPadding = self.createExpression(from: value)
+                case "text-max-width":
+                    layer.maximumTextWidth = self.createExpression(from: value)
+                case "text-letter-spacing":
+                    layer.textLetterSpacing = self.createExpression(from: value)
+                case "text-rotate":
+                    layer.textRotation = self.createExpression(from: value)
                 default:
                     print("iOS: Unknown symbol layout property: \(key)")
                 }

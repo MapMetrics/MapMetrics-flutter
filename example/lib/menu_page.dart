@@ -7,6 +7,7 @@ import 'package:maplibre_example/events_page.dart';
 import 'package:maplibre_example/gestures_page.dart';
 import 'package:maplibre_example/layers_circle_page.dart';
 import 'package:maplibre_example/layers_custom_marker_page.dart';
+import 'package:maplibre_example/layers_marker_page.dart';
 import 'package:maplibre_example/layers_mixed_page.dart';
 import 'package:maplibre_example/layers_polygon_page.dart';
 import 'package:maplibre_example/layers_polyline_page.dart';
@@ -126,8 +127,19 @@ class MenuPage extends StatelessWidget {
                   iconData: Icons.circle,
                   location: LayersCirclePage.location,
                 ),
+                // 'Markers' pointed at CustomMarkerPage, which is a WidgetLayer
+                // demo -- Flutter widgets positioned over the map, not anything
+                // the map draws. The page that actually demonstrates the SDK's
+                // MarkerLayer had no menu entry at all and its route was
+                // commented out in main.dart, so the only reachable "markers"
+                // in the whole example app were widgets.
                 ItemCard(
                   label: 'Markers',
+                  iconData: Icons.location_on,
+                  location: LayersMarkerPage.location,
+                ),
+                ItemCard(
+                  label: 'Marker Widgets',
                   iconData: Icons.location_on,
                   location: CustomMarkerPage.location,
                 ),
