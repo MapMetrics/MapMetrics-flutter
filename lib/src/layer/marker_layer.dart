@@ -52,9 +52,22 @@ class MarkerLayer extends Layer<Point> {
     // needs cannot be pruned from the CDN without breaking the basemap.
     // Montserrat Bold resolves today but nothing else depends on it.
     //
-    // The second entry is a genuine fallback -- also verified present -- so a
-    // glyph missing from Regular can still be composed.
-    this.textFont = const ['Noto Sans Regular', 'Noto Sans Medium'],
+    // EXACTLY ONE ENTRY. A multi-font stack is not a client-side fallback
+    // chain: MapLibre requests the whole stack as one comma-joined path,
+    //
+    //     /fonts/Noto%20Sans%20Regular,Noto%20Sans%20Medium/0-255.pbf
+    //
+    // and this glyph endpoint serves individual faces only -- that composite
+    // path 404s while each face alone returns 200. Measured:
+    //
+    //     Noto Sans Regular                    200
+    //     Noto Sans Medium                     200
+    //     Noto Sans Regular,Noto Sans Medium   404
+    //
+    // A two-entry default therefore renders no text at all, which is the same
+    // silent failure as naming a font that does not exist. Adding a second
+    // entry "for fallback" is an easy mistake to repeat; do not.
+    this.textFont = const ['Noto Sans Regular'],
     this.textSize = 16,
     this.textMaxWidth = 10,
     this.textLineHeight = 1.2,
