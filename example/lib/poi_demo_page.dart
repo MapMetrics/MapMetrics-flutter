@@ -31,7 +31,13 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       body: MapMetricsView(
         options: MapOptions(
           initCenter: Position(4.89, 52.37), // Amsterdam
-          initZoom: 14,
+          // Opens at 17, not 14. The category badges below ramp from zero at
+          // zoom 14 and only read from about 16, so a page that opened at 14
+          // showed none of them -- a demo that hides the thing it is
+          // demonstrating. flutter-mapmetrics keeps 14 because it is a
+          // navigation app where that is a normal browse zoom; this page
+          // exists to show the layers.
+          initZoom: 17,
           // The unauthenticated demo style. NO CREDENTIAL -- that is the point.
           //
           // This line used to carry a production API key inline, and the one
@@ -183,6 +189,91 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
       // (lib/screens/home/services/poi_service.dart), which reads these same
       // tiles and renders them correctly.
       // ==================================================================
+      // A coloured disc behind each icon, doubling as a category badge --
+      // ported from flutter-mapmetrics (poi_service.dart), same colours and
+      // same ramps. ADDED BEFORE THE SYMBOL LAYER so it draws underneath;
+      // MapLibre paints in insertion order, and adding it afterwards would
+      // hide every icon behind its own badge.
+      //
+      // Invisible at zoom 14, which is where this page opens: radius, opacity
+      // and stroke all interpolate from 0 there, so only the icons read at
+      // first sight and the badges fade in as you zoom toward 18. That is the
+      // reference's intent, not a bug -- zoom in to see them.
+      const circleColorExpression = <Object>[
+        'match',
+        ['get', 'category_group'],
+        'eat_and_drink', '#E89914',
+        'health_and_medical', '#9B4F42',
+        'financial_service', '#356AA6',
+        'public_service_and_government', '#356AA6',
+        'education', '#356AA6',
+        'religious_organization', '#4F8E8B',
+        'retail', '#734087',
+        'beauty_and_spa', '#734087',
+        'accommodation', '#666564',
+        'attractions_and_activities', '#666564',
+        'arts_and_entertainment', '#666564',
+        'active_life', '#666564',
+        'real_estate', '#5A84A8',
+        'professional_services', '#5A84A8',
+        'private_establishments_and_corporates', '#5A84A8',
+        'business_to_business', '#5A84A8',
+        'travel', '#33597F',
+        'automotive', '#54504A',
+        'home_service', '#54504A',
+        'structure_and_geography', '#5F4226',
+        '#323232', // default
+      ];
+
+      await _styleController!.addLayer(
+        const CircleStyleLayer(
+          id: 'poi-circles',
+          sourceId: 'poi-source',
+          minZoom: 14,
+          maxZoom: 24,
+          filter: ['has', 'category_group'],
+          layout: {'source-layer': 'pois'},
+          paint: {
+            'circle-radius': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              14, 0,
+              16, 1.5,
+              18, 3,
+              20, 4.5,
+            ],
+            'circle-color': circleColorExpression,
+            'circle-opacity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              14, 0,
+              16, 0.25,
+              18, 0.7,
+            ],
+            'circle-stroke-width': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              14, 0,
+              17, 0.5,
+              19, 0.75,
+            ],
+            'circle-stroke-color': '#FFFFFF',
+            'circle-stroke-opacity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              14, 0,
+              17, 0.8,
+              19, 1.0,
+            ],
+          },
+        ),
+      );
+      print('POI circle badge layer added');
+
       const iconImageExpression = <Object>[
         'match',
         ['get', 'category_group'],
