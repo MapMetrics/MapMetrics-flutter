@@ -21,7 +21,7 @@ class LayerManager {
   ///
   /// The source must exist before the layer that references it. These two calls
   /// used to be fired without awaiting either, so on iOS addCircleLayer
-  /// regularly landed first and failed with "Source not found: <id>" -- an
+  /// regularly landed first and failed with `Source not found: <id>` -- an
   /// error nobody saw, because the dropped future carried it away.
   Future<void> _addLayers(List<Layer> layers) async {
     for (final (index, layer) in layers.indexed) {
@@ -75,13 +75,24 @@ class LayerManager {
   /// translates the declarative layer definition of [MapLibreMap.layers] to
   /// imperative calls to the maps' [MapController].
   void updateLayers(List<Layer> layers) {
+    unawaited(_updateLayers(layers));
+  }
+
+  /// Apply a changed [MapLibreMap.layers] list, in order.
+  ///
+  /// Like the initial creation, every call here must be awaited: a source has
+  /// to exist before the layer that names it. These were fired without
+  /// awaiting, so a layer added by setState -- for instance one withheld until
+  /// its icon image was registered -- raced its own source and failed with
+  /// "Source not found", silently, because the future was dropped.
+  Future<void> _updateLayers(List<Layer> layers) async {
     for (var index = 0; index < layers.length; index++) {
       final layer = layers[index];
       final oldLayer = index > _oldLayers.length - 1 ? null : _oldLayers[index];
       // update source
       // TODO check if the entities of both lists are equal
       if (oldLayer case Layer()) {
-        style.updateGeoJsonSource(
+        await style.updateGeoJsonSource(
           id: layer.getSourceId(index),
           data: _encodeGeometries(layer),
         );
@@ -90,22 +101,22 @@ class LayerManager {
           id: layer.getSourceId(index),
           data: _encodeGeometries(layer),
         );
-        style.addSource(source);
+        await style.addSource(source);
       }
       // update layer
       if (layer != oldLayer) {
         if (oldLayer case Layer()) {
-          style.removeLayer(oldLayer.getLayerId(index));
+          await style.removeLayer(oldLayer.getLayerId(index));
         }
-        style.addLayer(layer.createStyleLayer(index));
+        await style.addLayer(layer.createStyleLayer(index));
       }
     }
     // remove any left-over sources and layers from the map
     for (var i = 0; i < (_oldLayers.length - layers.length); i++) {
       final index = layers.length + i;
       final oldLayer = _oldLayers[index];
-      style.removeLayer(oldLayer.getLayerId(index));
-      style.removeSource(oldLayer.getSourceId(index));
+      await style.removeLayer(oldLayer.getLayerId(index));
+      await style.removeSource(oldLayer.getSourceId(index));
     }
     _oldLayers = layers;
   }
