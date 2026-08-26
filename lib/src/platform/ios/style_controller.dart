@@ -170,7 +170,14 @@ class StyleControllerIos implements StyleController {
           'RasterDemSource not yet implemented via Pigeon',
         );
       case RasterSource():
-        throw UnimplementedError('RasterSource not yet implemented via Pigeon');
+        await _hostApi.addRasterSource(
+          id: source.id,
+          tiles: source.tiles ?? [],
+          minZoom: source.minZoom,
+          maxZoom: source.maxZoom,
+          tileSize: source.tileSize.toDouble(),
+          attribution: source.attribution,
+        );
       case VectorSource():
         try {
           await _hostApi.addVectorSource(

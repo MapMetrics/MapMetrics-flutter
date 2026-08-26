@@ -895,6 +895,30 @@ class MapLibreHostApi {
     }
   }
 
+  /// Add a raster source to the map style.
+  Future<void> addRasterSource({required String id, required List<String> tiles, required double minZoom, required double maxZoom, required double tileSize, String? attribution, }) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addRasterSource$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[id, tiles, minZoom, maxZoom, tileSize, attribution]);
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_sendFuture as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
   /// Minimal test method to debug Pigeon generation.
   Future<void> testMethod(String value) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod$pigeonVar_messageChannelSuffix';

@@ -1587,6 +1587,61 @@ void MapLibreHostApi::SetUp(
     }
   }
   {
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addRasterSource" + prepended_suffix, &GetCodec());
+    if (api != nullptr) {
+      channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {
+        try {
+          const auto& args = std::get<EncodableList>(message);
+          const auto& encodable_id_arg = args.at(0);
+          if (encodable_id_arg.IsNull()) {
+            reply(WrapError("id_arg unexpectedly null."));
+            return;
+          }
+          const auto& id_arg = std::get<std::string>(encodable_id_arg);
+          const auto& encodable_tiles_arg = args.at(1);
+          if (encodable_tiles_arg.IsNull()) {
+            reply(WrapError("tiles_arg unexpectedly null."));
+            return;
+          }
+          const auto& tiles_arg = std::get<EncodableList>(encodable_tiles_arg);
+          const auto& encodable_min_zoom_arg = args.at(2);
+          if (encodable_min_zoom_arg.IsNull()) {
+            reply(WrapError("min_zoom_arg unexpectedly null."));
+            return;
+          }
+          const auto& min_zoom_arg = std::get<double>(encodable_min_zoom_arg);
+          const auto& encodable_max_zoom_arg = args.at(3);
+          if (encodable_max_zoom_arg.IsNull()) {
+            reply(WrapError("max_zoom_arg unexpectedly null."));
+            return;
+          }
+          const auto& max_zoom_arg = std::get<double>(encodable_max_zoom_arg);
+          const auto& encodable_tile_size_arg = args.at(4);
+          if (encodable_tile_size_arg.IsNull()) {
+            reply(WrapError("tile_size_arg unexpectedly null."));
+            return;
+          }
+          const auto& tile_size_arg = std::get<double>(encodable_tile_size_arg);
+          const auto& encodable_attribution_arg = args.at(5);
+          const auto* attribution_arg = std::get_if<std::string>(&encodable_attribution_arg);
+          api->AddRasterSource(id_arg, tiles_arg, min_zoom_arg, max_zoom_arg, tile_size_arg, attribution_arg, [reply](std::optional<FlutterError>&& output) {
+            if (output.has_value()) {
+              reply(WrapError(output.value()));
+              return;
+            }
+            EncodableList wrapped;
+            wrapped.push_back(EncodableValue());
+            reply(EncodableValue(std::move(wrapped)));
+          });
+        } catch (const std::exception& exception) {
+          reply(WrapError(exception.what()));
+        }
+      });
+    } else {
+      channel.SetMessageHandler(nullptr);
+    }
+  }
+  {
     BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod" + prepended_suffix, &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler([api](const EncodableValue& message, const flutter::MessageReply<EncodableValue>& reply) {

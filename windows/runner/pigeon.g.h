@@ -649,6 +649,15 @@ class MapLibreHostApi {
     double min_zoom,
     double max_zoom,
     std::function<void(std::optional<FlutterError> reply)> result) = 0;
+  // Add a raster source to the map style.
+  virtual void AddRasterSource(
+    const std::string& id,
+    const flutter::EncodableList& tiles,
+    double min_zoom,
+    double max_zoom,
+    double tile_size,
+    const std::string* attribution,
+    std::function<void(std::optional<FlutterError> reply)> result) = 0;
   // Minimal test method to debug Pigeon generation.
   virtual void TestMethod(
     const std::string& value,

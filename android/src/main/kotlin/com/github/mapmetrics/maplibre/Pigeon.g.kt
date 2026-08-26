@@ -548,6 +548,8 @@ interface MapLibreHostApi {
   fun addClusteredGeoJsonSource(id: String, data: String, clustered: Boolean, clusterRadius: Double, clusterMaxZoom: Double, clusterPropertiesJson: String?, callback: (Result<Unit>) -> Unit)
   /** Add a vector source to the map style. */
   fun addVectorSource(id: String, tiles: List<String>, minZoom: Double, maxZoom: Double, callback: (Result<Unit>) -> Unit)
+  /** Add a raster source to the map style. */
+  fun addRasterSource(id: String, tiles: List<String>, minZoom: Double, maxZoom: Double, tileSize: Double, attribution: String?, callback: (Result<Unit>) -> Unit)
   /** Minimal test method to debug Pigeon generation. */
   fun testMethod(value: String, callback: (Result<Unit>) -> Unit)
   /**
@@ -965,6 +967,30 @@ interface MapLibreHostApi {
             val minZoomArg = args[2] as Double
             val maxZoomArg = args[3] as Double
             api.addVectorSource(idArg, tilesArg, minZoomArg, maxZoomArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addRasterSource$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val idArg = args[0] as String
+            val tilesArg = args[1] as List<String>
+            val minZoomArg = args[2] as Double
+            val maxZoomArg = args[3] as Double
+            val tileSizeArg = args[4] as Double
+            val attributionArg = args[5] as String?
+            api.addRasterSource(idArg, tilesArg, minZoomArg, maxZoomArg, tileSizeArg, attributionArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

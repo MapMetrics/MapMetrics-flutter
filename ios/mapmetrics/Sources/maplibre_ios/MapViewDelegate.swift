@@ -1375,12 +1375,74 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
       completion(.success(()))
     }
 
+    /// Add a raster layer to the style.
+    ///
+    /// This was a stub: it discarded every argument and reported
+    /// .success(()) without adding anything. Combined with RasterSource
+    /// throwing UnimplementedError on the Dart side, raster was entirely
+    /// non-functional on iOS while reporting success at both ends.
     func addRasterLayer(
-        id _: String, sourceId _: String, layout _: [String: Any],
-        paint _: [String: Any], belowLayerId _: String?,
+        id: String, sourceId: String, layout: [String: Any],
+        paint: [String: Any], belowLayerId: String?,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        completion(.success(()))
+        executeOrQueue({ mapView in
+            guard let style = mapView.style else {
+                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                return
+            }
+            guard let source = style.source(withIdentifier: sourceId) else {
+                completion(.failure(NSError(domain: "MapLibre", code: 2, userInfo: [NSLocalizedDescriptionKey: "Source not found: \(sourceId)"])))
+                return
+            }
+
+            let layer = MLNRasterStyleLayer(identifier: id, source: source)
+
+            if let minZoom = layout["__minZoom__"] as? Double {
+                layer.minimumZoomLevel = Float(minZoom)
+            }
+            if let maxZoom = layout["__maxZoom__"] as? Double {
+                layer.maximumZoomLevel = Float(maxZoom)
+            }
+            if let visibility = layout["visibility"] as? String {
+                layer.isVisible = (visibility == "visible")
+            }
+
+            paint.forEach { key, value in
+                let ok = MLNExpressionCatcher.performSafely {
+                    switch key {
+                    case "raster-opacity":
+                        layer.rasterOpacity = self.createExpression(from: value)
+                    case "raster-hue-rotate":
+                        layer.rasterHueRotation = self.createExpression(from: value)
+                    case "raster-brightness-min":
+                        layer.minimumRasterBrightness = self.createExpression(from: value)
+                    case "raster-brightness-max":
+                        layer.maximumRasterBrightness = self.createExpression(from: value)
+                    case "raster-saturation":
+                        layer.rasterSaturation = self.createExpression(from: value)
+                    case "raster-contrast":
+                        layer.rasterContrast = self.createExpression(from: value)
+                    case "raster-fade-duration":
+                        layer.rasterFadeDuration = self.createExpression(from: value)
+                    default:
+                        print("iOS: Unknown raster paint property: \(key)")
+                    }
+                }
+                if !ok {
+                    print("iOS: ⚠️ Skipped raster paint property '\(key)' (ObjC exception caught safely)")
+                }
+            }
+
+            if let belowLayerId = belowLayerId,
+               let belowLayer = style.layer(withIdentifier: belowLayerId) {
+                style.insertLayer(layer, below: belowLayer)
+            } else {
+                style.addLayer(layer)
+            }
+            print("iOS: Added raster layer '\(id)' over source '\(sourceId)'")
+            completion(.success(()))
+        }, completion: { _ in })
     }
 
 func addSymbolLayer(
@@ -2022,6 +2084,44 @@ func addSymbolLayer(
                 completion(.failure(error))
             }
         }
+    }
+
+    func addRasterSource(
+        id: String,
+        tiles: [String],
+        minZoom: Double,
+        maxZoom: Double,
+        tileSize: Double,
+        attribution: String?,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        executeOrQueue({ mapView in
+            guard let style = mapView.style else {
+                completion(.failure(NSError(domain: "MapLibre", code: 1, userInfo: [NSLocalizedDescriptionKey: "Style not available"])))
+                return
+            }
+
+            // MLNRasterTileSource takes tileSize through its options, not as a
+            // separate argument; omitting it makes MapLibre assume 512 and a
+            // 256px source then renders at half scale.
+            var options: [MLNTileSourceOption: Any] = [
+                .minimumZoomLevel: NSNumber(value: minZoom),
+                .maximumZoomLevel: NSNumber(value: maxZoom),
+                .tileSize: NSNumber(value: tileSize),
+            ]
+            if let attribution = attribution {
+                options[.attributionHTMLString] = attribution
+            }
+
+            let source = MLNRasterTileSource(
+                identifier: id,
+                tileURLTemplates: tiles,
+                options: options
+            )
+            style.addSource(source)
+            print("iOS: Added raster source '\(id)' (\(tiles.count) template(s), tileSize \(tileSize))")
+            completion(.success(()))
+        }, completion: { _ in })
     }
 
     func addVectorSource(

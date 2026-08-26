@@ -745,6 +745,7 @@ typedef struct {
   void (*add_sprite)(const gchar* sprite_json, const uint8_t* sprite_image, size_t sprite_image_length, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_clustered_geo_json_source)(const gchar* id, const gchar* data, gboolean clustered, double cluster_radius, double cluster_max_zoom, const gchar* cluster_properties_json, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*add_vector_source)(const gchar* id, FlValue* tiles, double min_zoom, double max_zoom, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
+  void (*add_raster_source)(const gchar* id, FlValue* tiles, double min_zoom, double max_zoom, double tile_size, const gchar* attribution, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*test_method)(const gchar* value, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   void (*animate_camera)(double latitude, double longitude, double zoom, double bearing, double pitch, int64_t duration, MapmetricsMapLibreHostApiResponseHandle* response_handle, gpointer user_data);
   MapmetricsMapLibreHostApiGetCameraResponse* (*get_camera)(gpointer user_data);
@@ -1078,6 +1079,25 @@ void mapmetrics_map_libre_host_api_respond_add_vector_source(MapmetricsMapLibreH
  * Responds with an error to MapLibreHostApi.addVectorSource. 
  */
 void mapmetrics_map_libre_host_api_respond_error_add_vector_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_add_raster_source:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ *
+ * Responds to MapLibreHostApi.addRasterSource. 
+ */
+void mapmetrics_map_libre_host_api_respond_add_raster_source(MapmetricsMapLibreHostApiResponseHandle* response_handle);
+
+/**
+ * mapmetrics_map_libre_host_api_respond_error_add_raster_source:
+ * @response_handle: a #MapmetricsMapLibreHostApiResponseHandle.
+ * @code: error code.
+ * @message: error message.
+ * @details: (allow-none): error details or %NULL.
+ *
+ * Responds with an error to MapLibreHostApi.addRasterSource. 
+ */
+void mapmetrics_map_libre_host_api_respond_error_add_raster_source(MapmetricsMapLibreHostApiResponseHandle* response_handle, const gchar* code, const gchar* message, FlValue* details);
 
 /**
  * mapmetrics_map_libre_host_api_respond_test_method:

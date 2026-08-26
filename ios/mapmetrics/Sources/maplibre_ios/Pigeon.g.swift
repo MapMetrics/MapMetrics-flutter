@@ -558,6 +558,8 @@ protocol MapLibreHostApi {
   func addClusteredGeoJsonSource(id: String, data: String, clustered: Bool, clusterRadius: Double, clusterMaxZoom: Double, clusterPropertiesJson: String?, completion: @escaping (Result<Void, Error>) -> Void)
   /// Add a vector source to the map style.
   func addVectorSource(id: String, tiles: [String], minZoom: Double, maxZoom: Double, completion: @escaping (Result<Void, Error>) -> Void)
+  /// Add a raster source to the map style.
+  func addRasterSource(id: String, tiles: [String], minZoom: Double, maxZoom: Double, tileSize: Double, attribution: String?, completion: @escaping (Result<Void, Error>) -> Void)
   /// Minimal test method to debug Pigeon generation.
   func testMethod(value: String, completion: @escaping (Result<Void, Error>) -> Void)
   /// Animate the camera to a new position.
@@ -954,6 +956,29 @@ class MapLibreHostApiSetup {
       }
     } else {
       addVectorSourceChannel.setMessageHandler(nil)
+    }
+    /// Add a raster source to the map style.
+    let addRasterSourceChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.addRasterSource\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      addRasterSourceChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let idArg = args[0] as! String
+        let tilesArg = args[1] as! [String]
+        let minZoomArg = args[2] as! Double
+        let maxZoomArg = args[3] as! Double
+        let tileSizeArg = args[4] as! Double
+        let attributionArg: String? = nilOrValue(args[5])
+        api.addRasterSource(id: idArg, tiles: tilesArg, minZoom: minZoomArg, maxZoom: maxZoomArg, tileSize: tileSizeArg, attribution: attributionArg) { result in
+          switch result {
+          case .success:
+            reply(wrapResult(nil))
+          case .failure(let error):
+            reply(wrapError(error))
+          }
+        }
+      }
+    } else {
+      addRasterSourceChannel.setMessageHandler(nil)
     }
     /// Minimal test method to debug Pigeon generation.
     let testMethodChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.mapmetrics.MapLibreHostApi.testMethod\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)

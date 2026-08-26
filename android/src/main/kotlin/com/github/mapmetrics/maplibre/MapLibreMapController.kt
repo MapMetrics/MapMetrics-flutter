@@ -749,6 +749,38 @@ class MapLibreMapController(
         }
     }
 
+    /// Added for parity with iOS, which reaches raster sources through Pigeon.
+    /// Android's StyleController builds RasterSource over JNI directly and so
+    /// never calls this, but the generated MapLibreHostApi requires it.
+    override fun addRasterSource(
+        id: String,
+        tiles: List<String>,
+        minZoom: Double,
+        maxZoom: Double,
+        tileSize: Double,
+        attribution: String?,
+        callback: (Result<Unit>) -> Unit,
+    ) {
+        try {
+            val style = mapLibreMap.style
+            if (style == null) {
+                callback(Result.failure(Exception("Style not available")))
+                return
+            }
+            val tileSet = org.maplibre.android.style.sources.TileSet("2.2.0", *tiles.toTypedArray())
+            tileSet.minZoom = minZoom.toFloat()
+            tileSet.maxZoom = maxZoom.toFloat()
+            if (attribution != null) tileSet.attribution = attribution
+            style.addSource(
+                org.maplibre.android.style.sources.RasterSource(id, tileSet, tileSize.toInt()),
+            )
+            callback(Result.success(Unit))
+        } catch (e: Exception) {
+            println("Android: Error adding raster source: ${e.message}")
+            callback(Result.failure(e))
+        }
+    }
+
     override fun addVectorSource(
         id: String,
         tiles: List<String>,

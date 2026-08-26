@@ -168,6 +168,17 @@ abstract class MapLibreHostApi {
     required double maxZoom,
   });
 
+  /// Add a raster source to the map style.
+  @async
+  void addRasterSource({
+    required String id,
+    required List<String> tiles,
+    required double minZoom,
+    required double maxZoom,
+    required double tileSize,
+    String? attribution,
+  });
+
   /// Minimal test method to debug Pigeon generation.
   @async
   void testMethod(String value);
