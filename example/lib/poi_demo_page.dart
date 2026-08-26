@@ -28,7 +28,11 @@ class _PoiDemoPageState extends State<PoiDemoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('POI Demo')),
-      body: MapLibreMap(
+      // MapMetricsView, not the raw MapLibreMap this page used to build.
+      // MapMetricsView is MapLibreMap plus the MapMetrics logo overlay, so
+      // using the inner widget directly made this the one page in the example
+      // that rendered without MapMetrics attribution.
+      body: MapMetricsView(
         options: MapOptions(
           initCenter: Position(4.89, 52.37), // Amsterdam
           initZoom: 14,
