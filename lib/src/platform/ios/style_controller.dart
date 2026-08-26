@@ -143,31 +143,27 @@ class StyleControllerIos implements StyleController {
         if (source.clusterProperties != null) {
           clusterPropsJson = json.encode(source.clusterProperties);
         }
+        // These used to catch-and-print. That made addSource resolve
+        // successfully after the native side had refused the data, so callers
+        // went on to add layers against a source that did not exist and the map
+        // just stayed empty. A source that fails to add is not a warning.
         if (source.cluster) {
-          try {
-            await _hostApi.addClusteredGeoJsonSource(
-              id: source.id,
-              data: source.data,
-              clustered: source.cluster,
-              clusterRadius: source.clusterRadius.toDouble(),
-              clusterMaxZoom: (source.clusterMaxZoom ?? 16.0).toDouble(),
-              clusterPropertiesJson: clusterPropsJson,
-            );
-          } catch (e) {
-            print('iOS: Error adding clustered source via Pigeon: $e');
-          }
+          await _hostApi.addClusteredGeoJsonSource(
+            id: source.id,
+            data: source.data,
+            clustered: source.cluster,
+            clusterRadius: source.clusterRadius.toDouble(),
+            clusterMaxZoom: (source.clusterMaxZoom ?? 16.0).toDouble(),
+            clusterPropertiesJson: clusterPropsJson,
+          );
         } else {
-          try {
-            await _hostApi.addClusteredGeoJsonSource(
-              id: source.id,
-              data: source.data,
-              clustered: false,
-              clusterRadius: 0.0,
-              clusterMaxZoom: 0.0,
-            );
-          } catch (e) {
-            print('iOS: Error adding regular source via Pigeon: $e');
-          }
+          await _hostApi.addClusteredGeoJsonSource(
+            id: source.id,
+            data: source.data,
+            clustered: false,
+            clusterRadius: 0.0,
+            clusterMaxZoom: 0.0,
+          );
         }
       case RasterDemSource():
         throw UnimplementedError(

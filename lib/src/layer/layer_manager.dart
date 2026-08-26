@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:mapmetrics/mapmetrics.dart';
@@ -12,16 +13,56 @@ class LayerManager {
   /// It creates all sources and layers on the map. It's not needed to compare
   /// the layers with [_oldLayers] in for the initial creation.
   LayerManager(this.style, List<Layer> layers) {
+    _oldLayers = layers;
+    unawaited(_addLayers(layers));
+  }
+
+  /// Create the source and style layer for each [Layer], in order.
+  ///
+  /// The source must exist before the layer that references it. These two calls
+  /// used to be fired without awaiting either, so on iOS addCircleLayer
+  /// regularly landed first and failed with "Source not found: <id>" -- an
+  /// error nobody saw, because the dropped future carried it away.
+  Future<void> _addLayers(List<Layer> layers) async {
     for (final (index, layer) in layers.indexed) {
       final source = GeoJsonSource(
         id: layer.getSourceId(index),
-        data: jsonEncode(GeometryCollection(geometries: layer.list).toJson()),
+        data: _encodeGeometries(layer),
       );
-      style.addSource(source);
-      style.addLayer(layer.createStyleLayer(index));
+      await style.addSource(source);
+      await style.addLayer(layer.createStyleLayer(index));
     }
-    _oldLayers = layers;
   }
+
+  /// Encode a [Layer]'s geometries as the source data for its style layer.
+  ///
+  /// Emits a FeatureCollection of one Feature per geometry. Two things here are
+  /// deliberate, and both were bugs:
+  ///
+  /// It used to emit a bare GeometryCollection. That is valid GeoJSON but is
+  /// not a feature, so it exposes nothing for a style layer to draw -- on iOS
+  /// it parses to MLNShapeCollection rather than the MLNShapeCollectionFeature
+  /// a source needs.
+  ///
+  /// The JSON is built by hand rather than via geotypes' Feature.toJson, which
+  /// serialises a null id as `"id": null`. RFC 7946 allows only a string or a
+  /// number there, and MapLibre's parser rejects the whole document -- the
+  /// native side answered "Invalid GeoJSON data" for every layer.
+  ///
+  /// Every widget in the high-level `layers:` API funnels through here, so both
+  /// faults emptied CircleLayer, MarkerLayer, PolygonLayer and PolylineLayer
+  /// alike.
+  static String _encodeGeometries(Layer layer) => jsonEncode({
+    'type': 'FeatureCollection',
+    'features': [
+      for (final geometry in layer.list)
+        {
+          'type': 'Feature',
+          'geometry': geometry.toJson(),
+          'properties': const <String, Object?>{},
+        },
+    ],
+  });
 
   /// The [StyleController] of the [MapLibreMap].
   final StyleController style;
@@ -42,12 +83,12 @@ class LayerManager {
       if (oldLayer case Layer()) {
         style.updateGeoJsonSource(
           id: layer.getSourceId(index),
-          data: jsonEncode(GeometryCollection(geometries: layer.list).toJson()),
+          data: _encodeGeometries(layer),
         );
       } else {
         final source = GeoJsonSource(
           id: layer.getSourceId(index),
-          data: jsonEncode(GeometryCollection(geometries: layer.list).toJson()),
+          data: _encodeGeometries(layer),
         );
         style.addSource(source);
       }
