@@ -25,8 +25,8 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
       appBar: AppBar(title: const Text('Widget Layer')),
       body: MapMetricsView(
         options: MapOptions(
-          initCenter: Position(-74.006, 40.7128),
-          initZoom: 9,
+          initCenter: Position(4.92, 52.37),
+          initZoom: 11,
         ),
         onStyleLoaded: _onStyleLoaded,
         onEvent: (event) {
@@ -43,7 +43,7 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
               // A 3D marker
               Marker(
                 size: const Size.square(50),
-                point: Position(-10, 0),
+                point: Position(4.83, 52.37),
                 child: const Icon(
                   Icons.location_on,
                   color: Colors.red,
@@ -53,7 +53,7 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
               ),
               Marker(
                 size: const Size.square(50),
-                point: Position(-5, 0),
+                point: Position(4.89, 52.37),
                 child: const Icon(
                   Icons.location_on,
                   color: Colors.red,
@@ -64,7 +64,7 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
               ),
               Marker(
                 size: const Size.square(50),
-                point: Position(0, 0),
+                point: Position(4.95, 52.37),
                 child: const Icon(
                   Icons.location_on,
                   color: Colors.red,
@@ -75,7 +75,7 @@ class _WidgetLayerPageState extends State<WidgetLayerPage> {
               ),
               Marker(
                 size: const Size.square(50),
-                point: Position(5, 0),
+                point: Position(5.01, 52.37),
                 child: const Icon(
                   Icons.location_on,
                   color: Colors.red,

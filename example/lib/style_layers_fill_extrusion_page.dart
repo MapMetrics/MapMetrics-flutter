@@ -23,8 +23,8 @@ class _StyleLayersFillExtrusionPageState
       appBar: AppBar(title: const Text('Fill Extrusion Style Layer')),
       body: MapMetricsView(
         options: MapOptions(
-          initCenter: Position(-74.006, 40.7128),
-          initZoom: 9,
+          initCenter: Position(-87.6169, 41.8662),
+          initZoom: 12,
         ),
         onStyleLoaded: _onStyleLoaded,
       ),

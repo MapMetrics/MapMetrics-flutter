@@ -18,10 +18,10 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
   final _mapKey = GlobalKey();
 
   final List<Position> _markerPositions = [
-    Position(-10, 0),
-    Position(-5, 0),
-    Position(0, 0),
-    Position(5, 0),
+    Position(4.83, 52.37),
+    Position(4.89, 52.37),
+    Position(4.95, 52.37),
+    Position(5.01, 52.37),
   ];
 
   final List<String> _markerLabels = [
@@ -52,8 +52,8 @@ class _CustomMarkerPageState extends State<CustomMarkerPage> {
             child: MapMetricsView(
               key: _mapKey,
               options: MapOptions(
-                initZoom: 3,
-                initCenter: Position(0, 0),
+                initZoom: 11,
+                initCenter: Position(4.92, 52.37),
                 gestures: _mapGestures,
               ),
               onMapCreated: (controller) => _controller = controller,

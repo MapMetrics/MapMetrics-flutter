@@ -22,8 +22,8 @@ class _StyleLayersHillshadePageState extends State<StyleLayersHillshadePage> {
       appBar: AppBar(title: const Text('Hillshade Style Layer')),
       body: MapMetricsView(
         options: MapOptions(
-          initCenter: Position(-74.006, 40.7128),
-          initZoom: 9,
+          initCenter: Position(7.9622, 46.5763),
+          initZoom: 11,
         ),
         onStyleLoaded: _onStyleLoaded,
       ),
