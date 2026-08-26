@@ -19,7 +19,10 @@ class _StyleLayersLinePageState extends State<StyleLayersLinePage> {
       appBar: AppBar(title: const Text('Line Style Layer')),
       body: MapMetricsView(
         options: MapOptions(
-          initCenter: Position(-74.006, 40.7128),
+          // Same fault as the fill example: the layer draws
+          // assets/geojson/path.json, which runs lng 8.80..9.25,
+          // lat 47.95..48.08, while the camera sat on New York.
+          initCenter: Position(9.02, 48.01),
           initZoom: 9,
         ),
         onStyleLoaded: _onStyleLoaded,

@@ -13,16 +13,22 @@ class StyleLayersFillPage extends StatefulWidget {
 }
 
 class _StyleLayersFillPageState extends State<StyleLayersFillPage> {
-  late final MapController _controller;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Fill Style Layer')),
       body: MapMetricsView(
         options: MapOptions(
-          initCenter: Position(-74.006, 40.7128),
-          initZoom: 9,
+          // The layer fills assets/geojson/lake-constance.json, which spans
+          // lng 8.86..9.75, lat 47.48..47.82. The camera pointed at
+          // (-74.006, 40.7128) -- New York -- so the example rendered a lake
+          // in Germany while looking at Manhattan, and showed a blank map.
+          //
+          // Zoom 8 rather than 9: the polygon is ~0.9 degrees wide, and at
+          // zoom 9 the viewport is only ~0.55 degrees across, so the lake
+          // would not fit on screen.
+          initCenter: Position(9.31, 47.65),
+          initZoom: 8,
         ),
         onStyleLoaded: _onStyleLoaded,
       ),
