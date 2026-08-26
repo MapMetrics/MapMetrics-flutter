@@ -682,10 +682,15 @@ class MapLibreMapController(
                 }
             }
 
+            val sheetSize = "${spriteBitmap.width}x${spriteBitmap.height}"
             spriteBitmap.recycle()
 
             val elapsed = System.currentTimeMillis() - startTime
-            // Sprite loading: $successCount icons
+            android.util.Log.i(
+                "MapMetrics",
+                "addSprite: $successCount images added, $failCount skipped, " +
+                    "sheet=$sheetSize, ${elapsed}ms",
+            )
             callback(Result.success(Unit))
         } catch (e: Exception) {
             println("Android: Error in addSprite: ${e.message}")
