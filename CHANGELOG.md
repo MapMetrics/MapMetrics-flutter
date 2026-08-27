@@ -73,6 +73,14 @@ in every case the old behaviour failed silently.
 * **Android discarded every raster layer property** — the `setProperties`
   call was commented out.
 
+* **`filter`, `minZoom` and `maxZoom` now work on fill, line and background
+  layers.** They were declared on the base class but never forwarded by those
+  constructors, so `FillStyleLayer(filter: ...)` did not compile — and even if
+  it had, no platform applied them: only the circle and symbol paths packed
+  them for the native side. Fill, line and background now forward the fields,
+  both platforms apply them, and a background layer correctly ignores `filter`
+  because it has no source to filter.
+
 ### Examples
 
 * Each example now points its camera at its own content, uses its own

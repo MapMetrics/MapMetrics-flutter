@@ -321,6 +321,7 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         }
 
         let layer = MLNFillStyleLayer(identifier: id, source: source)
+        applyLayerSentinels(layer, layout: layout, what: "fill layer")
         applyFillProperties(to: layer, paint: paint, layout: layout)
 
         if let belowLayerId = belowLayerId {
@@ -600,6 +601,38 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
     }
 
     // Convert MapLibre filter expression to NSPredicate (handles 'all', 'any' compound operators)
+    /// Apply the `__filter__` / `__minZoom__` / `__maxZoom__` sentinels the Dart
+    /// side packs into `layout`.
+    ///
+    /// These were handled only by the circle and symbol layers, so
+    /// `FillStyleLayer(filter: ...)`, `LineStyleLayer(minZoom: ...)` and friends
+    /// compiled, sent their sentinel across the channel, and were dropped here
+    /// without a word. A filter that silently does nothing looks exactly like a
+    /// filter that matches everything, which is why it survived this long.
+    ///
+    /// `filter` applies only to a vector layer. A background layer has no source
+    /// to filter, so the cast fails and only the zoom range is applied -- which
+    /// is the correct behaviour, not an oversight.
+    private func applyLayerSentinels(_ layer: MLNStyleLayer, layout: [String: Any], what: String) {
+        if let filterArray = layout["__filter__"] as? [Any] {
+            if let vectorLayer = layer as? MLNVectorStyleLayer {
+                if let predicate = predicateFromFilter(filterArray) {
+                    vectorLayer.predicate = predicate
+                } else {
+                    NSLog("iOS: could not convert filter to a predicate for %@", what)
+                }
+            } else {
+                NSLog("iOS: %@ takes no filter; ignoring __filter__", what)
+            }
+        }
+        if let minZoom = layout["__minZoom__"] as? Double {
+            layer.minimumZoomLevel = Float(minZoom)
+        }
+        if let maxZoom = layout["__maxZoom__"] as? Double {
+            layer.maximumZoomLevel = Float(maxZoom)
+        }
+    }
+
     private func predicateFromFilter(_ filter: [Any]) -> NSPredicate? {
         guard !filter.isEmpty, let op = filter.first as? String else {
             return nil
@@ -1091,6 +1124,7 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
         }
 
         let layer = MLNBackgroundStyleLayer(identifier: id)
+        applyLayerSentinels(layer, layout: layout, what: "background layer")
         applyBackgroundProperties(to: layer, paint: paint, layout: layout)
 
         if let belowLayerId = belowLayerId {
@@ -1199,6 +1233,7 @@ class MapLibreView: NSObject, FlutterPlatformView, MLNMapViewDelegate,
 
       print("iOS: Creating line layer with source: \(sourceId)")
       let lineLayer = MLNLineStyleLayer(identifier: id, source: source)
+      applyLayerSentinels(lineLayer, layout: layout, what: "line layer")
 
       // Handle source-layer property for vector tile sources.
       // Without this, an MLNLineStyleLayer backed by an MLNVectorTileSource

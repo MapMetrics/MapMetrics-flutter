@@ -24,13 +24,27 @@ class StyleControllerIos implements StyleController {
     await _hostApi.addSprite(spriteJson, spriteImage);
   }
 
+  /// Pack `filter`, `minZoom` and `maxZoom` into `layout` under sentinel keys.
+  ///
+  /// Pigeon has no field for them, so they ride across the channel inside the
+  /// layout map and the native side lifts them back out. Only the circle and
+  /// symbol layers ever did this, which is why the other layer types did not
+  /// expose the properties at all.
+  static Map<String, Object> _layoutWithSentinels(StyleLayer layer) {
+    final map = Map<String, Object>.from(layer.layout);
+    if (layer.filter != null) map['__filter__'] = layer.filter!;
+    if (layer.minZoom != null) map['__minZoom__'] = layer.minZoom!;
+    if (layer.maxZoom != null) map['__maxZoom__'] = layer.maxZoom!;
+    return map;
+  }
+
   @override
   Future<void> addLayer(StyleLayer layer, {String? belowLayerId}) async {
     switch (layer) {
       case BackgroundStyleLayer():
         await _hostApi.addBackgroundLayer(
           id: layer.id,
-          layout: layer.layout,
+          layout: _layoutWithSentinels(layer),
           paint: layer.paint,
           belowLayerId: belowLayerId,
         );
@@ -58,7 +72,7 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addFillLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout,
+          layout: _layoutWithSentinels(layer),
           paint: layer.paint,
           belowLayerId: belowLayerId,
         );
@@ -67,7 +81,7 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addLineLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout,
+          layout: _layoutWithSentinels(layer),
           paint: layer.paint,
           belowLayerId: belowLayerId,
         );

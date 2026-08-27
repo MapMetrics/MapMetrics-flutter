@@ -13,6 +13,9 @@ final class LineStyleLayer extends StyleLayerWithSource {
     required super.sourceId,
     super.layout,
     super.paint,
+    super.minZoom,
+    super.maxZoom,
+    super.filter,
   });
 
   // TODO add properties

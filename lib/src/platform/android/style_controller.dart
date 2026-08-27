@@ -145,6 +145,33 @@ class StyleControllerAndroid implements StyleController {
       jLayer.releasedBy(arena);
       jLayer.setProperties(props);
 
+      // filter / minZoom / maxZoom. Only the Symbol and Circle paths above
+      // carried these, and they return before reaching here -- so for every
+      // other layer type the properties were never applied. They were not even
+      // reachable from Dart: FillStyleLayer, LineStyleLayer and
+      // BackgroundStyleLayer did not forward the base-class fields, so passing
+      // one did not compile. Both halves are fixed together; neither is useful
+      // alone.
+      if (layer.minZoom case final double minZoom) {
+        jLayer.setMinZoom(minZoom);
+      }
+      if (layer.maxZoom case final double maxZoom) {
+        jLayer.setMaxZoom(maxZoom);
+      }
+      if (layer.filter case final Object filter) {
+        final expression = _createExpressionFromJson(jsonEncode(filter));
+        if (expression == null) {
+          debugPrint('Android: could not build an Expression for ${layer.id}');
+        } else if (jLayer case final jni.FillLayer fillLayer) {
+          fillLayer.setFilter(expression);
+        } else if (jLayer case final jni.LineLayer lineLayer) {
+          lineLayer.setFilter(expression);
+        } else {
+          // A background layer has no source, so it takes no filter.
+          debugPrint('Android: ${layer.runtimeType} takes no filter; ignored');
+        }
+      }
+
       // Safety: remove existing layer with same ID to prevent native SIGSEGV
       try {
         _jniStyle.removeLayer(layer.id.toJString());

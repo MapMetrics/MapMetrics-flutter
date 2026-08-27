@@ -15,6 +15,8 @@ final class BackgroundStyleLayer extends StyleLayer {
     this.opacity = 1,
     super.layout,
     super.paint,
+    super.minZoom,
+    super.maxZoom,
   });
 
   /// Whether this layer is displayed.

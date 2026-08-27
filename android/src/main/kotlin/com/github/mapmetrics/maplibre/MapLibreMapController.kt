@@ -348,7 +348,16 @@ class MapLibreMapController(
         callback: (Result<Unit>) -> Unit,
     ) {
         val layer = BackgroundLayer(id)
-        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
+
+        // A background layer has no source, so there is nothing to filter --
+        // only the zoom range applies.
+        (layout["__minZoom__"] as? Double)?.let { layer.minZoom = it.toFloat() }
+        (layout["__maxZoom__"] as? Double)?.let { layer.maxZoom = it.toFloat() }
+
+        val filteredLayout = layout.filterKeys {
+            it != "__filter__" && it != "__minZoom__" && it != "__maxZoom__"
+        }
+        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
         safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
@@ -404,7 +413,22 @@ class MapLibreMapController(
         callback: (Result<Unit>) -> Unit,
     ) {
         val layer = LineLayer(id, sourceId)
-        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(layout))
+
+        // Sentinels, same shape addFillLayer already handled. They must also be
+        // stripped before parseLayoutProperties: that parser is generic, so a
+        // stray `__filter__` would be handed to Expression.Converter as if it
+        // were a layout property.
+        (layout["source-layer"] as? String)?.let { layer.setSourceLayer(it) }
+        (layout["__filter__"] as? ArrayList<*>)?.let {
+            layer.setFilter(Expression.Converter.convert(gson.toJsonTree(it)))
+        }
+        (layout["__minZoom__"] as? Double)?.let { layer.minZoom = it.toFloat() }
+        (layout["__maxZoom__"] as? Double)?.let { layer.maxZoom = it.toFloat() }
+
+        val filteredLayout = layout.filterKeys {
+            it != "source-layer" && it != "__filter__" && it != "__minZoom__" && it != "__maxZoom__"
+        }
+        layer.setProperties(*parsePaintProperties(paint), *parseLayoutProperties(filteredLayout))
         safeAddLayer(layer, belowLayerId)
         callback(Result.success(Unit))
     }
