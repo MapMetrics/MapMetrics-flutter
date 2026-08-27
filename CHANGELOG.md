@@ -1,3 +1,21 @@
+## 2.0.1
+
+* **`filter`, `minZoom` and `maxZoom` now work on fill, line and background
+  layers.** They were declared on the base class but never forwarded by those
+  constructors, so `FillStyleLayer(filter: ...)` did not compile — and even if
+  it had, no platform applied them: only the circle and symbol code paths
+  packed them for the native side. Fill, line and background now forward the
+  fields, both platforms apply them, and a background layer correctly ignores
+  `filter` because it has no source to filter.
+
+  This was written for 2.0.0 and listed in its changelog, but the upload
+  completed before the code landed. 2.0.0 ships without it; this is the
+  version that has it.
+
+  Still not covered: `FillExtrusionStyleLayer` and `HeatmapStyleLayer` on iOS,
+  whose native handlers ignore every argument and report success. Exposing the
+  properties there would have been a lie.
+
 ## 2.0.0
 
 **Breaking: the default map style changed.** `MapOptions.initStyle` used to
@@ -72,14 +90,6 @@ in every case the old behaviour failed silently.
   an expression, so symbol layers using one rendered no labels.
 * **Android discarded every raster layer property** — the `setProperties`
   call was commented out.
-
-* **`filter`, `minZoom` and `maxZoom` now work on fill, line and background
-  layers.** They were declared on the base class but never forwarded by those
-  constructors, so `FillStyleLayer(filter: ...)` did not compile — and even if
-  it had, no platform applied them: only the circle and symbol paths packed
-  them for the native side. Fill, line and background now forward the fields,
-  both platforms apply them, and a background layer correctly ignores `filter`
-  because it has no source to filter.
 
 ### Examples
 
