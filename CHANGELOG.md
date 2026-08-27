@@ -38,6 +38,50 @@ to say so. Both paths now resolve MapMetrics-SDK 2.0.1.
   Vulkan**. That declaration is gone from the default artefact. Apps wanting
   Vulkan can depend on `mapmetrics-native-sdk-vulkan` directly.
 
+### Fixed — rendering
+
+Everything below shipped after the 2.0.0 version bump was first cut. Most of
+it is the difference between a layer drawing and a layer drawing nothing, and
+in every case the old behaviour failed silently.
+
+* **The high-level `layers:` API rendered nothing on iOS.** Three faults at
+  once: the source was a bare `GeometryCollection` (valid GeoJSON, but not a
+  feature, so a style layer has nothing to draw), `Feature.toJson` emitted
+  `"id": null` which MapLibre's parser rejects outright, and the source and
+  layer calls were fired without awaiting, so the layer regularly landed
+  first and failed with `Source not found`. Every widget in that API —
+  `CircleLayer`, `MarkerLayer`, `PolygonLayer`, `PolylineLayer` — was affected.
+* **Clustered GeoJSON did not render on iOS.** A dynamic `UIColor` cannot be
+  used as an `NSExpression` constant, the cluster-count layer had no font
+  stack, and `addCircleLayer` silently discarded app-supplied layers on a
+  clustered source.
+* **`MarkerLayer` drew zero features on iOS.** Its default font stack had two
+  entries; MapLibre requests a multi-font stack as one comma-joined glyph
+  path, and that path 404s. Exactly one entry now.
+* **`getCamera().zoom` returned altitude in metres on iOS** — values in the
+  millions. The zoom buttons stepped from that number, so they desynced from
+  pinch gestures. Both now read the real zoom level.
+* **iOS dropped most symbol layout properties.** `text-font`,
+  `symbol-sort-key`, `symbol-z-order`, `symbol-placement`, the
+  `text-allow-overlap` family, `text-offset`/`icon-offset` and others were
+  discarded by a hand-written whitelist that had no entry for them. Unknown
+  properties are now logged instead of vanishing.
+* **Raster sources and raster layers are implemented on iOS.** They existed in
+  the Dart API and did nothing.
+* **Android parsed `text-font` as an expression.** A font stack is data, not
+  an expression, so symbol layers using one rendered no labels.
+* **Android discarded every raster layer property** — the `setProperties`
+  call was commented out.
+
+### Examples
+
+* Each example now points its camera at its own content, uses its own
+  geometry, and carries the icons it needs. Several were rendering correctly
+  into empty ocean.
+* New POI demo: vector tiles through the gateway, category-ranked icons and
+  category badge circles.
+* README written.
+
 ### Security
 
 * Removed three non-expiring production API keys from the package and its
