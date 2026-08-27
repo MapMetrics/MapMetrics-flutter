@@ -94,12 +94,12 @@ class _MapControlButtonsState extends State<MapControlButtons> {
         _trackLocationButtonInitialized = true;
         if (Platform.isIOS) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            // await Future.delayed(const Duration(milliseconds: 500));
+            // await Future<void>.delayed(const Duration(milliseconds: 500));
             await _initializeLocation(controller);
           });
         } else if (_permissionManager?.locationPermissionsGranted ?? false) {
           WidgetsBinding.instance.addPostFrameCallback((_) async {
-            // await Future.delayed(const Duration(milliseconds: 500));
+            // await Future<void>.delayed(const Duration(milliseconds: 500));
             await _initializeLocation(controller);
           });
         }
@@ -231,7 +231,7 @@ class _MapControlButtonsState extends State<MapControlButtons> {
         await controller.enableLocation();
         setState(() => _trackState = _TrackLocationState.gpsFixed);
 
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future<void>.delayed(const Duration(milliseconds: 500));
         if (widget.onCurrentLocation != null && controller.camera != null) {
           widget.onCurrentLocation!(controller.camera!.center);
         }
@@ -256,7 +256,7 @@ class _MapControlButtonsState extends State<MapControlButtons> {
       await controller.enableLocation();
 
       setState(() => _trackState = _TrackLocationState.gpsFixed);
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future<void>.delayed(const Duration(milliseconds: 500));
       if (widget.onCurrentLocation != null && controller.camera != null) {
         widget.onCurrentLocation!(controller.camera!.center);
       }

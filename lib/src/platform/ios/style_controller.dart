@@ -30,13 +30,13 @@ class StyleControllerIos implements StyleController {
       case BackgroundStyleLayer():
         await _hostApi.addBackgroundLayer(
           id: layer.id,
-          layout: layer.layout ?? {},
-          paint: layer.paint ?? {},
+          layout: layer.layout,
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
       case CircleStyleLayer():
-        final circleLayout = Map<String, Object>.from(layer.layout ?? {});
+        final circleLayout = Map<String, Object>.from(layer.layout);
         if (layer.filter != null) {
           circleLayout['__filter__'] = layer.filter!;
         }
@@ -50,7 +50,7 @@ class StyleControllerIos implements StyleController {
           id: layer.id,
           sourceId: layer.sourceId,
           layout: circleLayout,
-          paint: layer.paint ?? {},
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
@@ -58,8 +58,8 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addFillLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
-          paint: layer.paint ?? {},
+          layout: layer.layout,
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
@@ -67,13 +67,13 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addLineLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
-          paint: layer.paint ?? {},
+          layout: layer.layout,
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
       case SymbolStyleLayer():
-        final layout = Map<String, Object>.from(layer.layout ?? {});
+        final layout = Map<String, Object>.from(layer.layout);
         if (layer.filter != null) {
           layout['__filter__'] = layer.filter!;
         }
@@ -87,7 +87,7 @@ class StyleControllerIos implements StyleController {
           id: layer.id,
           sourceId: layer.sourceId,
           layout: layout,
-          paint: layer.paint ?? {},
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
@@ -95,8 +95,8 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addFillExtrusionLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
-          paint: layer.paint ?? {},
+          layout: layer.layout,
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
@@ -104,8 +104,8 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addHeatmapLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
-          paint: layer.paint ?? {},
+          layout: layer.layout,
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
@@ -113,8 +113,8 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addHillshadeLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
-          paint: layer.paint ?? {},
+          layout: layer.layout,
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
@@ -122,8 +122,8 @@ class StyleControllerIos implements StyleController {
         await _hostApi.addRasterLayer(
           id: layer.id,
           sourceId: layer.sourceId,
-          layout: layer.layout ?? {},
-          paint: layer.paint ?? {},
+          layout: layer.layout,
+          paint: layer.paint,
           belowLayerId: belowLayerId,
         );
 
@@ -183,8 +183,8 @@ class StyleControllerIos implements StyleController {
           await _hostApi.addVectorSource(
             id: source.id,
             tiles: source.tiles ?? [],
-            minZoom: source.minZoom ?? 0.0,
-            maxZoom: source.maxZoom ?? 22.0,
+            minZoom: source.minZoom,
+            maxZoom: source.maxZoom,
           );
         } catch (e) {
           print('iOS: Error adding vector source via Pigeon: $e');
@@ -253,10 +253,6 @@ class StyleControllerIos implements StyleController {
     updateGeoJsonSource(id: id, data: data);
   }
 
-  NSArray _getLayers() {
-    // TODO: Implement Pigeon method for getting layers
-    return NSArray.new1();
-  }
 
   @override
   void setProjection(MapProjection projection) {

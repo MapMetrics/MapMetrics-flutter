@@ -3,9 +3,9 @@ description: "Permissive and performant mapping library that supports Mapbox Vec
 
 version: 2.0.0
 
-repository: https://github.com/MapMetrics/MapMetrics-flutter
+repository: https://github.com/MapMetrics/MapMetrics-flutter-SDK
 issue_tracker: https://github.com/MapMetrics/MapMetrics-flutter/issues
-homepage: https://github.com/MapMetrics/MapMetrics-flutter
+homepage: https://github.com/MapMetrics/MapMetrics-flutter-SDK
 
 topics: [ map, mapmetrics, mvt ]
 

@@ -687,6 +687,10 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
   // Old _applyRoadSnapping method removed - snapping now handled in _setupLocationSnapping timer
 
+  // Nothing calls this yet -- drag handling is wired through
+  // _setupLocationSnapping today. Kept because it is the only place the
+  // long-press-to-drag flow is written down.
+  // ignore: unused_element
   void _setupDragHandling() {
     // Note: MapLibre Android doesn't expose removeOnMapClickListener directly
     // The listeners will be overridden when we add new ones
@@ -815,9 +819,7 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     } else {
       debugPrint('📍 Location marker drag mode DISABLED');
       // Re-enable normal tracking if it was disabled
-      if (_locationComponent != null) {
-        _locationComponent.setCameraMode(jni.CameraMode.TRACKING);
-      }
+      _locationComponent.setCameraMode(jni.CameraMode.TRACKING);
     }
   }
 
@@ -844,9 +846,7 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
     _ensureNavigationIconAboveRoute();
 
     // Force immediate update after route change
-    if (_locationComponent != null) {
-      _applyRoadSnapping();
-    }
+    _applyRoadSnapping();
 
     // Snapping will be applied automatically by the timer in _setupLocationSnapping
     debugPrint('📍 Road snapping will be applied automatically');
@@ -880,28 +880,24 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
   /// Hide the native location icon (useful for navigation mode)
   void hideLocationIcon() {
-    if (_locationComponent != null) {
-      // Completely disable the location component to hide the native marker
-      _locationComponent.setLocationComponentEnabled(false);
-      debugPrint('🚫 Native location component completely disabled');
-    }
+    // Completely disable the location component to hide the native marker
+    _locationComponent.setLocationComponentEnabled(false);
+    debugPrint('🚫 Native location component completely disabled');
   }
 
   /// Show the native location icon with the specified mode
   void showLocationIcon({BearingTrackMode mode = BearingTrackMode.gps}) {
-    if (_locationComponent != null) {
-      // First re-enable the location component
-      _locationComponent.setLocationComponentEnabled(true);
+    // First re-enable the location component
+    _locationComponent.setLocationComponentEnabled(true);
 
-      // Then set the appropriate render mode
-      final renderMode = switch (mode) {
-        BearingTrackMode.none => jni.RenderMode.NORMAL, // 18
-        BearingTrackMode.compass => jni.RenderMode.COMPASS, // 4
-        BearingTrackMode.gps => jni.RenderMode.GPS, // 8
-      };
-      _locationComponent.setRenderMode(renderMode);
-      debugPrint('✅ Native location component re-enabled with mode: $mode');
-    }
+    // Then set the appropriate render mode
+    final renderMode = switch (mode) {
+      BearingTrackMode.none => jni.RenderMode.NORMAL, // 18
+      BearingTrackMode.compass => jni.RenderMode.COMPASS, // 4
+      BearingTrackMode.gps => jni.RenderMode.GPS, // 8
+    };
+    _locationComponent.setRenderMode(renderMode);
+    debugPrint('✅ Native location component re-enabled with mode: $mode');
   }
 
   /// Ensure navigation icon stays above route polylines during rerouting
@@ -918,11 +914,9 @@ final class MapLibreMapStateAndroid extends MapLibreMapStateNative {
 
         // Solution: Disable location component to hide default marker
         // The custom navigation marker from road snapping service will be used instead
-        if (_locationComponent != null) {
-          // Disable location component during navigation
-          _locationComponent.setLocationComponentEnabled(false);
-          debugPrint('🚫 Location component disabled for navigation mode');
-        }
+        // Disable location component during navigation
+        _locationComponent.setLocationComponentEnabled(false);
+        debugPrint('🚫 Location component disabled for navigation mode');
 
         // The actual navigation marker positioning is handled by the road snapping service
         // which automatically positions itself correctly above route layers

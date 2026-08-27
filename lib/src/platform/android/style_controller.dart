@@ -13,7 +13,7 @@ class StyleControllerAndroid implements StyleController {
     // (matching iOS implementation which works correctly with SDF icons)
     if (layer is SymbolStyleLayer) {
       // Adding symbol layer via Pigeon
-      final layout = Map<String, Object>.from(layer.layout ?? {});
+      final layout = Map<String, Object>.from(layer.layout);
       // Pass filter through layout with special key
       if (layer.filter != null) {
         layout['__filter__'] = layer.filter!;
@@ -29,7 +29,7 @@ class StyleControllerAndroid implements StyleController {
         id: layer.id,
         sourceId: layer.sourceId,
         layout: layout,
-        paint: layer.paint ?? {},
+        paint: layer.paint,
         belowLayerId: belowLayerId,
       );
       // Symbol layer added
@@ -39,7 +39,7 @@ class StyleControllerAndroid implements StyleController {
     // For CircleStyleLayer, use Pigeon to properly handle filters
     if (layer is CircleStyleLayer) {
       // Adding circle layer via Pigeon
-      final layout = Map<String, Object>.from(layer.layout ?? {});
+      final layout = Map<String, Object>.from(layer.layout);
       // Pass filter through layout with special key
       if (layer.filter != null) {
         layout['__filter__'] = layer.filter!;
@@ -55,7 +55,7 @@ class StyleControllerAndroid implements StyleController {
         id: layer.id,
         sourceId: layer.sourceId,
         layout: layout,
-        paint: layer.paint ?? {},
+        paint: layer.paint,
         belowLayerId: belowLayerId,
       );
       print('Android StyleController: Circle layer added successfully');
@@ -373,7 +373,6 @@ class StyleControllerAndroid implements StyleController {
     }
   }
 
-  JList<jni.Layer?> _getLayers() => _jniStyle.getLayers();
 
   @override
   void setProjection(MapProjection projection) {
@@ -382,6 +381,10 @@ class StyleControllerAndroid implements StyleController {
 
   /// Create a MapLibre Expression from a JSON string via JNI reflection.
   /// Uses Expression.raw(String) which parses a MapLibre expression JSON array.
+  // ignore_for_file: invalid_use_of_internal_member
+  // Expression.raw has no binding in the generated JNI surface, so the
+  // static call is made by hand through package:jni's internals. They are
+  // marked @internal upstream; there is no public equivalent.
   static JObject? _createExpressionFromJson(String jsonString) {
     try {
       final expressionClass = JClass.forName(

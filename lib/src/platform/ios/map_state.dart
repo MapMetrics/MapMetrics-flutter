@@ -21,7 +21,6 @@ part 'style_controller.dart';
 final class MapLibreMapStateIos extends MapLibreMapStateNative
     implements pigeon.MapLibreFlutterApi {
   pigeon.MapLibreHostApi? _hostApi;
-  int? _viewId;
   MLNMapView? _cachedMapView;
   bool _isMapReady = false;
 
@@ -78,7 +77,6 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     final channelSuffix = viewId.toString();
     _hostApi = pigeon.MapLibreHostApi(messageChannelSuffix: channelSuffix);
     pigeon.MapLibreFlutterApi.setUp(this, messageChannelSuffix: channelSuffix);
-    _viewId = viewId;
 
     // Note: We'll rely on Pigeon for now since FFI registry access is complex
     // The native Swift code handles the map view through the registry
@@ -438,12 +436,10 @@ final class MapLibreMapStateIos extends MapLibreMapStateNative
     super.didUpdateWidget(oldWidget);
   }
 
-  @override
   Future<void> _updateOptions(MapLibreMap oldWidget) async {
     final hostApi = _hostApi;
     if (hostApi == null) return;
 
-    final oldOptions = oldWidget.options;
     final options = this.options;
 
     // Always use Pigeon for updating options to ensure reliability
